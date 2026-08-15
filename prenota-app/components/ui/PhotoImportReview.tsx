@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, Check, Trash2 } from "lucide-react";
+import { AlertTriangle, Check, Trash2, Loader2 } from "lucide-react";
 import type { ParsedReservationDraft } from "@/types";
 
 interface PhotoImportReviewProps {
   drafts: ParsedReservationDraft[];
   onConfirm: (confirmed: ParsedReservationDraft[]) => void;
   onCancel: () => void;
+  isSaving?: boolean;
 }
 
 const CONFIDENCE_LABEL: Record<ParsedReservationDraft["confidence"], string> = {
@@ -25,7 +26,7 @@ const CONFIDENCE_COLOR: Record<ParsedReservationDraft["confidence"], string> = {
 // Schermata di conferma OBBLIGATORIA dopo la lettura della foto dell'agenda.
 // La scrittura a mano può essere letta male: nessuna prenotazione viene salvata
 // finché lo staff non conferma (o corregge) ogni riga qui.
-export function PhotoImportReview({ drafts, onConfirm, onCancel }: PhotoImportReviewProps) {
+export function PhotoImportReview({ drafts, onConfirm, onCancel, isSaving }: PhotoImportReviewProps) {
   const [rows, setRows] = useState(drafts);
 
   function updateRow(index: number, patch: Partial<ParsedReservationDraft>) {
@@ -92,6 +93,12 @@ export function PhotoImportReview({ drafts, onConfirm, onCancel }: PhotoImportRe
                 onChange={(e) => updateRow(i, { partySize: Number(e.target.value) })}
                 placeholder="Coperti"
               />
+              <input
+                className="col-span-2 rounded-lg border border-black/10 px-3 py-2 text-sm"
+                value={row.notes ?? ""}
+                onChange={(e) => updateRow(i, { notes: e.target.value })}
+                placeholder="Note (allergie, richieste...)"
+              />
             </div>
           </div>
         ))}
@@ -100,19 +107,22 @@ export function PhotoImportReview({ drafts, onConfirm, onCancel }: PhotoImportRe
       <div className="flex gap-2 pt-2">
         <button
           onClick={onCancel}
-          className="touch-target flex-1 rounded-xl border border-black/10 font-medium text-ink-muted"
+          disabled={isSaving}
+          className="touch-target flex-1 rounded-xl border border-black/10 font-medium text-ink-muted disabled:opacity-40"
         >
           Annulla
         </button>
         <button
           onClick={() => onConfirm(rows)}
-          disabled={rows.length === 0}
+          disabled={rows.length === 0 || isSaving}
           className="touch-target flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary font-medium text-white disabled:opacity-40"
         >
-          <Check size={18} />
-          Conferma e salva ({rows.length})
+          {isSaving ? (
+            <Loader2 size={18} className="animate-spin" />
+          ) : (
+            <Check size={18} />
+          )}
+          {isSaving ? "Salvo..." : `Conferma e salva (${rows.length})`}
         </button>
       </div>
     </div>
-  );
-}
