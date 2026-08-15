@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Camera, Loader2 } from "lucide-react";
 import { StatusBar } from "@/components/ui/StatusBar";
 import { TableCard } from "@/components/ui/TableCard";
@@ -18,8 +19,10 @@ const MOCK_TABLES: RestaurantTable[] = [
 ];
 
 export default function DashboardPage() {
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [drafts, setDrafts] = useState<ParsedReservationDraft[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,9 +55,25 @@ export default function DashboardPage() {
   }
 
   async function handleConfirmImport(confirmed: ParsedReservationDraft[]) {
-    // TODO: salvare le prenotazioni confermate su Supabase (source: "photo")
-    console.log("Prenotazioni da salvare:", confirmed);
-    setDrafts(null);
+    setIsSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ drafts: confirmed, source: "photo" }),
+      });
+      if (!res.ok) throw new Error("Errore nel salvataggio");
+
+      setDrafts(null);
+      // Porta subito alla lista prenotazioni per vedere il risultato ordinato per orario
+      router.push("/prenotazioni");
+    } catch (err) {
+      console.error(err);
+      setError("Non sono riuscito a salvare le prenotazioni. Riprova.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   // Vista di conferma a schermo intero dopo la lettura della foto
@@ -64,6 +83,7 @@ export default function DashboardPage() {
         drafts={drafts}
         onConfirm={handleConfirmImport}
         onCancel={() => setDrafts(null)}
+        isSaving={isSaving}
       />
     );
   }
