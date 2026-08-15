@@ -126,3 +126,5 @@ export function PhotoImportReview({ drafts, onConfirm, onCancel, isSaving }: Pho
         </button>
       </div>
     </div>
+  );
+}
