@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-bg text-ink antialiased;
+  }
+  /* Numeri sempre allineati e leggibili: orari, coperti, prezzi */
+  .num-tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* Target touch minimo 44px, pensato per uso rapido durante il servizio */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+}
