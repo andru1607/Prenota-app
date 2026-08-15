@@ -3,7 +3,9 @@ export type ReservationStatus =
   | "confirmed"   // verde — confermata
   | "pending"     // ambra — da confermare / in attesa
   | "late"        // ambra/rosso — in ritardo rispetto all'orario
-  | "cancelled";  // rosso — cancellata
+  | "cancelled"   // rosso — cancellata
+  | "completed"   // verde forte — cliente arrivato (presente)
+  | "no_show";    // rosso — mancata presenza
 
 export type TableStatus = "free" | "occupied" | "reserved" | "closed";
 
