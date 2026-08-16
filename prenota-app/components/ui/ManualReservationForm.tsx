@@ -12,6 +12,7 @@ interface ManualReservationFormProps {
     date: string;
   }) => Promise<void>;
   onCancel: () => void;
+  initialDate?: string;
 }
 
 function todayDateString(): string {
@@ -22,12 +23,12 @@ function todayDateString(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-export function ManualReservationForm({ onSave, onCancel }: ManualReservationFormProps) {
+export function ManualReservationForm({ onSave, onCancel, initialDate }: ManualReservationFormProps) {
   const [customerName, setCustomerName] = useState("");
   const [reservationTime, setReservationTime] = useState("");
   const [partySize, setPartySize] = useState("");
   const [notes, setNotes] = useState("");
-  const [date, setDate] = useState(todayDateString());
+  const [date, setDate] = useState(initialDate ?? todayDateString());
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
