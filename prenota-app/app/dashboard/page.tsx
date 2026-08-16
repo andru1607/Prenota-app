@@ -159,7 +159,12 @@ export default function DashboardPage() {
     : undefined;
 
   const tavoliLiberi = tables.filter((t) => t.status === "free").length;
-  const previewList = activeToday.slice(0, MAX_PREVIEW_ITEMS);
+
+  const allActive = reservations
+    .filter((r) => r.status !== "cancelled" && r.status !== "completed" && r.status !== "no_show")
+    .sort((a, b) => new Date(a.reservationTime).getTime() - new Date(b.reservationTime).getTime());
+
+  const previewList = allActive.slice(0, MAX_PREVIEW_ITEMS);
 
   async function handlePhotoSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -305,11 +310,11 @@ export default function DashboardPage() {
           </>
         ) : (
           <div>
-            <p className="mb-3 text-xs text-ink-muted">Prossimi arrivi di oggi.</p>
+            <p className="mb-3 text-xs text-ink-muted">Prossime prenotazioni.</p>
 
             {previewList.length === 0 ? (
               <p className="py-8 text-center text-sm text-ink-muted">
-                Nessuna prenotazione attiva per oggi.
+                Nessuna prenotazione attiva al momento.
               </p>
             ) : (
               <div className="space-y-2">
