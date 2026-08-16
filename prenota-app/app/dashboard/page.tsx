@@ -35,15 +35,24 @@ export default function DashboardPage() {
 
     try {
       const base64 = await fileToBase64(file);
-         const res = await fetch("/api/reservations", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ drafts: confirmed, source: "photo" }),
-    });
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error("Errore nel salvataggio: " + body);
+      const res = await fetch("/api/parse-agenda", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64, mediaType: file.type }),
+      });
+
+      if (!res.ok) throw new Error("Errore nella lettura della foto");
+
+      const { drafts } = await res.json();
+      setDrafts(drafts);
+    } catch (err) {
+      console.error(err);
+      setError("Non sono riuscito a leggere l'agenda. Riprova con una foto più nitida.");
+    } finally {
+      setIsProcessing(false);
+      e.target.value = "";
     }
+  }
 
   async function handleConfirmImport(confirmed: ParsedReservationDraft[]) {
     setIsSaving(true);
@@ -54,22 +63,23 @@ export default function DashboardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ drafts: confirmed, source: "photo" }),
       });
-      if (!res.ok) throw new Error("Errore nel salvataggio");
+
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error("Errore nel salvataggio: " + body);
+      }
 
       setDrafts(null);
-      // Porta subito alla lista prenotazioni per vedere il risultato ordinato per orario
       router.push("/prenotazioni");
-      } catch (err) {
-    console.error(err);
-    setError("Non sono riuscito a salvare le prenotazioni. Riprova.");
-    alert("ERRORE: " + (err instanceof Error ? err.message : String(err)));
-  } finally {
-    setIsSaving(false);
+    } catch (err) {
+      console.error(err);
+      setError("Non sono riuscito a salvare le prenotazioni. Riprova.");
+      alert("ERRORE: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setIsSaving(false);
+    }
   }
-}
 
-
-  // Vista di conferma a schermo intero dopo la lettura della foto
   if (drafts) {
     return (
       <PhotoImportReview
@@ -136,7 +146,7 @@ function fileToBase64(file: File): Promise<string> {
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
-      resolve(result.split(",")[1]); // rimuove il prefisso "data:image/...;base64,"
+      resolve(result.split(",")[1]);
     };
     reader.onerror = reject;
     reader.readAsDataURL(file);
