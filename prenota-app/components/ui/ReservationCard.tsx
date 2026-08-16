@@ -1,4 +1,4 @@
-import { Users, Check, UserX, StickyNote, X } from "lucide-react";
+import { Users, Check, UserX, StickyNote, X, Trash2 } from "lucide-react";
 import type { Reservation, ReservationStatus } from "@/types";
 
 const STATUS_BAR_COLOR: Record<ReservationStatus, string> = {
@@ -24,16 +24,15 @@ interface ReservationCardProps {
   onCheckIn?: () => void;
   onNoShow?: () => void;
   onCancel?: () => void;
+  onDelete?: () => void;
 }
 
-// Card prenotazione: striscia colorata = stato (coerente con TableCard),
-// azioni rapide sempre nella stessa posizione a destra.
-// Stati finali (completed/no_show/cancelled) nascondono le azioni: la decisione è già presa.
 export function ReservationCard({
   reservation,
   onCheckIn,
   onNoShow,
   onCancel,
+  onDelete,
 }: ReservationCardProps) {
   const time = new Date(reservation.reservationTime).toLocaleTimeString("it-IT", {
     hour: "2-digit",
@@ -66,40 +65,48 @@ export function ReservationCard({
             </div>
           </div>
 
-          {!isFinal && (
-            <div className="flex shrink-0 items-center gap-1">
-              {onCheckIn && (
-                <button
-                  onClick={onCheckIn}
-                  className="touch-target grid place-items-center rounded-lg text-status-free hover:bg-status-freeBg"
-                  aria-label="Presente"
-                  title="Segna come presente"
-                >
-                  <Check size={20} />
-                </button>
-              )}
-              {onNoShow && (
-                <button
-                  onClick={onNoShow}
-                  className="touch-target grid place-items-center rounded-lg text-status-danger hover:bg-status-dangerBg"
-                  aria-label="Assente"
-                  title="Segna come mancata presenza"
-                >
-                  <UserX size={20} />
-                </button>
-              )}
-              {onCancel && (
-                <button
-                  onClick={onCancel}
-                  className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
-                  aria-label="Cancella"
-                  title="Cancella prenotazione"
-                >
-                  <X size={18} />
-                </button>
-              )}
-            </div>
-          )}
+          <div className="flex shrink-0 items-center gap-1">
+            {!isFinal && onCheckIn && (
+              <button
+                onClick={onCheckIn}
+                className="touch-target grid place-items-center rounded-lg text-status-free hover:bg-status-freeBg"
+                aria-label="Presente"
+                title="Segna come presente"
+              >
+                <Check size={20} />
+              </button>
+            )}
+            {!isFinal && onNoShow && (
+              <button
+                onClick={onNoShow}
+                className="touch-target grid place-items-center rounded-lg text-status-danger hover:bg-status-dangerBg"
+                aria-label="Assente"
+                title="Segna come mancata presenza"
+              >
+                <UserX size={20} />
+              </button>
+            )}
+            {!isFinal && onCancel && (
+              <button
+                onClick={onCancel}
+                className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+                aria-label="Cancella"
+                title="Cancella prenotazione"
+              >
+                <X size={18} />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={onDelete}
+                className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                aria-label="Elimina definitivamente"
+                title="Elimina definitivamente"
+              >
+                <Trash2 size={17} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
