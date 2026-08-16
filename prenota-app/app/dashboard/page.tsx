@@ -100,7 +100,6 @@ export default function DashboardPage() {
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             className="hidden"
             onChange={handlePhotoSelected}
           />
