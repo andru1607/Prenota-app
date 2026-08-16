@@ -6,20 +6,22 @@ import { Camera, Loader2 } from "lucide-react";
 import { StatusBar } from "@/components/ui/StatusBar";
 import { TableCard } from "@/components/ui/TableCard";
 import { PhotoImportReview } from "@/components/ui/PhotoImportReview";
-import type { ParsedReservationDraft, Reservation, RestaurantTable } from "@/types";
+import type { ParsedReservationDraft, Reservation, RestaurantTable, TableStatus } from "@/types";
 
-const MOCK_TABLES: RestaurantTable[] = [
-  { id: "1", number: "1", capacity: 2, status: "free" },
-  { id: "2", number: "2", capacity: 2, status: "occupied" },
-  { id: "3", number: "3", capacity: 4, status: "reserved" },
-  { id: "4", number: "4", capacity: 4, status: "free" },
-  { id: "5", number: "5", capacity: 6, status: "occupied" },
-  { id: "6", number: "6", capacity: 8, status: "reserved" },
+const DEFAULT_TABLES = [
+  { number: "1", capacity: 2 },
+  { number: "2", capacity: 2 },
+  { number: "3", capacity: 4 },
+  { number: "4", capacity: 4 },
+  { number: "5", capacity: 6 },
+  { number: "6", capacity: 8 },
 ];
+
+const STATUS_CYCLE: TableStatus[] = ["free", "occupied", "reserved"];
 
 const REFRESH_INTERVAL_MS = 60_000;
 
-function mapRow(row: any): Reservation {
+function mapReservationRow(row: any): Reservation {
   return {
     id: row.id,
     customerName: row.customer_name,
@@ -34,6 +36,16 @@ function mapRow(row: any): Reservation {
   };
 }
 
+function mapTableRow(row: any): RestaurantTable {
+  return {
+    id: row.id,
+    number: row.number,
+    capacity: row.capacity,
+    status: row.status,
+    notes: row.notes ?? undefined,
+  };
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -43,23 +55,69 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [skippedInfo, setSkippedInfo] = useState<string | null>(null);
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [tables, setTables] = useState<RestaurantTable[]>([]);
 
   const loadReservations = useCallback(async () => {
     try {
       const res = await fetch("/api/reservations");
       if (!res.ok) return;
       const { reservations: data } = await res.json();
-      setReservations((data ?? []).map(mapRow));
+      setReservations((data ?? []).map(mapReservationRow));
     } catch (err) {
       console.error("Errore caricamento numeri servizio:", err);
     }
   }, []);
 
+  const loadTables = useCallback(async () => {
+    try {
+      const res = await fetch("/api/tables");
+      if (!res.ok) return;
+      const { tables: data } = await res.json();
+
+      if (!data || data.length === 0) {
+        const seedRes = await fetch("/api/tables", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tables: DEFAULT_TABLES }),
+        });
+        if (seedRes.ok) {
+          const { tables: seeded } = await seedRes.json();
+          setTables((seeded ?? []).map(mapTableRow));
+        }
+        return;
+      }
+
+      setTables(data.map(mapTableRow));
+    } catch (err) {
+      console.error("Errore caricamento tavoli:", err);
+    }
+  }, []);
+
   useEffect(() => {
     loadReservations();
+    loadTables();
     const interval = setInterval(loadReservations, REFRESH_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [loadReservations]);
+  }, [loadReservations, loadTables]);
+
+  async function handleTableTap(table: RestaurantTable) {
+    const currentIndex = STATUS_CYCLE.indexOf(table.status);
+    const nextStatus = STATUS_CYCLE[(currentIndex + 1) % STATUS_CYCLE.length];
+
+    setTables((prev) => prev.map((t) => (t.id === table.id ? { ...t, status: nextStatus } : t)));
+
+    try {
+      const res = await fetch("/api/tables", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: table.id, status: nextStatus }),
+      });
+      if (!res.ok) throw new Error("Errore aggiornamento tavolo");
+    } catch (err) {
+      console.error(err);
+      loadTables();
+    }
+  }
 
   const today = new Date();
   const todayReservations = reservations.filter(
@@ -86,7 +144,7 @@ export default function DashboardPage() {
       })
     : undefined;
 
-  const tavoliLiberi = MOCK_TABLES.filter((t) => t.status === "free").length;
+  const tavoliLiberi = tables.filter((t) => t.status === "free").length;
 
   async function handlePhotoSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -196,6 +254,10 @@ export default function DashboardPage() {
           </button>
         </div>
 
+        <p className="mb-3 text-xs text-ink-muted">
+          Tocca un tavolo per cambiarne lo stato (libero → occupato → riservato).
+        </p>
+
         {skippedInfo && (
           <p className="mb-3 rounded-lg bg-status-pendingBg p-3 text-sm text-status-pending">
             {skippedInfo}
@@ -209,8 +271,8 @@ export default function DashboardPage() {
         )}
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {MOCK_TABLES.map((table) => (
-            <TableCard key={table.id} table={table} />
+          {tables.map((table) => (
+            <TableCard key={table.id} table={table} onClick={() => handleTableTap(table)} />
           ))}
         </div>
       </div>
