@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, Eye, EyeOff, ChevronRight } from "lucide-react";
 import { StatusBar } from "@/components/ui/StatusBar";
 import { TableCard } from "@/components/ui/TableCard";
+import { ReservationCard } from "@/components/ui/ReservationCard";
 import { PhotoImportReview } from "@/components/ui/PhotoImportReview";
 import type { ParsedReservationDraft, Reservation, RestaurantTable, TableStatus } from "@/types";
 
@@ -18,8 +19,9 @@ const DEFAULT_TABLES = [
 ];
 
 const STATUS_CYCLE: TableStatus[] = ["free", "occupied", "reserved"];
-
 const REFRESH_INTERVAL_MS = 60_000;
+const SHOW_TABLES_KEY = "prenota-app:showTables";
+const MAX_PREVIEW_ITEMS = 8;
 
 function mapReservationRow(row: any): Reservation {
   return {
@@ -56,6 +58,20 @@ export default function DashboardPage() {
   const [skippedInfo, setSkippedInfo] = useState<string | null>(null);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [tables, setTables] = useState<RestaurantTable[]>([]);
+  const [showTables, setShowTables] = useState(true);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem(SHOW_TABLES_KEY);
+    if (saved === "false") setShowTables(false);
+  }, []);
+
+  function toggleShowTables() {
+    setShowTables((prev) => {
+      const next = !prev;
+      window.localStorage.setItem(SHOW_TABLES_KEY, String(next));
+      return next;
+    });
+  }
 
   const loadReservations = useCallback(async () => {
     try {
@@ -129,13 +145,11 @@ export default function DashboardPage() {
     .reduce((sum, r) => sum + r.partySize, 0);
 
   const now = new Date();
-  const nextArrival = todayReservations
-    .filter(
-      (r) =>
-        (r.status === "confirmed" || r.status === "pending") &&
-        new Date(r.reservationTime).getTime() >= now.getTime()
-    )
-    .sort((a, b) => new Date(a.reservationTime).getTime() - new Date(b.reservationTime).getTime())[0];
+  const activeToday = todayReservations
+    .filter((r) => r.status !== "cancelled" && r.status !== "completed" && r.status !== "no_show")
+    .sort((a, b) => new Date(a.reservationTime).getTime() - new Date(b.reservationTime).getTime());
+
+  const nextArrival = activeToday.find((r) => new Date(r.reservationTime).getTime() >= now.getTime());
 
   const prossimoArrivo = nextArrival
     ? new Date(nextArrival.reservationTime).toLocaleTimeString("it-IT", {
@@ -145,6 +159,7 @@ export default function DashboardPage() {
     : undefined;
 
   const tavoliLiberi = tables.filter((t) => t.status === "free").length;
+  const previewList = activeToday.slice(0, MAX_PREVIEW_ITEMS);
 
   async function handlePhotoSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -228,35 +243,42 @@ export default function DashboardPage() {
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-lg font-semibold text-ink">Sala</h1>
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handlePhotoSelected}
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isProcessing}
-            className="touch-target flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                Leggo l'agenda...
-              </>
-            ) : (
-              <>
-                <Camera size={18} />
-                Foto agenda
-              </>
-            )}
-          </button>
-        </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleShowTables}
+              className="touch-target flex items-center gap-1.5 rounded-xl border border-black/10 px-3 py-2 text-sm font-medium text-ink-muted"
+              title={showTables ? "Nascondi tavoli" : "Mostra tavoli"}
+            >
+              {showTables ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showTables ? "Nascondi tavoli" : "Mostra tavoli"}
+            </button>
 
-        <p className="mb-3 text-xs text-ink-muted">
-          Tocca un tavolo per cambiarne lo stato (libero → occupato → riservato).
-        </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoSelected}
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isProcessing}
+              className="touch-target flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Leggo...
+                </>
+              ) : (
+                <>
+                  <Camera size={18} />
+                  Foto agenda
+                </>
+              )}
+            </button>
+          </div>
+        </div>
 
         {skippedInfo && (
           <p className="mb-3 rounded-lg bg-status-pendingBg p-3 text-sm text-status-pending">
@@ -270,11 +292,42 @@ export default function DashboardPage() {
           </p>
         )}
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {tables.map((table) => (
-            <TableCard key={table.id} table={table} onClick={() => handleTableTap(table)} />
-          ))}
-        </div>
+        {showTables ? (
+          <>
+            <p className="mb-3 text-xs text-ink-muted">
+              Tocca un tavolo per cambiarne lo stato (libero → occupato → riservato).
+            </p>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {tables.map((table) => (
+                <TableCard key={table.id} table={table} onClick={() => handleTableTap(table)} />
+              ))}
+            </div>
+          </>
+        ) : (
+          <div>
+            <p className="mb-3 text-xs text-ink-muted">Prossimi arrivi di oggi.</p>
+
+            {previewList.length === 0 ? (
+              <p className="py-8 text-center text-sm text-ink-muted">
+                Nessuna prenotazione attiva per oggi.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {previewList.map((r) => (
+                  <ReservationCard key={r.id} reservation={r} />
+                ))}
+              </div>
+            )}
+
+            <button
+              onClick={() => router.push("/prenotazioni")}
+              className="touch-target mt-3 flex w-full items-center justify-center gap-1 rounded-xl border border-black/10 py-2.5 text-sm font-medium text-primary"
+            >
+              Vedi tutte le prenotazioni
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
