@@ -31,9 +31,10 @@ export async function POST(req: NextRequest) {
   const supabase = createClient();
 
   try {
-    const { drafts, source } = (await req.json()) as {
+    const { drafts, source, date } = (await req.json()) as {
       drafts: ParsedReservationDraft[];
       source: "photo" | "manual";
+      date?: string;
     };
 
     if (!drafts || drafts.length === 0) {
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest) {
     const rows = drafts.map((d) => ({
       customer_name: d.customerName,
       party_size: d.partySize ?? 1,
-      reservation_time: buildTodayIsoTime(d.reservationTime),
+      reservation_time: buildTodayIsoTime(d.reservationTime, date),
       notes: d.notes || null,
       status: "confirmed",
       source: source ?? "manual",
@@ -122,12 +123,29 @@ export async function DELETE(req: NextRequest) {
   }
 }
 
-function buildTodayIsoTime(time: string | null): string {
-  const now = new Date();
-  if (!time || !/^\d{1,2}:\d{2}$/.test(time)) {
-    return now.toISOString();
+function buildTodayIsoTime(time: string | null, dateStr?: string): string {
+  const base = dateStr ? new Date(dateStr + "T00:00:00Z") : new Date();
+  const y = dateStr ? base.getUTCFullYear() : base.getFullYear();
+  const m = dateStr ? base.getUTCMonth() : base.getMonth();
+  const d = dateStr ? base.getUTCDate() : base.getDate();
+
+  let hours = base.getHours();
+  let minutes = base.getMinutes();
+  if (time && /^\d{1,2}:\d{2}$/.test(time)) {
+    [hours, minutes] = time.split(":").map(Number);
   }
-  const [hours, minutes] = time.split(":").map(Number);
-  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
-  return d.toISOString();
+
+  return toItalyIso(y, m, d, hours, minutes);
 }
+
+function toItalyIso(year: number, month: number, day: number, hours: number, minutes: number): string {
+  const guess = new Date(Date.UTC(year, month, day, hours, minutes));
+
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    
