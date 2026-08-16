@@ -25,6 +25,14 @@ export function ManualReservationForm({ onSave, onCancel }: ManualReservationFor
 
   const isValid = customerName.trim().length > 0 && /^\d{1,2}:\d{2}$/.test(reservationTime) && Number(partySize) > 0;
 
+  // Formatta automaticamente l'input numerico in HH:MM (es. "2352" -> "23:52"),
+  // così su iPhone basta la tastiera numerica senza dover cercare i due punti.
+  function formatTimeInput(raw: string) {
+    const digits = raw.replace(/\D/g, "").slice(0, 4);
+    if (digits.length <= 2) return digits;
+    return digits.slice(0, 2) + ":" + digits.slice(2);
+  }
+
   async function handleSubmit() {
     if (!isValid) return;
     setIsSaving(true);
@@ -69,9 +77,10 @@ export function ManualReservationForm({ onSave, onCancel }: ManualReservationFor
           <input
             className="num-tabular rounded-lg border border-black/10 px-3 py-2 text-sm"
             value={reservationTime}
-            onChange={(e) => setReservationTime(e.target.value)}
+            onChange={(e) => setReservationTime(formatTimeInput(e.target.value))}
             placeholder="Orario (HH:MM)"
             inputMode="numeric"
+            maxLength={5}
           />
           <input
             type="number"
