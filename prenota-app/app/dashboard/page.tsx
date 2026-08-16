@@ -35,24 +35,15 @@ export default function DashboardPage() {
 
     try {
       const base64 = await fileToBase64(file);
-      const res = await fetch("/api/parse-agenda", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64, mediaType: file.type }),
-      });
-
-      if (!res.ok) throw new Error("Errore nella lettura della foto");
-
-      const { drafts } = await res.json();
-      setDrafts(drafts);
-    } catch (err) {
-      console.error(err);
-      setError("Non sono riuscito a leggere l'agenda. Riprova con una foto più nitida.");
-    } finally {
-      setIsProcessing(false);
-      e.target.value = ""; // reset input per permettere di riscattare la stessa foto
+         const res = await fetch("/api/reservations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ drafts: confirmed, source: "photo" }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error("Errore nel salvataggio: " + body);
     }
-  }
 
   async function handleConfirmImport(confirmed: ParsedReservationDraft[]) {
     setIsSaving(true);
