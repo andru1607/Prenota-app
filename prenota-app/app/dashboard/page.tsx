@@ -8,7 +8,6 @@ import { TableCard } from "@/components/ui/TableCard";
 import { PhotoImportReview } from "@/components/ui/PhotoImportReview";
 import type { ParsedReservationDraft, RestaurantTable } from "@/types";
 
-// Dati di esempio — da sostituire con fetch reale da Supabase
 const MOCK_TABLES: RestaurantTable[] = [
   { id: "1", number: "1", capacity: 2, status: "free" },
   { id: "2", number: "2", capacity: 2, status: "occupied" },
@@ -25,12 +24,14 @@ export default function DashboardPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [drafts, setDrafts] = useState<ParsedReservationDraft[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [skippedInfo, setSkippedInfo] = useState<string | null>(null);
 
   async function handlePhotoSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setError(null);
+    setSkippedInfo(null);
     setIsProcessing(true);
 
     try {
@@ -43,8 +44,21 @@ export default function DashboardPage() {
 
       if (!res.ok) throw new Error("Errore nella lettura della foto");
 
-      const { drafts } = await res.json();
-      setDrafts(drafts);
+      const { drafts, skipped } = await res.json();
+
+      if (skipped && skipped.length > 0) {
+        setSkippedInfo(
+          `${skipped.length} già presenti, escluse automaticamente: ${skipped.join(", ")}`
+        );
+      }
+
+      if (drafts && drafts.length > 0) {
+        setDrafts(drafts);
+      } else if (skipped && skipped.length > 0) {
+        setError(null);
+      } else {
+        setError("Non ho trovato nessuna prenotazione leggibile in questa foto.");
+      }
     } catch (err) {
       console.error(err);
       setError("Non sono riuscito a leggere l'agenda. Riprova con una foto più nitida.");
@@ -63,18 +77,13 @@ export default function DashboardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ drafts: confirmed, source: "photo" }),
       });
-
-      if (!res.ok) {
-        const body = await res.text();
-        throw new Error("Errore nel salvataggio: " + body);
-      }
+      if (!res.ok) throw new Error("Errore nel salvataggio");
 
       setDrafts(null);
       router.push("/prenotazioni");
     } catch (err) {
       console.error(err);
       setError("Non sono riuscito a salvare le prenotazioni. Riprova.");
-      alert("ERRORE: " + (err instanceof Error ? err.message : String(err)));
     } finally {
       setIsSaving(false);
     }
@@ -124,6 +133,12 @@ export default function DashboardPage() {
             )}
           </button>
         </div>
+
+        {skippedInfo && (
+          <p className="mb-3 rounded-lg bg-status-pendingBg p-3 text-sm text-status-pending">
+            {skippedInfo}
+          </p>
+        )}
 
         {error && (
           <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">
