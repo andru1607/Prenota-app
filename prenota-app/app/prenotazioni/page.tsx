@@ -96,6 +96,7 @@ export default function PrenotazioniPage() {
     reservationTime: string;
     partySize: number;
     notes: string;
+    date: string;
   }) {
     const res = await fetch("/api/reservations", {
       method: "POST",
@@ -111,6 +112,7 @@ export default function PrenotazioniPage() {
           },
         ],
         source: "manual",
+        date: data.date,
       }),
     });
 
