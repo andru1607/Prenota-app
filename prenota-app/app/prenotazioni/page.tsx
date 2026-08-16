@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { RefreshCw } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { RefreshCw, Plus } from "lucide-react";
 import { ReservationCard } from "@/components/ui/ReservationCard";
+import { ManualReservationForm } from "@/components/ui/ManualReservationForm";
 import type { Reservation } from "@/types";
 
 // Converte una riga del database (snake_case) nel tipo usato dall'interfaccia (camelCase)
@@ -26,6 +26,7 @@ export default function PrenotazioniPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
   const loadReservations = useCallback(async () => {
     setIsLoading(true);
@@ -48,7 +49,6 @@ export default function PrenotazioniPage() {
   }, [loadReservations]);
 
   async function updateStatus(id: string, status: Reservation["status"]) {
-    // Aggiornamento ottimistico: cambia subito la UI, poi conferma sul server
     setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
     try {
       const res = await fetch("/api/reservations", {
@@ -59,12 +59,42 @@ export default function PrenotazioniPage() {
       if (!res.ok) throw new Error("Errore aggiornamento");
     } catch (err) {
       console.error(err);
-      // In caso di errore, ricarica per tornare allo stato reale
       loadReservations();
     }
   }
 
-  // Le prenotazioni arrivano già ordinate per orario dall'API (reservation_time crescente)
+  async function handleManualSave(data: {
+    customerName: string;
+    reservationTime: string;
+    partySize: number;
+    notes: string;
+  }) {
+    const res = await fetch("/api/reservations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        drafts: [
+          {
+            customerName: data.customerName,
+            reservationTime: data.reservationTime,
+            partySize: data.partySize,
+            notes: data.notes || undefined,
+            confidence: "high",
+          },
+        ],
+        source: "manual",
+      }),
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error("Errore nel salvataggio: " + body);
+    }
+
+    setShowForm(false);
+    loadReservations();
+  }
+
   const upcoming = reservations.filter(
     (r) => r.status !== "cancelled" && r.status !== "completed" && r.status !== "no_show"
   );
@@ -76,22 +106,37 @@ export default function PrenotazioniPage() {
     <div className="p-4">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-ink">Prenotazioni</h1>
-        <button
-          onClick={loadReservations}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
-          aria-label="Aggiorna"
-        >
-          <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={loadReservations}
+            className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+            aria-label="Aggiorna"
+          >
+            <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
+          </button>
+          <button
+            onClick={() => setShowForm((v) => !v)}
+            className="touch-target flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-medium text-white"
+          >
+            <Plus size={18} />
+            Nuova
+          </button>
+        </div>
       </div>
+
+      {showForm && (
+        <div className="mb-4">
+          <ManualReservationForm onSave={handleManualSave} onCancel={() => setShowForm(false)} />
+        </div>
+      )}
 
       {error && (
         <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
       )}
 
-      {!isLoading && reservations.length === 0 && !error && (
+      {!isLoading && reservations.length === 0 && !error && !showForm && (
         <p className="py-8 text-center text-sm text-ink-muted">
-          Nessuna prenotazione ancora. Usa "Foto agenda" nella Dashboard per importarle.
+          Nessuna prenotazione ancora. Usa "Nuova" qui sopra o "Foto agenda" nella Dashboard.
         </p>
       )}
 
