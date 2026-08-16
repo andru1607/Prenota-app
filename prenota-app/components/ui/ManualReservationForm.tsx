@@ -9,24 +9,34 @@ interface ManualReservationFormProps {
     reservationTime: string;
     partySize: number;
     notes: string;
+    date: string;
   }) => Promise<void>;
   onCancel: () => void;
 }
 
-// Form rapido per aggiungere una prenotazione senza passare dalla foto agenda.
-// Stessi campi della conferma-foto, per coerenza visiva e di dati.
+function todayDateString(): string {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export function ManualReservationForm({ onSave, onCancel }: ManualReservationFormProps) {
   const [customerName, setCustomerName] = useState("");
   const [reservationTime, setReservationTime] = useState("");
   const [partySize, setPartySize] = useState("");
   const [notes, setNotes] = useState("");
+  const [date, setDate] = useState(todayDateString());
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isValid = customerName.trim().length > 0 && /^\d{1,2}:\d{2}$/.test(reservationTime) && Number(partySize) > 0;
+  const isValid =
+    customerName.trim().length > 0 &&
+    /^\d{1,2}:\d{2}$/.test(reservationTime) &&
+    Number(partySize) > 0 &&
+    date.length > 0;
 
-  // Formatta automaticamente l'input numerico in HH:MM (es. "2352" -> "23:52"),
-  // così su iPhone basta la tastiera numerica senza dover cercare i due punti.
   function formatTimeInput(raw: string) {
     const digits = raw.replace(/\D/g, "").slice(0, 4);
     if (digits.length <= 2) return digits;
@@ -43,6 +53,7 @@ export function ManualReservationForm({ onSave, onCancel }: ManualReservationFor
         reservationTime,
         partySize: Number(partySize),
         notes: notes.trim(),
+        date,
       });
     } catch (err) {
       console.error(err);
@@ -73,6 +84,14 @@ export function ManualReservationForm({ onSave, onCancel }: ManualReservationFor
           placeholder="Nome cliente"
           autoFocus
         />
+
+        <input
+          type="date"
+          className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm text-ink"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
+
         <div className="grid grid-cols-2 gap-2">
           <input
             className="num-tabular rounded-lg border border-black/10 px-3 py-2 text-sm"
