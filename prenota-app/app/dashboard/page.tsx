@@ -68,13 +68,15 @@ export default function DashboardPage() {
       setDrafts(null);
       // Porta subito alla lista prenotazioni per vedere il risultato ordinato per orario
       router.push("/prenotazioni");
-    } catch (err) {
-      console.error(err);
-      setError("Non sono riuscito a salvare le prenotazioni. Riprova.");
-    } finally {
-      setIsSaving(false);
-    }
+      } catch (err) {
+    console.error(err);
+    setError("Non sono riuscito a salvare le prenotazioni. Riprova.");
+    alert("ERRORE: " + (err instanceof Error ? err.message : String(err)));
+  } finally {
+    setIsSaving(false);
   }
+}
+
 
   // Vista di conferma a schermo intero dopo la lettura della foto
   if (drafts) {
