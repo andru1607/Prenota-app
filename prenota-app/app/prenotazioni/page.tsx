@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { RefreshCw, Plus } from "lucide-react";
+import { RefreshCw, Plus, Trash2 } from "lucide-react";
 import { ReservationCard } from "@/components/ui/ReservationCard";
 import { ManualReservationForm } from "@/components/ui/ManualReservationForm";
 import type { Reservation } from "@/types";
 
-// Converte una riga del database (snake_case) nel tipo usato dall'interfaccia (camelCase)
 function mapRow(row: any): Reservation {
   return {
     id: row.id,
@@ -27,6 +26,7 @@ export default function PrenotazioniPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
 
   const loadReservations = useCallback(async () => {
     setIsLoading(true);
@@ -60,6 +60,34 @@ export default function PrenotazioniPage() {
     } catch (err) {
       console.error(err);
       loadReservations();
+    }
+  }
+
+  async function deleteOne(id: string) {
+    if (!confirm("Eliminare definitivamente questa prenotazione?")) return;
+    setReservations((prev) => prev.filter((r) => r.id !== id));
+    try {
+      const res = await fetch(`/api/reservations?id=${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Errore eliminazione");
+    } catch (err) {
+      console.error(err);
+      loadReservations();
+    }
+  }
+
+  async function deleteAll() {
+    if (!confirm("Eliminare TUTTE le prenotazioni? Questa azione non si può annullare.")) return;
+    setIsDeletingAll(true);
+    try {
+      const res = await fetch("/api/reservations?all=true", { method: "DELETE" });
+      if (!res.ok) throw new Error("Errore eliminazione totale");
+      setReservations([]);
+    } catch (err) {
+      console.error(err);
+      alert("Non sono riuscito a eliminare tutte le prenotazioni.");
+      loadReservations();
+    } finally {
+      setIsDeletingAll(false);
     }
   }
 
@@ -114,6 +142,17 @@ export default function PrenotazioniPage() {
           >
             <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
           </button>
+          {reservations.length > 0 && (
+            <button
+              onClick={deleteAll}
+              disabled={isDeletingAll}
+              className="touch-target grid place-items-center rounded-lg text-status-danger hover:bg-status-dangerBg disabled:opacity-40"
+              aria-label="Elimina tutte"
+              title="Elimina tutte le prenotazioni"
+            >
+              <Trash2 size={18} />
+            </button>
+          )}
           <button
             onClick={() => setShowForm((v) => !v)}
             className="touch-target flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-medium text-white"
@@ -149,6 +188,7 @@ export default function PrenotazioniPage() {
               onCheckIn={() => updateStatus(r.id, "completed")}
               onNoShow={() => updateStatus(r.id, "no_show")}
               onCancel={() => updateStatus(r.id, "cancelled")}
+              onDelete={() => deleteOne(r.id)}
             />
           ))}
         </div>
@@ -159,7 +199,7 @@ export default function PrenotazioniPage() {
           <p className="mb-2 text-xs font-medium uppercase text-ink-muted">Concluse</p>
           <div className="space-y-2 opacity-70">
             {done.map((r) => (
-              <ReservationCard key={r.id} reservation={r} />
+              <ReservationCard key={r.id} reservation={r} onDelete={() => deleteOne(r.id)} />
             ))}
           </div>
         </div>
