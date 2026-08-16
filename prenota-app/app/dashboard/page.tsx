@@ -58,11 +58,11 @@ export default function DashboardPage() {
   const [skippedInfo, setSkippedInfo] = useState<string | null>(null);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [tables, setTables] = useState<RestaurantTable[]>([]);
-  const [showTables, setShowTables] = useState(true);
+  const [showTables, setShowTables] = useState(false);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(SHOW_TABLES_KEY);
-    if (saved === "false") setShowTables(false);
+    if (saved === "true") setShowTables(true);
   }, []);
 
   function toggleShowTables() {
