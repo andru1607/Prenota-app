@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import type { ParsedReservationDraft } from "@/types";
 
-// GET /api/reservations
 export async function GET(req: NextRequest) {
   const supabase = createClient();
   const date = req.nextUrl.searchParams.get("date");
@@ -28,7 +27,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ reservations: data });
 }
 
-// POST /api/reservations
 export async function POST(req: NextRequest) {
   const supabase = createClient();
 
@@ -65,7 +63,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PATCH /api/reservations
 export async function PATCH(req: NextRequest) {
   const supabase = createClient();
 
@@ -95,12 +92,42 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-// DELETE /api/reservations?id=xxx    -> elimina una singola prenotazione
-// DELETE /api/reservations?all=true  -> elimina TUTTE le prenotazioni (irreversibile)
 export async function DELETE(req: NextRequest) {
   const supabase = createClient();
   const id = req.nextUrl.searchParams.get("id");
   const all = req.nextUrl.searchParams.get("all");
 
   try {
-    
+    if (all === "true") {
+      const { error } = await supabase
+        .from("reservations")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000");
+
+      if (error) throw error;
+      return NextResponse.json({ success: true });
+    }
+
+    if (!id) {
+      return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
+    }
+
+    const { error } = await supabase.from("reservations").delete().eq("id", id);
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Errore eliminazione prenotazione:", err);
+    return NextResponse.json({ error: "Impossibile eliminare." }, { status: 500 });
+  }
+}
+
+function buildTodayIsoTime(time: string | null): string {
+  const now = new Date();
+  if (!time || !/^\d{1,2}:\d{2}$/.test(time)) {
+    return now.toISOString();
+  }
+  const [hours, minutes] = time.split(":").map(Number);
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
+  return d.toISOString();
+}
