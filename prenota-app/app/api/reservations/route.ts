@@ -148,4 +148,26 @@ function toItalyIso(year: number, month: number, day: number, hours: number, min
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(guess);
+
+  const map: Record<string, string> = {};
+  parts.forEach((p) => {
+    if (p.type !== "literal") map[p.type] = p.value;
+  });
+
+  const shownAsUtc = Date.UTC(
+    Number(map.year),
+    Number(map.month) - 1,
+    Number(map.day),
+    Number(map.hour === "24" ? "0" : map.hour),
+    Number(map.minute),
+    Number(map.second)
+  );
+
+  const offsetMs = guess.getTime() - shownAsUtc;
+  const corrected = new Date(guess.getTime() + offsetMs);
+
+  return corrected.toISOString();
+}
