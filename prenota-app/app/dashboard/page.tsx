@@ -1,12 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, Loader2 } from "lucide-react";
 import { StatusBar } from "@/components/ui/StatusBar";
 import { TableCard } from "@/components/ui/TableCard";
 import { PhotoImportReview } from "@/components/ui/PhotoImportReview";
-import type { ParsedReservationDraft, RestaurantTable } from "@/types";
+import type { ParsedReservationDraft, Reservation, RestaurantTable } from "@/types";
 
 const MOCK_TABLES: RestaurantTable[] = [
   { id: "1", number: "1", capacity: 2, status: "free" },
@@ -17,6 +17,23 @@ const MOCK_TABLES: RestaurantTable[] = [
   { id: "6", number: "6", capacity: 8, status: "reserved" },
 ];
 
+const REFRESH_INTERVAL_MS = 60_000;
+
+function mapRow(row: any): Reservation {
+  return {
+    id: row.id,
+    customerName: row.customer_name,
+    phone: row.phone ?? undefined,
+    partySize: row.party_size,
+    reservationTime: row.reservation_time,
+    status: row.status,
+    tableId: row.table_id ?? undefined,
+    notes: row.notes ?? undefined,
+    source: row.source,
+    createdAt: row.created_at,
+  };
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,6 +42,51 @@ export default function DashboardPage() {
   const [drafts, setDrafts] = useState<ParsedReservationDraft[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [skippedInfo, setSkippedInfo] = useState<string | null>(null);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+
+  const loadReservations = useCallback(async () => {
+    try {
+      const res = await fetch("/api/reservations");
+      if (!res.ok) return;
+      const { reservations: data } = await res.json();
+      setReservations((data ?? []).map(mapRow));
+    } catch (err) {
+      console.error("Errore caricamento numeri servizio:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadReservations();
+    const interval = setInterval(loadReservations, REFRESH_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [loadReservations]);
+
+  const today = new Date();
+  const todayReservations = reservations.filter(
+    (r) => new Date(r.reservationTime).toDateString() === today.toDateString()
+  );
+
+  const coperti = todayReservations
+    .filter((r) => r.status !== "cancelled")
+    .reduce((sum, r) => sum + r.partySize, 0);
+
+  const now = new Date();
+  const nextArrival = todayReservations
+    .filter(
+      (r) =>
+        (r.status === "confirmed" || r.status === "pending") &&
+        new Date(r.reservationTime).getTime() >= now.getTime()
+    )
+    .sort((a, b) => new Date(a.reservationTime).getTime() - new Date(b.reservationTime).getTime())[0];
+
+  const prossimoArrivo = nextArrival
+    ? new Date(nextArrival.reservationTime).toLocaleTimeString("it-IT", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : undefined;
+
+  const tavoliLiberi = MOCK_TABLES.filter((t) => t.status === "free").length;
 
   async function handlePhotoSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -102,7 +164,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <StatusBar totalCoperti={42} tavoliLiberi={2} prossimoArrivo="20:15" />
+      <StatusBar totalCoperti={coperti} tavoliLiberi={tavoliLiberi} prossimoArrivo={prossimoArrivo} />
 
       <div className="p-4">
         <div className="mb-4 flex items-center justify-between">
