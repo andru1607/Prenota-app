@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getRestaurantId } from "@/lib/restaurant";
 
 export async function GET() {
   const supabase = createClient();
@@ -26,10 +27,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Nessun tavolo da creare." }, { status: 400 });
     }
 
+    const restaurantId = await getRestaurantId(supabase);
+
     const rows = tables.map((t) => ({
       number: t.number,
       capacity: t.capacity,
       status: t.status ?? "free",
+      restaurant_id: restaurantId,
     }));
 
     const { data, error } = await supabase.from("tables").insert(rows).select();
