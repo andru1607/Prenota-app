@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Lock, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -89,6 +90,13 @@ function LoginForm() {
           {isLoading && <Loader2 size={18} className="animate-spin" />}
           {isLoading ? "Accedo..." : "Accedi"}
         </button>
+
+        <p className="mt-4 text-center text-sm text-ink-muted">
+          Non hai un account?{" "}
+          <Link href="/signup" className="font-medium text-primary">
+            Registrati
+          </Link>
+        </p>
       </form>
     </div>
   );
