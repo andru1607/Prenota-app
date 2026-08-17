@@ -5,6 +5,8 @@ import type { ParsedReservationDraft } from "@/types";
 export async function GET(req: NextRequest) {
   const supabase = createClient();
   const date = req.nextUrl.searchParams.get("date");
+  const from = req.nextUrl.searchParams.get("from");
+  const to = req.nextUrl.searchParams.get("to");
 
   let query = supabase
     .from("reservations")
@@ -14,6 +16,10 @@ export async function GET(req: NextRequest) {
   if (date) {
     const start = `${date}T00:00:00`;
     const end = `${date}T23:59:59`;
+    query = query.gte("reservation_time", start).lte("reservation_time", end);
+  } else if (from && to) {
+    const start = `${from}T00:00:00`;
+    const end = `${to}T23:59:59`;
     query = query.gte("reservation_time", start).lte("reservation_time", end);
   }
 
