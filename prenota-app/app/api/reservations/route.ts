@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getRestaurantId } from "@/lib/restaurant";
 import type { ParsedReservationDraft } from "@/types";
 
 export async function GET(req: NextRequest) {
@@ -47,6 +48,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Nessuna prenotazione da salvare." }, { status: 400 });
     }
 
+    const restaurantId = await getRestaurantId(supabase);
+
     const rows = drafts.map((d) => ({
       customer_name: d.customerName,
       party_size: d.partySize ?? 1,
@@ -54,6 +57,7 @@ export async function POST(req: NextRequest) {
       notes: d.notes || null,
       status: "confirmed",
       source: source ?? "manual",
+      restaurant_id: restaurantId,
     }));
 
     const { data, error } = await supabase.from("reservations").insert(rows).select();
