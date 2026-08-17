@@ -1,0 +1,64 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+export async function POST(req: NextRequest) {
+  try {
+    const { email, password, fullName, restaurantName } = await req.json();
+
+    if (!email || !password || !restaurantName) {
+      return NextResponse.json({ error: "Compila tutti i campi obbligatori." }, { status: 400 });
+    }
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: "La password deve avere almeno 6 caratteri." },
+        { status: 400 }
+      );
+    }
+
+    const supabase = createAdminClient();
+
+    const { data: userData, error: userError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
+
+    if (userError || !userData.user) {
+      console.error("Errore creazione utente:", userError);
+      const message = userError?.message?.toLowerCase().includes("already")
+        ? "Esiste già un account con questa email."
+        : "Impossibile creare l'account.";
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
+
+    const { data: restaurant, error: restaurantError } = await supabase
+      .from("restaurants")
+      .insert({ name: restaurantName })
+      .select()
+      .single();
+
+    if (restaurantError || !restaurant) {
+      console.error("Errore creazione ristorante:", restaurantError);
+      await supabase.auth.admin.deleteUser(userData.user.id);
+      return NextResponse.json({ error: "Impossibile creare il ristorante." }, { status: 500 });
+    }
+
+    const { error: staffError } = await supabase.from("staff").insert({
+      auth_user_id: userData.user.id,
+      full_name: fullName || "Titolare",
+      role: "admin",
+      restaurant_id: restaurant.id,
+    });
+
+    if (staffError) {
+      console.error("Errore collegamento staff:", staffError);
+      await supabase.auth.admin.deleteUser(userData.user.id);
+      return NextResponse.json({ error: "Impossibile completare la registrazione." }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Errore registrazione:", err);
+    return NextResponse.json({ error: "Richiesta non valida." }, { status: 400 });
+  }
+}
