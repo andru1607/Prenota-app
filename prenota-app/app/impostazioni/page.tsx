@@ -12,8 +12,17 @@ import {
   Check,
   Image as ImageIcon,
   Loader2,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+}
 
 export default function ImpostazioniPage() {
   const router = useRouter();
@@ -32,6 +41,72 @@ export default function ImpostazioniPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
+  const [pushError, setPushError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function checkPushStatus() {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+      setPushSupported(true);
+
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      const existing = await registration.pushManager.getSubscription();
+      setPushEnabled(!!existing);
+    }
+    checkPushStatus();
+  }, []);
+
+  async function handleTogglePush() {
+    setPushError(null);
+    setPushLoading(true);
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+
+      if (pushEnabled) {
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+          await fetch("/api/push/subscribe", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ endpoint: subscription.endpoint }),
+          });
+          await subscription.unsubscribe();
+        }
+        setPushEnabled(false);
+      } else {
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          setPushError("Permesso negato. Puoi attivarlo dalle impostazioni del telefono.");
+          return;
+        }
+
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(
+            process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
+          ),
+        });
+
+        const res = await fetch("/api/push/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(subscription.toJSON()),
+        });
+
+        if (!res.ok) throw new Error("Errore attivazione");
+        setPushEnabled(true);
+      }
+    } catch (err) {
+      console.error(err);
+      setPushError("Non sono riuscito ad attivare le notifiche. Riprova.");
+    } finally {
+      setPushLoading(false);
+    }
+  }
 
   useEffect(() => {
     async function loadRestaurant() {
@@ -229,6 +304,37 @@ export default function ImpostazioniPage() {
           >
             Genera QR code da stampare
           </a>
+        </div>
+      )}
+
+      {pushSupported && (
+        <div className="mb-3 rounded-xl border border-black/5 bg-white p-4">
+          <div className="mb-2 flex items-center gap-3">
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+              {pushEnabled ? <Bell size={18} /> : <BellOff size={18} />}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-ink">Notifiche push</p>
+              <p className="text-xs text-ink-muted">
+                Ricevi un avviso sul telefono quando arriva una nuova richiesta di prenotazione
+              </p>
+            </div>
+          </div>
+
+          {pushError && <p className="mb-2 text-sm text-status-danger">{pushError}</p>}
+
+          <button
+            onClick={handleTogglePush}
+            disabled={pushLoading}
+            className={`touch-target flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium disabled:opacity-50 ${
+              pushEnabled
+                ? "border border-black/10 text-ink-muted"
+                : "bg-primary text-white"
+            }`}
+          >
+            {pushLoading && <Loader2 size={16} className="animate-spin" />}
+            {pushEnabled ? "Disattiva notifiche" : "Attiva notifiche"}
+          </button>
         </div>
       )}
 
