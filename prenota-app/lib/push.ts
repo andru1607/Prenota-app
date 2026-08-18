@@ -13,10 +13,17 @@ export async function sendPushToRestaurant(
 ) {
   const supabase = createAdminClient();
 
-  const { data: subscriptions } = await supabase
+  const { data: subscriptions, error: fetchError } = await supabase
     .from("push_subscriptions")
     .select("*")
     .eq("restaurant_id", restaurantId);
+
+  if (fetchError) {
+    console.error("Errore lettura iscrizioni push:", fetchError);
+    return;
+  }
+
+  console.log(`Trovate ${subscriptions?.length ?? 0} iscrizioni per il ristorante ${restaurantId}`);
 
   if (!subscriptions || subscriptions.length === 0) return;
 
