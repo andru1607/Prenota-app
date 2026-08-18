@@ -2,7 +2,7 @@ import webpush from "web-push";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 webpush.setVapidDetails(
-  "mailto:notifiche@prenota-app.local",
+  "mailto:alexandrut04@gmail.com",
   process.env.VAPID_PUBLIC_KEY!,
   process.env.VAPID_PRIVATE_KEY!
 );
