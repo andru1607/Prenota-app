@@ -1,36 +1,121 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BarChart3, ChevronRight, LogOut, QrCode, Copy, Check } from "lucide-react";
+import {
+  BarChart3,
+  ChevronRight,
+  LogOut,
+  QrCode,
+  Copy,
+  Check,
+  Image as ImageIcon,
+  Loader2,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ImpostazioniPage() {
   const router = useRouter();
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [link, setLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const [name, setName] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("#4F46E5");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    async function loadLink() {
+    async function loadRestaurant() {
       const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data } = await supabase
+      const { data: staffRow } = await supabase
         .from("staff")
         .select("restaurant_id")
         .eq("auth_user_id", user.id)
         .single();
 
-      if (data?.restaurant_id) {
-        setLink(`${window.location.origin}/richiesta/${data.restaurant_id}`);
+      if (!staffRow?.restaurant_id) return;
+
+      setRestaurantId(staffRow.restaurant_id);
+      setLink(`${window.location.origin}/richiesta/${staffRow.restaurant_id}`);
+
+      const { data: restaurant } = await supabase
+        .from("restaurants")
+        .select("name, logo_url, primary_color")
+        .eq("id", staffRow.restaurant_id)
+        .single();
+
+      if (restaurant) {
+        setName(restaurant.name ?? "");
+        setLogoUrl(restaurant.logo_url ?? null);
+        setPrimaryColor(restaurant.primary_color ?? "#4F46E5");
       }
     }
-    loadLink();
+    loadRestaurant();
   }, []);
+
+  function handleLogoSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  }
+
+  async function handleSave() {
+    if (!restaurantId) return;
+    setIsSaving(true);
+    setError(null);
+    setSaved(false);
+
+    try {
+      const supabase = createClient();
+      let finalLogoUrl = logoUrl;
+
+      if (logoFile) {
+        const ext = logoFile.name.split(".").pop() || "jpg";
+        const path = `${restaurantId}/logo.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("logos")
+          .upload(path, logoFile, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage.from("logos").getPublicUrl(path);
+        finalLogoUrl = publicUrlData.publicUrl;
+      }
+
+      const { error: updateError } = await supabase
+        .from("restaurants")
+        .update({ name, primary_color: primaryColor, logo_url: finalLogoUrl })
+        .eq("id", restaurantId);
+
+      if (updateError) throw updateError;
+
+      setLogoUrl(finalLogoUrl);
+      setLogoFile(null);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      console.error(err);
+      setError("Non sono riuscito a salvare le modifiche. Riprova.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   async function handleLogout() {
     const supabase = createClient();
@@ -49,6 +134,67 @@ export default function ImpostazioniPage() {
   return (
     <div className="p-4">
       <h1 className="mb-4 text-lg font-semibold text-ink">Impostazioni</h1>
+
+      <div className="mb-3 rounded-xl border border-black/5 bg-white p-4">
+        <p className="mb-3 text-sm font-medium text-ink">Personalizza la pagina prenotazioni</p>
+
+        <div className="mb-3 flex items-center gap-3">
+          <button
+            onClick={() => logoInputRef.current?.click()}
+            className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border border-dashed border-black/20 bg-bg-subtle"
+          >
+            {logoPreview || logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoPreview ?? logoUrl ?? ""} alt="Logo" className="h-full w-full object-cover" />
+            ) : (
+              <ImageIcon size={22} className="text-ink-muted" />
+            )}
+          </button>
+          <div className="flex-1">
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleLogoSelected}
+            />
+            <button
+              onClick={() => logoInputRef.current?.click()}
+              className="touch-target rounded-lg border border-black/10 px-3 py-2 text-xs font-medium text-ink-muted"
+            >
+              Scegli foto del logo
+            </button>
+          </div>
+        </div>
+
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Nome del ristorante"
+          className="mb-2 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+        />
+
+        <div className="mb-3 flex items-center gap-3">
+          <span className="text-sm text-ink-muted">Colore principale</span>
+          <input
+            type="color"
+            value={primaryColor}
+            onChange={(e) => setPrimaryColor(e.target.value)}
+            className="h-9 w-14 cursor-pointer rounded-lg border border-black/10"
+          />
+        </div>
+
+        {error && <p className="mb-2 text-sm text-status-danger">{error}</p>}
+
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-50"
+        >
+          {isSaving && <Loader2 size={16} className="animate-spin" />}
+          {saved ? "Salvato!" : isSaving ? "Salvo..." : "Salva personalizzazione"}
+        </button>
+      </div>
 
       {link && (
         <div className="mb-3 rounded-xl border border-black/5 bg-white p-4">
