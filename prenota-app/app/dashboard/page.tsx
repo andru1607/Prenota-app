@@ -167,41 +167,48 @@ export default function DashboardPage() {
   const previewList = allActive.slice(0, MAX_PREVIEW_ITEMS);
 
   async function handlePhotoSelected(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setError(null);
     setSkippedInfo(null);
     setIsProcessing(true);
 
     try {
-      const base64 = await fileToBase64(file);
-      const res = await fetch("/api/parse-agenda", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64, mediaType: file.type }),
-      });
+      const allDrafts: ParsedReservationDraft[] = [];
+      const allSkipped: string[] = [];
 
-      if (!res.ok) throw new Error("Errore nella lettura della foto");
+      for (const file of Array.from(files)) {
+        const base64 = await fileToBase64(file);
+        const res = await fetch("/api/parse-agenda", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64, mediaType: file.type }),
+        });
 
-      const { drafts, skipped } = await res.json();
+        if (!res.ok) throw new Error("Errore nella lettura di una delle foto");
 
-      if (skipped && skipped.length > 0) {
+        const { drafts, skipped } = await res.json();
+        if (drafts) allDrafts.push(...drafts);
+        if (skipped) allSkipped.push(...skipped);
+      }
+
+      if (allSkipped.length > 0) {
         setSkippedInfo(
-          `${skipped.length} già presenti, escluse automaticamente: ${skipped.join(", ")}`
+          `${allSkipped.length} già presenti, escluse automaticamente: ${allSkipped.join(", ")}`
         );
       }
 
-      if (drafts && drafts.length > 0) {
-        setDrafts(drafts);
-      } else if (skipped && skipped.length > 0) {
+      if (allDrafts.length > 0) {
+        setDrafts(allDrafts);
+      } else if (allSkipped.length > 0) {
         setError(null);
       } else {
-        setError("Non ho trovato nessuna prenotazione leggibile in questa foto.");
+        setError("Non ho trovato nessuna prenotazione leggibile in queste foto.");
       }
     } catch (err) {
       console.error(err);
-      setError("Non sono riuscito a leggere l'agenda. Riprova con una foto più nitida.");
+      setError("Non sono riuscito a leggere una o più foto. Riprova con foto più nitide.");
     } finally {
       setIsProcessing(false);
       e.target.value = "";
@@ -262,6 +269,7 @@ export default function DashboardPage() {
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              multiple
               className="hidden"
               onChange={handlePhotoSelected}
             />
