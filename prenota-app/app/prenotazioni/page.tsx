@@ -273,6 +273,8 @@ export default function PrenotazioniPage() {
               onNoShow={() => updateStatus(r.id, "no_show")}
               onCancel={() => updateStatus(r.id, "cancelled")}
               onDelete={() => deleteOne(r.id)}
+              onAccept={() => updateStatus(r.id, "confirmed")}
+              onReject={() => updateStatus(r.id, "cancelled")}
             />
           ))}
         </div>
