@@ -28,7 +28,11 @@ export async function sendPushToRestaurant(
             endpoint: sub.endpoint,
             keys: { p256dh: sub.p256dh, auth: sub.auth },
           },
-          JSON.stringify(payload)
+          JSON.stringify(payload),
+          {
+            urgency: "high",
+            TTL: 60,
+          }
         );
       } catch (err: any) {
         if (err?.statusCode === 404 || err?.statusCode === 410) {
