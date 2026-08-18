@@ -17,7 +17,8 @@
     "@anthropic-ai/sdk": "^0.27.0",
     "lucide-react": "^0.400.0",
     "date-fns": "^3.6.0",
-    "clsx": "^2.1.1"
+    "clsx": "^2.1.1",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "typescript": "^5.5.0",
@@ -28,6 +29,7 @@
     "postcss": "^8.4.0",
     "autoprefixer": "^10.4.0",
     "eslint": "^8.57.0",
-    "eslint-config-next": "^14.2.0"
+    "eslint-config-next": "^14.2.0",
+    "@types/web-push": "^3.6.3"
   }
 }
