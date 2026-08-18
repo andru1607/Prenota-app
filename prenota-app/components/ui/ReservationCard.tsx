@@ -25,6 +25,8 @@ interface ReservationCardProps {
   onNoShow?: () => void;
   onCancel?: () => void;
   onDelete?: () => void;
+  onAccept?: () => void;
+  onReject?: () => void;
 }
 
 export function ReservationCard({
@@ -33,6 +35,8 @@ export function ReservationCard({
   onNoShow,
   onCancel,
   onDelete,
+  onAccept,
+  onReject,
 }: ReservationCardProps) {
   const time = new Date(reservation.reservationTime).toLocaleTimeString("it-IT", {
     hour: "2-digit",
@@ -44,6 +48,8 @@ export function ReservationCard({
     reservation.status === "no_show" ||
     reservation.status === "cancelled";
 
+  const isPending = reservation.status === "pending";
+
   return (
     <div className="overflow-hidden rounded-xl bg-white shadow-sm">
       <div className="flex">
@@ -53,6 +59,11 @@ export function ReservationCard({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <p className="truncate font-semibold text-ink">{reservation.customerName}</p>
+              {reservation.source === "public" && (
+                <span className="shrink-0 rounded-full bg-primary-light px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                  Richiesta cliente
+                </span>
+              )}
             </div>
             <div className="mt-0.5 flex items-center gap-3 text-sm text-ink-muted">
               <span className="num-tabular font-medium text-ink">{time}</span>
@@ -66,7 +77,28 @@ export function ReservationCard({
           </div>
 
           <div className="flex shrink-0 items-center gap-1">
-            {!isFinal && onCheckIn && (
+            {isPending && onAccept && (
+              <button
+                onClick={onAccept}
+                className="touch-target grid place-items-center rounded-lg text-status-free hover:bg-status-freeBg"
+                aria-label="Accetta richiesta"
+                title="Accetta"
+              >
+                <Check size={20} />
+              </button>
+            )}
+            {isPending && onReject && (
+              <button
+                onClick={onReject}
+                className="touch-target grid place-items-center rounded-lg text-status-danger hover:bg-status-dangerBg"
+                aria-label="Rifiuta richiesta"
+                title="Rifiuta"
+              >
+                <X size={20} />
+              </button>
+            )}
+
+            {!isFinal && !isPending && onCheckIn && (
               <button
                 onClick={onCheckIn}
                 className="touch-target grid place-items-center rounded-lg text-status-free hover:bg-status-freeBg"
@@ -76,7 +108,7 @@ export function ReservationCard({
                 <Check size={20} />
               </button>
             )}
-            {!isFinal && onNoShow && (
+            {!isFinal && !isPending && onNoShow && (
               <button
                 onClick={onNoShow}
                 className="touch-target grid place-items-center rounded-lg text-status-danger hover:bg-status-dangerBg"
@@ -86,7 +118,7 @@ export function ReservationCard({
                 <UserX size={20} />
               </button>
             )}
-            {!isFinal && onCancel && (
+            {!isFinal && !isPending && onCancel && (
               <button
                 onClick={onCancel}
                 className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
