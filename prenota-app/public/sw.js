@@ -11,8 +11,6 @@ self.addEventListener("push", (event) => {
   const title = payload.title || "Prenota";
   const options = {
     body: payload.body || "",
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
     data: { url: payload.url || "/prenotazioni" },
   };
 
