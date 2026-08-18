@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+export async function GET(req: NextRequest) {
+  const restaurantId = req.nextUrl.searchParams.get("restaurantId");
+
+  if (!restaurantId) {
+    return NextResponse.json({ error: "Parametro 'restaurantId' obbligatorio." }, { status: 400 });
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("restaurants")
+    .select("name, logo_url, primary_color")
+    .eq("id", restaurantId)
+    .single();
+
+  if (error || !data) {
+    return NextResponse.json({ error: "Ristorante non trovato." }, { status: 404 });
+  }
+
+  return NextResponse.json({ restaurant: data });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { restaurantId, customerName, phone, date, time, partySize } = await req.json();
