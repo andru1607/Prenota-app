@@ -1,8 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { CalendarCheck, Loader2, Check } from "lucide-react";
+
+interface RestaurantBranding {
+  name: string;
+  logo_url: string | null;
+  primary_color: string;
+}
 
 function todayDateString(): string {
   const d = new Date();
@@ -16,6 +22,8 @@ export default function RichiestaPage() {
   const params = useParams();
   const restaurantId = params.restaurantId as string;
 
+  const [branding, setBranding] = useState<RestaurantBranding | null>(null);
+
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [date, setDate] = useState(todayDateString());
@@ -24,6 +32,17 @@ export default function RichiestaPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<"confirmed" | "pending" | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/richiesta?restaurantId=${restaurantId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => {
+        if (body?.restaurant) setBranding(body.restaurant);
+      })
+      .catch(() => {});
+  }, [restaurantId]);
+
+  const color = branding?.primary_color || "#4F46E5";
 
   function formatTimeInput(raw: string) {
     const digits = raw.replace(/\D/g, "").slice(0, 4);
@@ -104,10 +123,25 @@ export default function RichiestaPage() {
     <div className="flex min-h-screen items-center justify-center bg-bg p-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-sm">
         <div className="mb-4 flex flex-col items-center gap-2 text-center">
-          <div className="grid h-12 w-12 place-items-center rounded-full bg-primary-light text-primary">
-            <CalendarCheck size={22} />
-          </div>
-          <h1 className="text-lg font-semibold text-ink">Richiedi una prenotazione</h1>
+          {branding?.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={branding.logo_url}
+              alt={branding.name}
+              className="h-16 w-16 rounded-full object-cover"
+            />
+          ) : (
+            <div
+              className="grid h-12 w-12 place-items-center rounded-full"
+              style={{ backgroundColor: color + "20", color }}
+            >
+              <CalendarCheck size={22} />
+            </div>
+          )}
+          <h1 className="text-lg font-semibold text-ink">
+            {branding?.name || "Richiedi una prenotazione"}
+          </h1>
+          {branding?.name && <p className="text-sm text-ink-muted">Richiedi una prenotazione</p>}
         </div>
 
         <div className="space-y-2">
@@ -155,7 +189,8 @@ export default function RichiestaPage() {
         <button
           type="submit"
           disabled={!isValid || isLoading}
-          className="touch-target mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-40"
+          style={{ backgroundColor: color }}
+          className="touch-target mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium text-white disabled:opacity-40"
         >
           {isLoading && <Loader2 size={18} className="animate-spin" />}
           {isLoading ? "Invio..." : "Invia richiesta"}
