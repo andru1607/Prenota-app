@@ -8,13 +8,16 @@ export async function GET(req: NextRequest) {
   const date = req.nextUrl.searchParams.get("date");
   const from = req.nextUrl.searchParams.get("from");
   const to = req.nextUrl.searchParams.get("to");
+  const phone = req.nextUrl.searchParams.get("phone");
 
   let query = supabase
     .from("reservations")
     .select("*")
     .order("reservation_time", { ascending: true });
 
-  if (date) {
+  if (phone) {
+    query = query.eq("phone", phone);
+  } else if (date) {
     const start = `${date}T00:00:00`;
     const end = `${date}T23:59:59`;
     query = query.gte("reservation_time", start).lte("reservation_time", end);
