@@ -15,6 +15,15 @@ function mapTableRow(row: any): RestaurantTable {
   };
 }
 
+function sortTablesByNumber(tables: RestaurantTable[]): RestaurantTable[] {
+  return [...tables].sort((a, b) => {
+    const numA = Number(a.number);
+    const numB = Number(b.number);
+    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+    return a.number.localeCompare(b.number);
+  });
+}
+
 export default function TavoliPage() {
   const router = useRouter();
   const [tables, setTables] = useState<RestaurantTable[]>([]);
@@ -38,7 +47,7 @@ export default function TavoliPage() {
       const res = await fetch("/api/tables");
       if (!res.ok) throw new Error("Errore nel caricamento");
       const { tables: data } = await res.json();
-      setTables((data ?? []).map(mapTableRow));
+      setTables(sortTablesByNumber((data ?? []).map(mapTableRow)));
     } catch (err) {
       console.error(err);
       setError("Non sono riuscito a caricare i tavoli.");
