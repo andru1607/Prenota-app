@@ -14,6 +14,7 @@ import {
   Loader2,
   Bell,
   BellOff,
+  UtensilsCrossed,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -337,6 +338,22 @@ export default function ImpostazioniPage() {
           </button>
         </div>
       )}
+
+      <Link
+        href="/tavoli"
+        className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+      >
+        <div className="flex items-center gap-3">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+            <UtensilsCrossed size={18} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-ink">Tavoli</p>
+            <p className="text-xs text-ink-muted">Aggiungi, modifica ed elimina i tavoli del locale</p>
+          </div>
+        </div>
+        <ChevronRight size={18} className="text-ink-muted" />
+      </Link>
 
       <Link
         href="/statistiche"
