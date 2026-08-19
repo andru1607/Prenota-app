@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToRestaurant } from "@/lib/push";
+import { upsertCustomerFromReservation } from "@/lib/customers";
 
 export async function GET(req: NextRequest) {
   const restaurantId = req.nextUrl.searchParams.get("restaurantId");
@@ -65,16 +66,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Impossibile inviare la richiesta." }, { status: 500 });
     }
 
+    await upsertCustomerFromReservation(supabase, restaurantId, customerName, phone);
+
     const notificationBody =
       status === "confirmed"
         ? `${customerName} ha prenotato per ${size} persone alle ${time}`
         : `${customerName} chiede un tavolo da ${size} persone alle ${time} — da confermare`;
 
-    sendPushToRestaurant(restaurantId, {
-      title: status === "confirmed" ? "Nuova prenotazione" : "Richiesta da confermare",
-      body: notificationBody,
-      url: "/prenotazioni",
-    }).catch((err) => console.error("Errore invio notifica:", err));
+    try {
+      await sendPushToRestaurant(restaurantId, {
+        title: status === "confirmed" ? "Nuova prenotazione" : "Richiesta da confermare",
+        body: notificationBody,
+        url: "/prenotazioni",
+      });
+    } catch (err) {
+      console.error("Errore invio notifica:", err);
+    }
 
     return NextResponse.json({ success: true, status });
   } catch (err) {
