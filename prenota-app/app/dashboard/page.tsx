@@ -48,6 +48,15 @@ function mapTableRow(row: any): RestaurantTable {
   };
 }
 
+function sortTablesByNumber(tables: RestaurantTable[]): RestaurantTable[] {
+  return [...tables].sort((a, b) => {
+    const numA = Number(a.number);
+    const numB = Number(b.number);
+    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+    return a.number.localeCompare(b.number);
+  });
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -98,12 +107,12 @@ export default function DashboardPage() {
         });
         if (seedRes.ok) {
           const { tables: seeded } = await seedRes.json();
-          setTables((seeded ?? []).map(mapTableRow));
+          setTables(sortTablesByNumber((seeded ?? []).map(mapTableRow)));
         }
         return;
       }
 
-      setTables(data.map(mapTableRow));
+      setTables(sortTablesByNumber(data.map(mapTableRow)));
     } catch (err) {
       console.error("Errore caricamento tavoli:", err);
     }
