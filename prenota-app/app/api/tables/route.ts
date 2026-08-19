@@ -54,15 +54,20 @@ export async function PATCH(req: NextRequest) {
   const supabase = createClient();
 
   try {
-    const { id, status } = await req.json();
+    const { id, status, number, capacity } = await req.json();
 
-    if (!id || !status) {
-      return NextResponse.json({ error: "Parametri 'id' e 'status' obbligatori." }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
     }
+
+    const updates: Record<string, unknown> = {};
+    if (status !== undefined) updates.status = status;
+    if (number !== undefined) updates.number = number;
+    if (capacity !== undefined) updates.capacity = capacity;
 
     const { data, error } = await supabase
       .from("tables")
-      .update({ status })
+      .update(updates)
       .eq("id", id)
       .select()
       .single();
@@ -77,4 +82,22 @@ export async function PATCH(req: NextRequest) {
     console.error("Errore richiesta aggiornamento tavolo:", err);
     return NextResponse.json({ error: "Richiesta non valida." }, { status: 400 });
   }
+}
+
+export async function DELETE(req: NextRequest) {
+  const supabase = createClient();
+  const id = req.nextUrl.searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
+  }
+
+  const { error } = await supabase.from("tables").delete().eq("id", id);
+
+  if (error) {
+    console.error("Errore eliminazione tavolo:", error);
+    return NextResponse.json({ error: "Impossibile eliminare il tavolo." }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
 }
