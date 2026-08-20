@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Star, Trash2, Check, Loader2 } from "lucide-react";
 import { ReservationCard } from "@/components/ui/ReservationCard";
+import { getMyRole } from "@/lib/roles";
 import type { Customer, Reservation } from "@/types";
 
 function mapCustomerRow(row: any): Customer {
@@ -38,6 +39,7 @@ export default function ClienteDettaglioPage() {
   const customerId = params.id as string;
 
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [history, setHistory] = useState<Reservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +86,7 @@ export default function ClienteDettaglioPage() {
 
   useEffect(() => {
     load();
+    getMyRole().then((role) => setIsAdmin(role === "admin"));
   }, [load]);
 
   async function handleSaveNotes() {
@@ -141,6 +144,7 @@ export default function ClienteDettaglioPage() {
           </div>
           <p className="text-sm text-ink-muted">{customer.phone || "Nessun telefono"}</p>
         </div>
+        {isAdmin && (
         <button
           onClick={handleDelete}
           className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
@@ -148,6 +152,7 @@ export default function ClienteDettaglioPage() {
         >
           <Trash2 size={18} />
         </button>
+        )}
       </div>
 
       <div className="mb-4 grid grid-cols-2 gap-3 rounded-xl border border-black/5 bg-white p-4">
