@@ -84,11 +84,13 @@ export default function ProfiloPage() {
         .eq("id", staffId);
       if (staffError) throw staffError;
 
-      const { error: restaurantError } = await supabase
-        .from("restaurants")
-        .update({ name: restaurantName })
-        .eq("id", restaurantId);
-      if (restaurantError) throw restaurantError;
+      if (role === "admin") {
+        const { error: restaurantError } = await supabase
+          .from("restaurants")
+          .update({ name: restaurantName })
+          .eq("id", restaurantId);
+        if (restaurantError) throw restaurantError;
+      }
 
       setProfileSaved(true);
       setTimeout(() => setProfileSaved(false), 2500);
@@ -197,12 +199,18 @@ export default function ProfiloPage() {
           <Store size={16} className="text-ink-muted" />
           <p className="text-sm font-medium text-ink">Nome del ristorante</p>
         </div>
-        <input
-          value={restaurantName}
-          onChange={(e) => setRestaurantName(e.target.value)}
-          placeholder="Nome del ristorante"
-          className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
-        />
+        {role === "admin" ? (
+          <input
+            value={restaurantName}
+            onChange={(e) => setRestaurantName(e.target.value)}
+            placeholder="Nome del ristorante"
+            className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+          />
+        ) : (
+          <p className="rounded-lg bg-bg-subtle px-3 py-2 text-sm text-ink-muted">
+            {restaurantName}
+          </p>
+        )}
 
         <button
           onClick={handleSaveProfile}
