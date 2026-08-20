@@ -14,7 +14,9 @@ export async function GET(req: NextRequest) {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("restaurants")
-    .select("name, logo_url, primary_color, closed_weekdays")
+    .select(
+      "name, logo_url, primary_color, closed_weekdays, description, address, contact_phone, opening_hours_text"
+    )
     .eq("id", restaurantId)
     .single();
 
@@ -29,7 +31,18 @@ export async function GET(req: NextRequest) {
     .eq("restaurant_id", restaurantId)
     .gte("date", today);
 
-  return NextResponse.json({ restaurant: data, exceptions: exceptions ?? [] });
+  const { data: menuItems } = await supabase
+    .from("menu_items")
+    .select("*")
+    .eq("restaurant_id", restaurantId)
+    .order("category", { ascending: true })
+    .order("position", { ascending: true });
+
+  return NextResponse.json({
+    restaurant: data,
+    exceptions: exceptions ?? [],
+    menuItems: menuItems ?? [],
+  });
 }
 
 export async function POST(req: NextRequest) {
