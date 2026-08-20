@@ -15,6 +15,7 @@ import {
   Bell,
   BellOff,
   UtensilsCrossed,
+  CalendarX,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -338,6 +339,22 @@ export default function ImpostazioniPage() {
           </button>
         </div>
       )}
+
+      <Link
+        href="/orari"
+        className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+      >
+        <div className="flex items-center gap-3">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+            <CalendarX size={18} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-ink">Orari e chiusure</p>
+            <p className="text-xs text-ink-muted">Giorni di chiusura settimanali ed eccezioni</p>
+          </div>
+        </div>
+        <ChevronRight size={18} className="text-ink-muted" />
+      </Link>
 
       <Link
         href="/tavoli"
