@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { CalendarCheck, Loader2, Check } from "lucide-react";
+import { CalendarCheck, Loader2, Check, CalendarX } from "lucide-react";
+import { isDateOpen, type ScheduleException } from "@/lib/schedule";
 
 interface RestaurantBranding {
   name: string;
   logo_url: string | null;
   primary_color: string;
+  closed_weekdays: number[];
 }
 
 function todayDateString(): string {
@@ -23,6 +25,7 @@ export default function RichiestaPage() {
   const restaurantId = params.restaurantId as string;
 
   const [branding, setBranding] = useState<RestaurantBranding | null>(null);
+  const [exceptions, setExceptions] = useState<ScheduleException[]>([]);
 
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
@@ -38,11 +41,17 @@ export default function RichiestaPage() {
       .then((res) => (res.ok ? res.json() : null))
       .then((body) => {
         if (body?.restaurant) setBranding(body.restaurant);
+        if (body?.exceptions) setExceptions(body.exceptions);
       })
       .catch(() => {});
   }, [restaurantId]);
 
   const color = branding?.primary_color || "#4F46E5";
+
+  const isRestaurantOpen =
+    date && branding
+      ? isDateOpen(date, branding.closed_weekdays ?? [], exceptions)
+      : true;
 
   function formatTimeInput(raw: string) {
     const digits = raw.replace(/\D/g, "").slice(0, 4);
@@ -54,7 +63,8 @@ export default function RichiestaPage() {
     customerName.trim().length > 0 &&
     /^\d{1,2}:\d{2}$/.test(time) &&
     Number(partySize) > 0 &&
-    date.length > 0;
+    date.length > 0 &&
+    isRestaurantOpen;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -183,6 +193,13 @@ export default function RichiestaPage() {
             />
           </div>
         </div>
+
+        {!isRestaurantOpen && (
+          <p className="mt-2 flex items-center gap-1.5 text-sm text-status-danger">
+            <CalendarX size={15} />
+            Il ristorante è chiuso in questa data. Scegli un altro giorno.
+          </p>
+        )}
 
         {error && <p className="mt-2 text-sm text-status-danger">{error}</p>}
 
