@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { CalendarCheck, Loader2, Check, CalendarX } from "lucide-react";
+import { CalendarCheck, Loader2, Check, CalendarX, MapPin, Phone, Clock, UtensilsCrossed } from "lucide-react";
 import { isDateOpen, type ScheduleException } from "@/lib/schedule";
 
 interface RestaurantBranding {
@@ -10,6 +10,18 @@ interface RestaurantBranding {
   logo_url: string | null;
   primary_color: string;
   closed_weekdays: number[];
+  description: string | null;
+  address: string | null;
+  contact_phone: string | null;
+  opening_hours_text: string | null;
+}
+
+interface MenuItem {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number | null;
+  category: string | null;
 }
 
 function todayDateString(): string {
@@ -20,12 +32,25 @@ function todayDateString(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+function groupMenuByCategory(items: MenuItem[]): { category: string; items: MenuItem[] }[] {
+  const groups = new Map<string, MenuItem[]>();
+  for (const item of items) {
+    const key = item.category?.trim() || "Menu";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(item);
+  }
+  return Array.from(groups.entries()).map(([category, items]) => ({ category, items }));
+}
+
 export default function RichiestaPage() {
   const params = useParams();
   const restaurantId = params.restaurantId as string;
 
   const [branding, setBranding] = useState<RestaurantBranding | null>(null);
   const [exceptions, setExceptions] = useState<ScheduleException[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showForm, setShowForm] = useState(false);
 
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
@@ -42,6 +67,7 @@ export default function RichiestaPage() {
       .then((body) => {
         if (body?.restaurant) setBranding(body.restaurant);
         if (body?.exceptions) setExceptions(body.exceptions);
+        if (body?.menuItems) setMenuItems(body.menuItems);
       })
       .catch(() => {});
   }, [restaurantId]);
@@ -129,9 +155,11 @@ export default function RichiestaPage() {
     );
   }
 
+  const menuGroups = groupMenuByCategory(menuItems);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-bg p-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-sm">
+    <div className="min-h-screen bg-bg p-4">
+      <div className="mx-auto w-full max-w-sm">
         <div className="mb-4 flex flex-col items-center gap-2 text-center">
           {branding?.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -148,76 +176,176 @@ export default function RichiestaPage() {
               <CalendarCheck size={22} />
             </div>
           )}
-          <h1 className="text-lg font-semibold text-ink">
-            {branding?.name || "Richiedi una prenotazione"}
-          </h1>
-          {branding?.name && <p className="text-sm text-ink-muted">Richiedi una prenotazione</p>}
+          <h1 className="text-lg font-semibold text-ink">{branding?.name || "Ristorante"}</h1>
         </div>
 
-        <div className="space-y-2">
-          <input
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
-            placeholder="Nome e cognome"
-            autoFocus
-            className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm"
-          />
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Telefono"
-            className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm"
-          />
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm text-ink"
-          />
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              value={time}
-              onChange={(e) => setTime(formatTimeInput(e.target.value))}
-              placeholder="Orario (HH:MM)"
-              inputMode="numeric"
-              maxLength={5}
-              className="num-tabular rounded-lg border border-black/10 px-3 py-2.5 text-sm"
-            />
-            <input
-              type="number"
-              value={partySize}
-              onChange={(e) => setPartySize(e.target.value)}
-              placeholder="Persone"
-              className="num-tabular rounded-lg border border-black/10 px-3 py-2.5 text-sm"
-            />
+        {(branding?.description ||
+          branding?.address ||
+          branding?.contact_phone ||
+          branding?.opening_hours_text) && (
+          <div className="mb-4 rounded-2xl bg-white p-4 shadow-sm">
+            {branding.description && (
+              <p className="mb-3 text-sm text-ink">{branding.description}</p>
+            )}
+
+            <div className="space-y-2">
+              {branding.address && (
+                <a
+                  href={`https://maps.google.com/?q=${encodeURIComponent(branding.address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-start gap-2 text-sm text-ink-muted"
+                >
+                  <MapPin size={15} className="mt-0.5 shrink-0" style={{ color }} />
+                  <span className="underline">{branding.address}</span>
+                </a>
+              )}
+              {branding.contact_phone && (
+                <a
+                  href={`tel:${branding.contact_phone}`}
+                  className="flex items-center gap-2 text-sm text-ink-muted"
+                >
+                  <Phone size={15} className="shrink-0" style={{ color }} />
+                  <span className="underline">{branding.contact_phone}</span>
+                </a>
+              )}
+              {branding.opening_hours_text && (
+                <div className="flex items-start gap-2 text-sm text-ink-muted">
+                  <Clock size={15} className="mt-0.5 shrink-0" style={{ color }} />
+                  <span className="whitespace-pre-line">{branding.opening_hours_text}</span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-
-        {!isRestaurantOpen && (
-          <p className="mt-2 flex items-center gap-1.5 text-sm text-status-danger">
-            <CalendarX size={15} />
-            Il ristorante è chiuso in questa data. Scegli un altro giorno.
-          </p>
         )}
 
-        {error && <p className="mt-2 text-sm text-status-danger">{error}</p>}
+        {menuGroups.length > 0 && (
+          <div className="mb-4 rounded-2xl bg-white p-4 shadow-sm">
+            <button
+              onClick={() => setShowMenu((v) => !v)}
+              className="touch-target flex w-full items-center justify-between"
+            >
+              <span className="flex items-center gap-2 text-sm font-semibold text-ink">
+                <UtensilsCrossed size={16} style={{ color }} />
+                Menu
+              </span>
+              <span className="text-xs font-medium" style={{ color }}>
+                {showMenu ? "Nascondi" : "Vedi il menu"}
+              </span>
+            </button>
 
-        <button
-          type="submit"
-          disabled={!isValid || isLoading}
-          style={{ backgroundColor: color }}
-          className="touch-target mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium text-white disabled:opacity-40"
-        >
-          {isLoading && <Loader2 size={18} className="animate-spin" />}
-          {isLoading ? "Invio..." : "Invia richiesta"}
-        </button>
+            {showMenu && (
+              <div className="mt-3 space-y-4">
+                {menuGroups.map((group) => (
+                  <div key={group.category}>
+                    <p className="mb-1.5 text-xs font-semibold uppercase text-ink-muted">
+                      {group.category}
+                    </p>
+                    <div className="space-y-2">
+                      {group.items.map((item) => (
+                        <div key={item.id} className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-sm text-ink">{item.name}</p>
+                            {item.description && (
+                              <p className="text-xs text-ink-muted">{item.description}</p>
+                            )}
+                          </div>
+                          {item.price !== null && (
+                            <p className="num-tabular shrink-0 text-sm font-medium text-ink">
+                              €{Number(item.price).toFixed(2)}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-        <p className="mt-3 text-center text-xs text-ink-muted">
-          Fino a 6 persone la prenotazione viene confermata subito. Per gruppi più
-          numerosi il ristorante ti contatterà per confermare.
-        </p>
-      </form>
+        {!showForm && (
+          <button
+            onClick={() => setShowForm(true)}
+            style={{ backgroundColor: color }}
+            className="touch-target flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-medium text-white"
+          >
+            <CalendarCheck size={18} />
+            Prenota un tavolo
+          </button>
+        )}
+
+        {showForm && (
+          <form onSubmit={handleSubmit} className="rounded-2xl bg-white p-6 shadow-sm">
+            <h2 className="mb-3 text-base font-semibold text-ink">Richiedi una prenotazione</h2>
+
+            <div className="space-y-2">
+              <input
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="Nome e cognome"
+                autoFocus
+                className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm"
+              />
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Telefono"
+                className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm"
+              />
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm text-ink"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  value={time}
+                  onChange={(e) => setTime(formatTimeInput(e.target.value))}
+                  placeholder="Orario (HH:MM)"
+                  inputMode="numeric"
+                  maxLength={5}
+                  className="num-tabular rounded-lg border border-black/10 px-3 py-2.5 text-sm"
+                />
+                <input
+                  type="number"
+                  value={partySize}
+                  onChange={(e) => setPartySize(e.target.value)}
+                  placeholder="Persone"
+                  className="num-tabular rounded-lg border border-black/10 px-3 py-2.5 text-sm"
+                />
+              </div>
+            </div>
+
+            {!isRestaurantOpen && (
+              <p className="mt-2 flex items-center gap-1.5 text-sm text-status-danger">
+                <CalendarX size={15} />
+                Il ristorante è chiuso in questa data. Scegli un altro giorno.
+              </p>
+            )}
+
+            {error && <p className="mt-2 text-sm text-status-danger">{error}</p>}
+
+            <button
+              type="submit"
+              disabled={!isValid || isLoading}
+              style={{ backgroundColor: color }}
+              className="touch-target mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium text-white disabled:opacity-40"
+            >
+              {isLoading && <Loader2 size={18} className="animate-spin" />}
+              {isLoading ? "Invio..." : "Invia richiesta"}
+            </button>
+
+            <p className="mt-3 text-center text-xs text-ink-muted">
+              Fino a 6 persone la prenotazione viene confermata subito. Per gruppi più
+              numerosi il ristorante ti contatterà per confermare.
+            </p>
+          </form>
+        )}
+      </div>
     </div>
   );
 }
