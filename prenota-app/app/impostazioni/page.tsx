@@ -385,6 +385,7 @@ export default function ImpostazioniPage() {
       )}
 
       {isAdmin && (
+      <>
       <Link
         href="/vetrina"
         className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
@@ -416,6 +417,7 @@ export default function ImpostazioniPage() {
         </div>
         <ChevronRight size={18} className="text-ink-muted" />
       </Link>
+      </>
       )}
 
       <Link
