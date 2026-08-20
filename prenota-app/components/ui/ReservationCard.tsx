@@ -28,6 +28,7 @@ interface ReservationCardProps {
   onAccept?: () => void;
   onReject?: () => void;
   onEdit?: () => void;
+  tableNumber?: string;
 }
 
 export function ReservationCard({
@@ -39,6 +40,7 @@ export function ReservationCard({
   onAccept,
   onReject,
   onEdit,
+  tableNumber,
 }: ReservationCardProps) {
   const time = new Date(reservation.reservationTime).toLocaleTimeString("it-IT", {
     hour: "2-digit",
@@ -72,6 +74,11 @@ export function ReservationCard({
               <span className="flex items-center gap-1">
                 <Users size={14} /> {reservation.partySize}
               </span>
+              {tableNumber && (
+                <span className="rounded bg-bg-subtle px-1.5 py-0.5 text-xs font-medium text-ink-muted">
+                  Tavolo {tableNumber}
+                </span>
+              )}
               {isFinal && (
                 <span className="text-xs">{STATUS_LABEL[reservation.status]}</span>
               )}
