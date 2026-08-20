@@ -81,15 +81,24 @@ export async function PATCH(req: NextRequest) {
   const supabase = createClient();
 
   try {
-    const { id, status } = await req.json();
+    const { id, status, customerName, reservationTime, partySize, notes, date } = await req.json();
 
-    if (!id || !status) {
-      return NextResponse.json({ error: "Parametri 'id' e 'status' obbligatori." }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
+    }
+
+    const updates: Record<string, unknown> = {};
+    if (status !== undefined) updates.status = status;
+    if (customerName !== undefined) updates.customer_name = customerName;
+    if (partySize !== undefined) updates.party_size = partySize;
+    if (notes !== undefined) updates.notes = notes || null;
+    if (reservationTime !== undefined && date !== undefined) {
+      updates.reservation_time = buildTodayIsoTime(reservationTime, date);
     }
 
     const { data, error } = await supabase
       .from("reservations")
-      .update({ status })
+      .update(updates)
       .eq("id", id)
       .select()
       .single();
