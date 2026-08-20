@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, Loader2, Layers } from "lucide-react";
 import type { RestaurantTable } from "@/types";
+import { getMyRole } from "@/lib/roles";
 
 function mapTableRow(row: any): RestaurantTable {
   return {
@@ -27,6 +28,7 @@ function sortTablesByNumber(tables: RestaurantTable[]): RestaurantTable[] {
 export default function TavoliPage() {
   const router = useRouter();
   const [tables, setTables] = useState<RestaurantTable[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,6 +60,7 @@ export default function TavoliPage() {
 
   useEffect(() => {
     loadTables();
+    getMyRole().then((role) => setIsAdmin(role === "admin"));
   }, [loadTables]);
 
   async function handleAddTable() {
@@ -161,6 +164,7 @@ export default function TavoliPage() {
         <span className="text-sm text-ink-muted">{tables.length} totali</span>
       </div>
 
+      {isAdmin && (
       <div className="mb-3 rounded-xl border border-black/5 bg-white p-4">
         <p className="mb-2 text-sm font-medium text-ink">Aggiungi un tavolo</p>
         <div className="flex gap-2">
@@ -236,6 +240,7 @@ export default function TavoliPage() {
           </div>
         )}
       </div>
+      )}
 
       {error && (
         <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
@@ -257,15 +262,20 @@ export default function TavoliPage() {
               <div>
                 <p className="font-semibold text-ink">Tavolo {table.number}</p>
                 <div className="mt-1 flex items-center gap-1">
-                  <input
-                    type="number"
-                    value={table.capacity}
-                    onChange={(e) => handleCapacityChange(table.id, Number(e.target.value))}
-                    className="num-tabular w-14 rounded border border-black/10 px-1.5 py-1 text-xs"
-                  />
+                  {isAdmin ? (
+                    <input
+                      type="number"
+                      value={table.capacity}
+                      onChange={(e) => handleCapacityChange(table.id, Number(e.target.value))}
+                      className="num-tabular w-14 rounded border border-black/10 px-1.5 py-1 text-xs"
+                    />
+                  ) : (
+                    <span className="num-tabular text-xs text-ink">{table.capacity}</span>
+                  )}
                   <span className="text-xs text-ink-muted">coperti</span>
                 </div>
               </div>
+              {isAdmin && (
               <button
                 onClick={() => handleDelete(table.id, table.number)}
                 className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
@@ -273,6 +283,7 @@ export default function TavoliPage() {
               >
                 <Trash2 size={16} />
               </button>
+              )}
             </div>
           ))}
         </div>
