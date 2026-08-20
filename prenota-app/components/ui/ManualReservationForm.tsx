@@ -3,11 +3,17 @@
 import { useState } from "react";
 import { Check, Loader2, X } from "lucide-react";
 
+interface TableOption {
+  id: string;
+  number: string;
+}
+
 interface EditingReservation {
   customerName: string;
   reservationTime: string; // ISO
   partySize: number;
   notes?: string;
+  tableId?: string;
 }
 
 interface ManualReservationFormProps {
@@ -17,10 +23,12 @@ interface ManualReservationFormProps {
     partySize: number;
     notes: string;
     date: string;
+    tableId: string | null;
   }) => Promise<void>;
   onCancel: () => void;
   initialDate?: string;
   editingReservation?: EditingReservation;
+  tables?: TableOption[];
 }
 
 function todayDateString(): string {
@@ -53,6 +61,7 @@ export function ManualReservationForm({
   onCancel,
   initialDate,
   editingReservation,
+  tables,
 }: ManualReservationFormProps) {
   const editingDefaults = editingReservation
     ? isoToItalyDateAndTime(editingReservation.reservationTime)
@@ -65,6 +74,7 @@ export function ManualReservationForm({
   );
   const [notes, setNotes] = useState(editingReservation?.notes ?? "");
   const [date, setDate] = useState(editingDefaults?.date ?? initialDate ?? todayDateString());
+  const [tableId, setTableId] = useState(editingReservation?.tableId ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -93,6 +103,7 @@ export function ManualReservationForm({
         partySize: Number(partySize),
         notes: notes.trim(),
         date,
+        tableId: tableId || null,
       });
     } catch (err) {
       console.error(err);
@@ -156,6 +167,21 @@ export function ManualReservationForm({
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Note (allergie, richieste...)"
         />
+
+        {tables && tables.length > 0 && (
+          <select
+            value={tableId}
+            onChange={(e) => setTableId(e.target.value)}
+            className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm text-ink"
+          >
+            <option value="">Nessun tavolo assegnato</option>
+            {tables.map((t) => (
+              <option key={t.id} value={t.id}>
+                Tavolo {t.number}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {error && <p className="mt-2 text-sm text-status-danger">{error}</p>}
