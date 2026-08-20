@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getRestaurantId } from "@/lib/restaurant";
 
+async function requireAdmin(supabase: ReturnType<typeof createClient>): Promise<boolean> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data } = await supabase
+    .from("staff")
+    .select("role")
+    .eq("auth_user_id", user.id)
+    .single();
+
+  return data?.role === "admin";
+}
+
 export async function GET() {
   const supabase = createClient();
 
@@ -28,6 +43,18 @@ export async function POST(req: NextRequest) {
     }
 
     const restaurantId = await getRestaurantId(supabase);
+
+    const { count } = await supabase
+      .from("tables")
+      .select("*", { count: "exact", head: true })
+      .eq("restaurant_id", restaurantId);
+
+    if ((count ?? 0) > 0 && !(await requireAdmin(supabase))) {
+      return NextResponse.json(
+        { error: "Solo un amministratore può creare nuovi tavoli." },
+        { status: 403 }
+      );
+    }
 
     const rows = tables.map((t) => ({
       number: t.number,
@@ -60,6 +87,13 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
     }
 
+    if ((number !== undefined || capacity !== undefined) && !(await requireAdmin(supabase))) {
+      return NextResponse.json(
+        { error: "Solo un amministratore può modificare numero o capienza dei tavoli." },
+        { status: 403 }
+      );
+    }
+
     const updates: Record<string, unknown> = {};
     if (status !== undefined) updates.status = status;
     if (number !== undefined) updates.number = number;
@@ -90,6 +124,13 @@ export async function DELETE(req: NextRequest) {
 
   if (!id) {
     return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
+  }
+
+  if (!(await requireAdmin(supabase))) {
+    return NextResponse.json(
+      { error: "Solo un amministratore può eliminare i tavoli." },
+      { status: 403 }
+    );
   }
 
   const { error } = await supabase.from("tables").delete().eq("id", id);
