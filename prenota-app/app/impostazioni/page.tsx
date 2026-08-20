@@ -358,6 +358,22 @@ export default function ImpostazioniPage() {
       )}
 
       <Link
+        href="/vetrina"
+        className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+      >
+        <div className="flex items-center gap-3">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+            <UtensilsCrossed size={18} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-ink">Vetrina pubblica</p>
+            <p className="text-xs text-ink-muted">Descrizione, indirizzo, orari e menu per i clienti</p>
+          </div>
+        </div>
+        <ChevronRight size={18} className="text-ink-muted" />
+      </Link>
+
+      <Link
         href="/orari"
         className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
       >
