@@ -6,6 +6,11 @@ import { ReservationCard } from "@/components/ui/ReservationCard";
 import { ManualReservationForm } from "@/components/ui/ManualReservationForm";
 import type { Reservation } from "@/types";
 
+interface TableOption {
+  id: string;
+  number: string;
+}
+
 function mapRow(row: any): Reservation {
   return {
     id: row.id,
@@ -46,9 +51,19 @@ function formatDateLabel(dateStr: string): string {
   return isToday ? `Oggi, ${d.toLocaleDateString("it-IT", { day: "numeric", month: "long" })}` : capitalized;
 }
 
+function sortTablesByNumber(tables: TableOption[]): TableOption[] {
+  return [...tables].sort((a, b) => {
+    const numA = Number(a.number);
+    const numB = Number(b.number);
+    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+    return a.number.localeCompare(b.number);
+  });
+}
+
 export default function PrenotazioniPage() {
   const [selectedDate, setSelectedDate] = useState(todayDateString());
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [tables, setTables] = useState<TableOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -71,9 +86,26 @@ export default function PrenotazioniPage() {
     }
   }, [selectedDate]);
 
+  const loadTables = useCallback(async () => {
+    try {
+      const res = await fetch("/api/tables");
+      if (!res.ok) return;
+      const { tables: data } = await res.json();
+      setTables(sortTablesByNumber((data ?? []).map((t: any) => ({ id: t.id, number: t.number }))));
+    } catch (err) {
+      console.error("Errore caricamento tavoli:", err);
+    }
+  }, []);
+
   useEffect(() => {
     loadReservations();
   }, [loadReservations]);
+
+  useEffect(() => {
+    loadTables();
+  }, [loadTables]);
+
+  const tableNumberById = new Map(tables.map((t) => [t.id, t.number]));
 
   async function updateStatus(id: string, status: Reservation["status"]) {
     setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
@@ -144,6 +176,7 @@ export default function PrenotazioniPage() {
     partySize: number;
     notes: string;
     date: string;
+    tableId: string | null;
   }) {
     if (editingReservation) {
       const res = await fetch("/api/reservations", {
@@ -156,6 +189,7 @@ export default function PrenotazioniPage() {
           partySize: data.partySize,
           notes: data.notes,
           date: data.date,
+          tableId: data.tableId,
         }),
       });
 
@@ -189,6 +223,7 @@ export default function PrenotazioniPage() {
         ],
         source: "manual",
         date: data.date,
+        tableId: data.tableId,
       }),
     });
 
@@ -294,6 +329,7 @@ export default function PrenotazioniPage() {
             onSave={handleFormSave}
             onCancel={closeForm}
             initialDate={selectedDate}
+            tables={tables}
             editingReservation={
               editingReservation
                 ? {
@@ -301,6 +337,7 @@ export default function PrenotazioniPage() {
                     reservationTime: editingReservation.reservationTime,
                     partySize: editingReservation.partySize,
                     notes: editingReservation.notes,
+                    tableId: editingReservation.tableId,
                   }
                 : undefined
             }
@@ -331,6 +368,7 @@ export default function PrenotazioniPage() {
               onAccept={() => updateStatus(r.id, "confirmed")}
               onReject={() => updateStatus(r.id, "cancelled")}
               onEdit={() => openEditForm(r)}
+              tableNumber={r.tableId ? tableNumberById.get(r.tableId) : undefined}
             />
           ))}
         </div>
