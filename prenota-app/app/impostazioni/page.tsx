@@ -20,6 +20,7 @@ import {
   Users,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { getMyRole } from "@/lib/roles";
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -35,6 +36,7 @@ export default function ImpostazioniPage() {
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [link, setLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [name, setName] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#4F46E5");
@@ -111,6 +113,10 @@ export default function ImpostazioniPage() {
       setPushLoading(false);
     }
   }
+
+  useEffect(() => {
+    getMyRole().then((role) => setIsAdmin(role === "admin"));
+  }, []);
 
   useEffect(() => {
     async function loadRestaurant() {
@@ -230,6 +236,7 @@ export default function ImpostazioniPage() {
         <ChevronRight size={18} className="text-ink-muted" />
       </Link>
 
+      {isAdmin && (
       <Link
         href="/staff"
         className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
@@ -245,7 +252,9 @@ export default function ImpostazioniPage() {
         </div>
         <ChevronRight size={18} className="text-ink-muted" />
       </Link>
+      )}
 
+      {isAdmin && (
       <div className="mb-3 rounded-xl border border-black/5 bg-white p-4">
         <p className="mb-3 text-sm font-medium text-ink">Personalizza la pagina prenotazioni</p>
 
@@ -306,6 +315,7 @@ export default function ImpostazioniPage() {
           {saved ? "Salvato!" : isSaving ? "Salvo..." : "Salva personalizzazione"}
         </button>
       </div>
+      )}
 
       {link && (
         <div className="mb-3 rounded-xl border border-black/5 bg-white p-4">
@@ -374,6 +384,7 @@ export default function ImpostazioniPage() {
         </div>
       )}
 
+      {isAdmin && (
       <Link
         href="/vetrina"
         className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
@@ -405,6 +416,7 @@ export default function ImpostazioniPage() {
         </div>
         <ChevronRight size={18} className="text-ink-muted" />
       </Link>
+      )}
 
       <Link
         href="/tavoli"
@@ -416,12 +428,17 @@ export default function ImpostazioniPage() {
           </div>
           <div>
             <p className="text-sm font-medium text-ink">Tavoli</p>
-            <p className="text-xs text-ink-muted">Aggiungi, modifica ed elimina i tavoli del locale</p>
+            <p className="text-xs text-ink-muted">
+              {isAdmin
+                ? "Aggiungi, modifica ed elimina i tavoli del locale"
+                : "Guarda lo stato dei tavoli"}
+            </p>
           </div>
         </div>
         <ChevronRight size={18} className="text-ink-muted" />
       </Link>
 
+      {isAdmin && (
       <Link
         href="/statistiche"
         className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
@@ -437,6 +454,7 @@ export default function ImpostazioniPage() {
         </div>
         <ChevronRight size={18} className="text-ink-muted" />
       </Link>
+      )}
 
       <button
         onClick={handleLogout}
