@@ -17,6 +17,7 @@ import {
   UtensilsCrossed,
   CalendarX,
   User,
+  Users,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -224,6 +225,22 @@ export default function ImpostazioniPage() {
           <div>
             <p className="text-sm font-medium text-ink">Profilo</p>
             <p className="text-xs text-ink-muted">Nome, ristorante, email e password</p>
+          </div>
+        </div>
+        <ChevronRight size={18} className="text-ink-muted" />
+      </Link>
+
+      <Link
+        href="/staff"
+        className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+      >
+        <div className="flex items-center gap-3">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+            <Users size={18} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-ink">Team</p>
+            <p className="text-xs text-ink-muted">Aggiungi collaboratori con accesso al ristorante</p>
           </div>
         </div>
         <ChevronRight size={18} className="text-ink-muted" />
