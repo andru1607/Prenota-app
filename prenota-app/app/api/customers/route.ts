@@ -99,6 +99,26 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
   }
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Non autenticato." }, { status: 401 });
+  }
+
+  const { data: requesterStaff } = await supabase
+    .from("staff")
+    .select("role")
+    .eq("auth_user_id", user.id)
+    .single();
+
+  if (requesterStaff?.role !== "admin") {
+    return NextResponse.json(
+      { error: "Solo un amministratore può eliminare i clienti." },
+      { status: 403 }
+    );
+  }
+
   const { error } = await supabase.from("customers").delete().eq("id", id);
 
   if (error) {
