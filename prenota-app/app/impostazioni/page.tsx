@@ -16,6 +16,7 @@ import {
   BellOff,
   UtensilsCrossed,
   CalendarX,
+  User,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -211,6 +212,22 @@ export default function ImpostazioniPage() {
   return (
     <div className="p-4">
       <h1 className="mb-4 text-lg font-semibold text-ink">Impostazioni</h1>
+
+      <Link
+        href="/profilo"
+        className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+      >
+        <div className="flex items-center gap-3">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+            <User size={18} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-ink">Profilo</p>
+            <p className="text-xs text-ink-muted">Nome, ristorante, email e password</p>
+          </div>
+        </div>
+        <ChevronRight size={18} className="text-ink-muted" />
+      </Link>
 
       <div className="mb-3 rounded-xl border border-black/5 bg-white p-4">
         <p className="mb-3 text-sm font-medium text-ink">Personalizza la pagina prenotazioni</p>
