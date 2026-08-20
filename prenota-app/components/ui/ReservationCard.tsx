@@ -1,4 +1,4 @@
-import { Users, Check, UserX, StickyNote, X, Trash2 } from "lucide-react";
+import { Users, Check, UserX, StickyNote, X, Trash2, Pencil } from "lucide-react";
 import type { Reservation, ReservationStatus } from "@/types";
 
 const STATUS_BAR_COLOR: Record<ReservationStatus, string> = {
@@ -27,6 +27,7 @@ interface ReservationCardProps {
   onDelete?: () => void;
   onAccept?: () => void;
   onReject?: () => void;
+  onEdit?: () => void;
 }
 
 export function ReservationCard({
@@ -37,6 +38,7 @@ export function ReservationCard({
   onDelete,
   onAccept,
   onReject,
+  onEdit,
 }: ReservationCardProps) {
   const time = new Date(reservation.reservationTime).toLocaleTimeString("it-IT", {
     hour: "2-digit",
@@ -118,6 +120,18 @@ export function ReservationCard({
                 <UserX size={20} />
               </button>
             )}
+
+            {!isFinal && onEdit && (
+              <button
+                onClick={onEdit}
+                className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+                aria-label="Modifica prenotazione"
+                title="Modifica"
+              >
+                <Pencil size={16} />
+              </button>
+            )}
+
             {!isFinal && !isPending && onCancel && (
               <button
                 onClick={onCancel}
