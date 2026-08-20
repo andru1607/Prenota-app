@@ -52,6 +52,7 @@ export default function PrenotazioniPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
 
   const loadReservations = useCallback(async () => {
@@ -122,13 +123,57 @@ export default function PrenotazioniPage() {
     }
   }
 
-  async function handleManualSave(data: {
+  function openNewForm() {
+    setEditingReservation(null);
+    setShowForm((v) => !v);
+  }
+
+  function openEditForm(reservation: Reservation) {
+    setEditingReservation(reservation);
+    setShowForm(true);
+  }
+
+  function closeForm() {
+    setShowForm(false);
+    setEditingReservation(null);
+  }
+
+  async function handleFormSave(data: {
     customerName: string;
     reservationTime: string;
     partySize: number;
     notes: string;
     date: string;
   }) {
+    if (editingReservation) {
+      const res = await fetch("/api/reservations", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingReservation.id,
+          customerName: data.customerName,
+          reservationTime: data.reservationTime,
+          partySize: data.partySize,
+          notes: data.notes,
+          date: data.date,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error("Errore nel salvataggio: " + body);
+      }
+
+      closeForm();
+
+      if (data.date === selectedDate) {
+        loadReservations();
+      } else {
+        setSelectedDate(data.date);
+      }
+      return;
+    }
+
     const res = await fetch("/api/reservations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -152,7 +197,7 @@ export default function PrenotazioniPage() {
       throw new Error("Errore nel salvataggio: " + body);
     }
 
-    setShowForm(false);
+    closeForm();
 
     if (data.date === selectedDate) {
       loadReservations();
@@ -194,7 +239,7 @@ export default function PrenotazioniPage() {
             </button>
           )}
           <button
-            onClick={() => setShowForm((v) => !v)}
+            onClick={openNewForm}
             className="touch-target flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-medium text-white"
           >
             <Plus size={18} />
@@ -246,9 +291,19 @@ export default function PrenotazioniPage() {
       {showForm && (
         <div className="mb-4">
           <ManualReservationForm
-            onSave={handleManualSave}
-            onCancel={() => setShowForm(false)}
+            onSave={handleFormSave}
+            onCancel={closeForm}
             initialDate={selectedDate}
+            editingReservation={
+              editingReservation
+                ? {
+                    customerName: editingReservation.customerName,
+                    reservationTime: editingReservation.reservationTime,
+                    partySize: editingReservation.partySize,
+                    notes: editingReservation.notes,
+                  }
+                : undefined
+            }
           />
         </div>
       )}
@@ -275,6 +330,7 @@ export default function PrenotazioniPage() {
               onDelete={() => deleteOne(r.id)}
               onAccept={() => updateStatus(r.id, "confirmed")}
               onReject={() => updateStatus(r.id, "cancelled")}
+              onEdit={() => openEditForm(r)}
             />
           ))}
         </div>
