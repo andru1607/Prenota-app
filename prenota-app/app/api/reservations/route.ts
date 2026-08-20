@@ -41,10 +41,11 @@ export async function POST(req: NextRequest) {
   const supabase = createClient();
 
   try {
-    const { drafts, source, date } = (await req.json()) as {
+    const { drafts, source, date, tableId } = (await req.json()) as {
       drafts: ParsedReservationDraft[];
       source: "photo" | "manual";
       date?: string;
+      tableId?: string | null;
     };
 
     if (!drafts || drafts.length === 0) {
@@ -61,6 +62,7 @@ export async function POST(req: NextRequest) {
       status: "confirmed",
       source: source ?? "manual",
       restaurant_id: restaurantId,
+      table_id: tableId || null,
     }));
 
     const { data, error } = await supabase.from("reservations").insert(rows).select();
@@ -81,7 +83,8 @@ export async function PATCH(req: NextRequest) {
   const supabase = createClient();
 
   try {
-    const { id, status, customerName, reservationTime, partySize, notes, date } = await req.json();
+    const { id, status, customerName, reservationTime, partySize, notes, date, tableId } =
+      await req.json();
 
     if (!id) {
       return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
@@ -92,6 +95,7 @@ export async function PATCH(req: NextRequest) {
     if (customerName !== undefined) updates.customer_name = customerName;
     if (partySize !== undefined) updates.party_size = partySize;
     if (notes !== undefined) updates.notes = notes || null;
+    if (tableId !== undefined) updates.table_id = tableId || null;
     if (reservationTime !== undefined && date !== undefined) {
       updates.reservation_time = buildTodayIsoTime(reservationTime, date);
     }
