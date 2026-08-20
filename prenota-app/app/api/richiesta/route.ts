@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToRestaurant } from "@/lib/push";
 import { upsertCustomerFromReservation } from "@/lib/customers";
+import { isDateOpen } from "@/lib/schedule";
 
 export async function GET(req: NextRequest) {
   const restaurantId = req.nextUrl.searchParams.get("restaurantId");
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest) {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("restaurants")
-    .select("name, logo_url, primary_color")
+    .select("name, logo_url, primary_color, closed_weekdays")
     .eq("id", restaurantId)
     .single();
 
@@ -21,7 +22,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Ristorante non trovato." }, { status: 404 });
   }
 
-  return NextResponse.json({ restaurant: data });
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: exceptions } = await supabase
+    .from("schedule_exceptions")
+    .select("date, is_open")
+    .eq("restaurant_id", restaurantId)
+    .gte("date", today);
+
+  return NextResponse.json({ restaurant: data, exceptions: exceptions ?? [] });
 }
 
 export async function POST(req: NextRequest) {
@@ -39,12 +47,32 @@ export async function POST(req: NextRequest) {
 
     const { data: restaurant } = await supabase
       .from("restaurants")
-      .select("id")
+      .select("id, closed_weekdays")
       .eq("id", restaurantId)
       .single();
 
     if (!restaurant) {
       return NextResponse.json({ error: "Ristorante non trovato." }, { status: 404 });
+    }
+
+    const { data: exceptionRow } = await supabase
+      .from("schedule_exceptions")
+      .select("date, is_open")
+      .eq("restaurant_id", restaurantId)
+      .eq("date", date)
+      .maybeSingle();
+
+    const open = isDateOpen(
+      date,
+      restaurant.closed_weekdays ?? [],
+      exceptionRow ? [exceptionRow] : []
+    );
+
+    if (!open) {
+      return NextResponse.json(
+        { error: "Il ristorante è chiuso in questa data. Scegli un altro giorno." },
+        { status: 400 }
+      );
     }
 
     const size = Number(partySize);
