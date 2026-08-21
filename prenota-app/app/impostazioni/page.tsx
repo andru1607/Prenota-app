@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getMyRole } from "@/lib/roles";
+import { THEMES, applyTheme, type ThemeName, DEFAULT_THEME } from "@/lib/themes";
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -43,6 +44,8 @@ export default function ImpostazioniPage() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [appTheme, setAppTheme] = useState<ThemeName>(DEFAULT_THEME);
+  const [isSavingTheme, setIsSavingTheme] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -139,7 +142,7 @@ export default function ImpostazioniPage() {
 
       const { data: restaurant } = await supabase
         .from("restaurants")
-        .select("name, logo_url, primary_color")
+        .select("name, logo_url, primary_color, app_theme")
         .eq("id", staffRow.restaurant_id)
         .single();
 
@@ -147,10 +150,28 @@ export default function ImpostazioniPage() {
         setName(restaurant.name ?? "");
         setLogoUrl(restaurant.logo_url ?? null);
         setPrimaryColor(restaurant.primary_color ?? "#4F46E5");
+        if (restaurant.app_theme && restaurant.app_theme in THEMES) {
+          setAppTheme(restaurant.app_theme as ThemeName);
+        }
       }
     }
     loadRestaurant();
   }, []);
+
+  async function handleSelectTheme(theme: ThemeName) {
+    if (!restaurantId) return;
+    setAppTheme(theme);
+    applyTheme(theme);
+    setIsSavingTheme(true);
+    try {
+      const supabase = createClient();
+      await supabase.from("restaurants").update({ app_theme: theme }).eq("id", restaurantId);
+    } catch (err) {
+      console.error("Errore salvataggio tema:", err);
+    } finally {
+      setIsSavingTheme(false);
+    }
+  }
 
   function handleLogoSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -252,6 +273,47 @@ export default function ImpostazioniPage() {
         </div>
         <ChevronRight size={18} className="text-ink-muted" />
       </Link>
+      )}
+
+      {isAdmin && (
+      <div className="mb-3 rounded-xl border border-black/5 bg-white p-4">
+        <p className="mb-1 text-sm font-medium text-ink">Aspetto dell'app</p>
+        <p className="mb-3 text-xs text-ink-muted">
+          Cambia i colori dell'app che usi tu, indipendentemente da quelli della
+          pagina pubblica dei clienti.
+        </p>
+        <div className="space-y-2">
+          {(Object.keys(THEMES) as ThemeName[]).map((key) => {
+            const theme = THEMES[key];
+            const isSelected = appTheme === key;
+            return (
+              <button
+                key={key}
+                onClick={() => handleSelectTheme(key)}
+                disabled={isSavingTheme}
+                className={`touch-target flex w-full items-center gap-3 rounded-xl border p-3 text-left disabled:opacity-60 ${
+                  isSelected ? "border-primary bg-primary-light" : "border-black/10"
+                }`}
+              >
+                <span
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-black/10"
+                  style={{ backgroundColor: theme.bg }}
+                >
+                  <span
+                    className="h-4 w-4 rounded-full"
+                    style={{ backgroundColor: theme.primary }}
+                  />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-ink">{theme.label}</p>
+                  <p className="text-xs text-ink-muted">{theme.description}</p>
+                </div>
+                {isSelected && <Check size={18} className="shrink-0 text-primary" />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
       )}
 
       {isAdmin && (
