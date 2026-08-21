@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
     const { data: userData, error: userError } = await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
+      email_confirm: false,
     });
 
     if (userError || !userData.user) {
@@ -54,6 +55,22 @@ export async function POST(req: NextRequest) {
       console.error("Errore collegamento staff:", staffError);
       await supabase.auth.admin.deleteUser(userData.user.id);
       return NextResponse.json({ error: "Impossibile completare la registrazione." }, { status: 500 });
+    }
+
+    const origin = req.headers.get("origin") || req.nextUrl.origin;
+    const publicClient = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    const { error: resendError } = await publicClient.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: `${origin}/auth/confirm` },
+    });
+
+    if (resendError) {
+      console.error("Errore invio email di conferma:", resendError);
     }
 
     return NextResponse.json({ success: true });
