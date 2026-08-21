@@ -1,4 +1,4 @@
-import { Users, Check, UserX, StickyNote, X, Trash2, Pencil } from "lucide-react";
+import { Users, Check, UserX, StickyNote, X, Trash2, Pencil, Phone } from "lucide-react";
 import type { Reservation, ReservationStatus } from "@/types";
 
 const STATUS_BAR_COLOR: Record<ReservationStatus, string> = {
@@ -86,6 +86,17 @@ export function ReservationCard({
           </div>
 
           <div className="flex shrink-0 items-center gap-1">
+            {reservation.phone && (
+              <a
+                href={`tel:${reservation.phone}`}
+                onClick={(e) => e.stopPropagation()}
+                className="touch-target grid place-items-center rounded-lg text-primary hover:bg-primary-light"
+                aria-label={`Chiama ${reservation.customerName}`}
+                title="Chiama"
+              >
+                <Phone size={18} />
+              </a>
+            )}
             {isPending && onAccept && (
               <button
                 onClick={onAccept}
