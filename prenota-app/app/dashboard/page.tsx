@@ -7,6 +7,7 @@ import { StatusBar } from "@/components/ui/StatusBar";
 import { TableCard } from "@/components/ui/TableCard";
 import { ReservationCard } from "@/components/ui/ReservationCard";
 import { PhotoImportReview } from "@/components/ui/PhotoImportReview";
+import { OnboardingGuide } from "@/components/ui/OnboardingGuide";
 import type { ParsedReservationDraft, Reservation, RestaurantTable, TableStatus } from "@/types";
 
 const DEFAULT_TABLES = [
@@ -22,6 +23,21 @@ const STATUS_CYCLE: TableStatus[] = ["free", "occupied", "reserved"];
 const REFRESH_INTERVAL_MS = 60_000;
 const SHOW_TABLES_KEY = "prenota-app:showTables";
 const MAX_PREVIEW_ITEMS = 8;
+
+function formatPreviewDayLabel(dateStr: string): string {
+  const today = new Date();
+  const todayStr = today.toDateString();
+  const d = new Date(dateStr);
+
+  if (d.toDateString() === todayStr) return "Oggi";
+
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  if (d.toDateString() === tomorrow.toDateString()) return "Domani";
+
+  const label = d.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
 
 function mapReservationRow(row: any): Reservation {
   return {
@@ -258,6 +274,7 @@ export default function DashboardPage() {
 
   return (
     <div>
+      <OnboardingGuide />
       <StatusBar totalCoperti={coperti} tavoliLiberi={tavoliLiberi} prossimoArrivo={prossimoArrivo} />
 
       <div className="p-4">
@@ -335,9 +352,23 @@ export default function DashboardPage() {
               </p>
             ) : (
               <div className="space-y-2">
-                {previewList.map((r) => (
-                  <ReservationCard key={r.id} reservation={r} />
-                ))}
+                {previewList.map((r, index) => {
+                  const dayLabel = formatPreviewDayLabel(r.reservationTime);
+                  const previousDayLabel =
+                    index > 0 ? formatPreviewDayLabel(previewList[index - 1].reservationTime) : null;
+                  const showSeparator = dayLabel !== previousDayLabel;
+
+                  return (
+                    <div key={r.id}>
+                      {showSeparator && (
+                        <p className="mb-2 mt-4 text-xs font-semibold uppercase text-ink-muted first:mt-0">
+                          {dayLabel}
+                        </p>
+                      )}
+                      <ReservationCard reservation={r} />
+                    </div>
+                  );
+                })}
               </div>
             )}
 
