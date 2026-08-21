@@ -21,10 +21,14 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showResend, setShowResend] = useState(false);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setShowResend(false);
+    setResendMessage(null);
     setIsLoading(true);
 
     try {
@@ -35,7 +39,12 @@ function LoginForm() {
       });
 
       if (signInError) {
-        setError("Email o password errati.");
+        if (signInError.message.toLowerCase().includes("email not confirmed")) {
+          setError("Devi prima confermare la tua email. Controlla la posta in arrivo.");
+          setShowResend(true);
+        } else {
+          setError("Email o password errati.");
+        }
         return;
       }
 
@@ -47,6 +56,23 @@ function LoginForm() {
       setError("Qualcosa è andato storto. Riprova.");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleResendConfirmation() {
+    setResendMessage(null);
+    try {
+      const supabase = createClient();
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/auth/confirm` },
+      });
+      if (resendError) throw resendError;
+      setResendMessage("Email di conferma inviata di nuovo. Controlla la posta.");
+    } catch (err) {
+      console.error(err);
+      setResendMessage("Non sono riuscito a inviare di nuovo l'email. Riprova tra poco.");
     }
   }
 
@@ -81,6 +107,18 @@ function LoginForm() {
         </div>
 
         {error && <p className="mt-2 text-sm text-status-danger">{error}</p>}
+
+        {showResend && (
+          <button
+            type="button"
+            onClick={handleResendConfirmation}
+            className="mt-2 text-sm font-medium text-primary"
+          >
+            Invia di nuovo l'email di conferma
+          </button>
+        )}
+
+        {resendMessage && <p className="mt-2 text-xs text-ink-muted">{resendMessage}</p>}
 
         <button
           type="submit"
