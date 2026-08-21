@@ -9,11 +9,13 @@ import {
   Trash2,
   Check,
   X,
-  Loader2,
   Truck,
   Phone,
   Mail,
   Pencil,
+  ChevronDown,
+  ChevronRight as ChevronRightIcon,
+  Zap,
 } from "lucide-react";
 import { getMyRole } from "@/lib/roles";
 
@@ -49,20 +51,23 @@ export default function FornitoriPage() {
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [frequentProducts, setFrequentProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [addingProductId, setAddingProductId] = useState<string | null>(null);
-  const [pendingQuantity, setPendingQuantity] = useState("");
 
   const [showNewItemForm, setShowNewItemForm] = useState(false);
   const [newItemQuantity, setNewItemQuantity] = useState("");
   const [newItemSupplier, setNewItemSupplier] = useState("");
   const [saveToCatalog, setSaveToCatalog] = useState(true);
 
+  const [editingQuantityId, setEditingQuantityId] = useState<string | null>(null);
+  const [editingQuantityValue, setEditingQuantityValue] = useState("");
+
+  const [showSuppliers, setShowSuppliers] = useState(false);
   const [showSupplierForm, setShowSupplierForm] = useState(false);
   const [editingSupplierId, setEditingSupplierId] = useState<string | null>(null);
   const [supplierName, setSupplierName] = useState("");
@@ -74,9 +79,10 @@ export default function FornitoriPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const [suppliersRes, itemsRes] = await Promise.all([
+      const [suppliersRes, itemsRes, frequentRes] = await Promise.all([
         fetch("/api/suppliers"),
         fetch("/api/order-items"),
+        fetch("/api/products?frequent=true"),
       ]);
       if (!suppliersRes.ok || !itemsRes.ok) throw new Error("Errore nel caricamento");
 
@@ -84,6 +90,11 @@ export default function FornitoriPage() {
       const { items: iData } = await itemsRes.json();
       setSuppliers(sData ?? []);
       setOrderItems(iData ?? []);
+
+      if (frequentRes.ok) {
+        const { products } = await frequentRes.json();
+        setFrequentProducts(products ?? []);
+      }
     } catch (err) {
       console.error(err);
       setError("Non sono riuscito a caricare i dati.");
@@ -119,25 +130,23 @@ export default function FornitoriPage() {
     return () => clearTimeout(timeout);
   }, [query]);
 
-  function startAddFromCatalog(product: Product) {
-    setAddingProductId(product.id);
-    setPendingQuantity(product.default_quantity ?? "");
-  }
-
-  async function confirmAddFromCatalog(product: Product) {
+  async function quickAdd(product: Product) {
     try {
-      const res = await fetch("/api/order-items", {
+      await fetch("/api/order-items", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: product.name,
-          quantity: pendingQuantity,
+          quantity: product.default_quantity,
           supplierId: product.supplier_id,
         }),
       });
-      if (!res.ok) throw new Error("Errore aggiunta");
-      setAddingProductId(null);
-      setPendingQuantity("");
+      fetch("/api/products", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: product.id, incrementUse: true }),
+      }).catch(() => {});
+
       setQuery("");
       setSearchResults([]);
       load();
@@ -193,6 +202,28 @@ export default function FornitoriPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: item.id, isOrdered: !item.is_ordered }),
+      });
+    } catch (err) {
+      console.error(err);
+      load();
+    }
+  }
+
+  function startEditQuantity(item: OrderItem) {
+    setEditingQuantityId(item.id);
+    setEditingQuantityValue(item.quantity ?? "");
+  }
+
+  async function saveQuantity(id: string) {
+    setOrderItems((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, quantity: editingQuantityValue } : i))
+    );
+    setEditingQuantityId(null);
+    try {
+      await fetch("/api/order-items", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, quantity: editingQuantityValue }),
       });
     } catch (err) {
       console.error(err);
@@ -320,47 +351,48 @@ export default function FornitoriPage() {
           />
         </div>
 
+        {!query.trim() && frequentProducts.length > 0 && (
+          <div className="mt-3">
+            <p className="mb-1.5 flex items-center gap-1 text-xs font-medium text-ink-muted">
+              <Zap size={12} />
+              Ordinati spesso
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {frequentProducts.map((product) => (
+                <button
+                  key={product.id}
+                  onClick={() => quickAdd(product)}
+                  className="touch-target flex items-center gap-1 rounded-full border border-black/10 bg-bg-subtle px-3 py-1.5 text-xs font-medium text-ink"
+                >
+                  <Plus size={12} className="text-primary" />
+                  {product.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {isSearching && <p className="py-2 text-xs text-ink-muted">Cerco...</p>}
 
         {searchResults.length > 0 && (
           <div className="mt-2 space-y-1.5">
             {searchResults.map((product) => (
-              <div key={product.id} className="rounded-lg bg-bg-subtle p-2.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-sm text-ink">{product.name}</p>
-                    <p className="text-xs text-ink-muted">
-                      {product.suppliers?.name ?? "Nessun fornitore"}
-                    </p>
-                  </div>
-                  {addingProductId !== product.id && (
-                    <button
-                      onClick={() => startAddFromCatalog(product)}
-                      className="touch-target grid shrink-0 place-items-center rounded-lg bg-primary text-white"
-                      aria-label="Aggiungi alla lista"
-                    >
-                      <Plus size={16} />
-                    </button>
-                  )}
+              <button
+                key={product.id}
+                onClick={() => quickAdd(product)}
+                className="touch-target flex w-full items-center justify-between gap-2 rounded-lg bg-bg-subtle p-2.5 text-left"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm text-ink">{product.name}</p>
+                  <p className="text-xs text-ink-muted">
+                    {product.suppliers?.name ?? "Nessun fornitore"}
+                    {product.default_quantity && ` · ${product.default_quantity}`}
+                  </p>
                 </div>
-                {addingProductId === product.id && (
-                  <div className="mt-2 flex gap-2">
-                    <input
-                      value={pendingQuantity}
-                      onChange={(e) => setPendingQuantity(e.target.value)}
-                      placeholder="Quantità (es. 2 casse)"
-                      autoFocus
-                      className="flex-1 rounded-lg border border-black/10 px-2 py-1.5 text-sm"
-                    />
-                    <button
-                      onClick={() => confirmAddFromCatalog(product)}
-                      className="touch-target rounded-lg bg-primary px-3 text-sm font-medium text-white"
-                    >
-                      <Check size={16} />
-                    </button>
-                  </div>
-                )}
-              </div>
+                <span className="grid shrink-0 h-7 w-7 place-items-center rounded-lg bg-primary text-white">
+                  <Plus size={15} />
+                </span>
+              </button>
             ))}
           </div>
         )}
@@ -486,11 +518,28 @@ export default function FornitoriPage() {
                           }`}
                         >
                           {item.name}
-                          {item.quantity && (
-                            <span className="text-ink-muted"> · {item.quantity}</span>
-                          )}
                         </span>
                       </button>
+
+                      {editingQuantityId === item.id ? (
+                        <input
+                          value={editingQuantityValue}
+                          onChange={(e) => setEditingQuantityValue(e.target.value)}
+                          onBlur={() => saveQuantity(item.id)}
+                          onKeyDown={(e) => e.key === "Enter" && saveQuantity(item.id)}
+                          autoFocus
+                          placeholder="Quantità"
+                          className="w-24 shrink-0 rounded-lg border border-black/10 px-2 py-1 text-xs"
+                        />
+                      ) : (
+                        <button
+                          onClick={() => startEditQuantity(item)}
+                          className="shrink-0 rounded-lg px-1.5 py-0.5 text-xs text-ink-muted underline decoration-dotted"
+                        >
+                          {item.quantity || "+ quantità"}
+                        </button>
+                      )}
+
                       <button
                         onClick={() => deleteItem(item.id)}
                         className="touch-target grid shrink-0 place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
@@ -508,115 +557,128 @@ export default function FornitoriPage() {
       </div>
 
       <div className="rounded-xl border border-black/5 bg-white p-4">
-        <div className="mb-2 flex items-center justify-between">
-          <p className="text-sm font-medium text-ink">Fornitori</p>
-          {isAdmin && (
-            <button
-              onClick={() => (showSupplierForm ? resetSupplierForm() : setShowSupplierForm(true))}
-              className="touch-target flex items-center gap-1 text-xs font-medium text-primary"
-            >
-              <Plus size={14} />
-              Aggiungi
-            </button>
+        <button
+          onClick={() => setShowSuppliers((v) => !v)}
+          className="touch-target flex w-full items-center justify-between"
+        >
+          <span className="text-sm font-medium text-ink">Fornitori</span>
+          {showSuppliers ? (
+            <ChevronDown size={18} className="text-ink-muted" />
+          ) : (
+            <ChevronRightIcon size={18} className="text-ink-muted" />
           )}
-        </div>
+        </button>
 
-        {showSupplierForm && (
-          <div className="mb-3 rounded-lg bg-bg-subtle p-3">
-            <div className="space-y-2">
-              <input
-                value={supplierName}
-                onChange={(e) => setSupplierName(e.target.value)}
-                placeholder="Nome fornitore"
-                autoFocus
-                className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
-              />
-              <input
-                value={supplierPhone}
-                onChange={(e) => setSupplierPhone(e.target.value)}
-                placeholder="Telefono"
-                type="tel"
-                className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
-              />
-              <input
-                value={supplierEmail}
-                onChange={(e) => setSupplierEmail(e.target.value)}
-                placeholder="Email"
-                type="email"
-                className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
-              />
-              <input
-                value={supplierCategory}
-                onChange={(e) => setSupplierCategory(e.target.value)}
-                placeholder="Categoria (es. Ortofrutta)"
-                className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
-              />
-            </div>
-            <button
-              onClick={handleSaveSupplier}
-              disabled={!supplierName.trim()}
-              className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2 text-sm font-medium text-white disabled:opacity-40"
-            >
-              <Check size={16} />
-              Salva fornitore
-            </button>
-          </div>
-        )}
+        {showSuppliers && (
+          <div className="mt-3">
+            {isAdmin && (
+              <button
+                onClick={() => (showSupplierForm ? resetSupplierForm() : setShowSupplierForm(true))}
+                className="touch-target mb-2 flex items-center gap-1 text-xs font-medium text-primary"
+              >
+                <Plus size={14} />
+                Aggiungi
+              </button>
+            )}
 
-        {suppliers.length === 0 ? (
-          <p className="py-4 text-center text-sm text-ink-muted">Nessun fornitore ancora.</p>
-        ) : (
-          <div className="space-y-1.5">
-            {suppliers.map((s) => (
-              <div key={s.id} className="rounded-lg bg-bg-subtle p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-ink">{s.name}</p>
-                      {s.category && (
-                        <span className="rounded-full bg-white px-1.5 py-0.5 text-[10px] text-ink-muted">
-                          {s.category}
-                        </span>
+            {showSupplierForm && (
+              <div className="mb-3 rounded-lg bg-bg-subtle p-3">
+                <div className="space-y-2">
+                  <input
+                    value={supplierName}
+                    onChange={(e) => setSupplierName(e.target.value)}
+                    placeholder="Nome fornitore"
+                    autoFocus
+                    className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={supplierPhone}
+                    onChange={(e) => setSupplierPhone(e.target.value)}
+                    placeholder="Telefono"
+                    type="tel"
+                    className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={supplierEmail}
+                    onChange={(e) => setSupplierEmail(e.target.value)}
+                    placeholder="Email"
+                    type="email"
+                    className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={supplierCategory}
+                    onChange={(e) => setSupplierCategory(e.target.value)}
+                    placeholder="Categoria (es. Ortofrutta)"
+                    className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                  />
+                </div>
+                <button
+                  onClick={handleSaveSupplier}
+                  disabled={!supplierName.trim()}
+                  className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2 text-sm font-medium text-white disabled:opacity-40"
+                >
+                  <Check size={16} />
+                  Salva fornitore
+                </button>
+              </div>
+            )}
+
+            {suppliers.length === 0 ? (
+              <p className="py-4 text-center text-sm text-ink-muted">Nessun fornitore ancora.</p>
+            ) : (
+              <div className="space-y-1.5">
+                {suppliers.map((s) => (
+                  <div key={s.id} className="rounded-lg bg-bg-subtle p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-ink">{s.name}</p>
+                          {s.category && (
+                            <span className="rounded-full bg-white px-1.5 py-0.5 text-[10px] text-ink-muted">
+                              {s.category}
+                            </span>
+                          )}
+                        </div>
+                        {s.phone && (
+                          <a
+                            href={`tel:${s.phone}`}
+                            className="mt-0.5 flex items-center gap-1 text-xs text-ink-muted underline"
+                          >
+                            <Phone size={11} /> {s.phone}
+                          </a>
+                        )}
+                        {s.email && (
+                          <a
+                            href={`mailto:${s.email}`}
+                            className="mt-0.5 flex items-center gap-1 text-xs text-ink-muted underline"
+                          >
+                            <Mail size={11} /> {s.email}
+                          </a>
+                        )}
+                      </div>
+                      {isAdmin && (
+                        <div className="flex shrink-0 items-center gap-1">
+                          <button
+                            onClick={() => startEditSupplier(s)}
+                            className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-white"
+                            aria-label="Modifica fornitore"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSupplier(s.id)}
+                            className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                            aria-label="Elimina fornitore"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
                       )}
                     </div>
-                    {s.phone && (
-                      <a
-                        href={`tel:${s.phone}`}
-                        className="mt-0.5 flex items-center gap-1 text-xs text-ink-muted underline"
-                      >
-                        <Phone size={11} /> {s.phone}
-                      </a>
-                    )}
-                    {s.email && (
-                      <a
-                        href={`mailto:${s.email}`}
-                        className="mt-0.5 flex items-center gap-1 text-xs text-ink-muted underline"
-                      >
-                        <Mail size={11} /> {s.email}
-                      </a>
-                    )}
                   </div>
-                  {isAdmin && (
-                    <div className="flex shrink-0 items-center gap-1">
-                      <button
-                        onClick={() => startEditSupplier(s)}
-                        className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-white"
-                        aria-label="Modifica fornitore"
-                      >
-                        <Pencil size={15} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteSupplier(s.id)}
-                        className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
-                        aria-label="Elimina fornitore"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  )}
-                </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )}
       </div>
