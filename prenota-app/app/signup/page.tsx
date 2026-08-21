@@ -1,19 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Store, Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { Store, Loader2, MailCheck } from "lucide-react";
 
 export default function SignupPage() {
-  const router = useRouter();
   const [restaurantName, setRestaurantName] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,21 +31,33 @@ export default function SignupPage() {
         return;
       }
 
-      const supabase = createClient();
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-      if (signInError) {
-        setError("Account creato. Vai alla pagina di accesso ed entra con le credenziali appena scelte.");
-        return;
-      }
-
-      router.push("/dashboard");
-      router.refresh();
+      setRegisteredEmail(email);
     } catch (err) {
       console.error(err);
       setError("Qualcosa è andato storto. Riprova.");
     } finally {
       setIsLoading(false);
     }
+  }
+
+  if (registeredEmail) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-bg p-4">
+        <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-sm">
+          <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-primary-light text-primary">
+            <MailCheck size={24} />
+          </div>
+          <h1 className="text-lg font-semibold text-ink">Controlla la tua email</h1>
+          <p className="mt-2 text-sm text-ink-muted">
+            Ti abbiamo inviato un link di conferma a <strong>{registeredEmail}</strong>.
+            Toccalo per attivare l'account e iniziare a usare Prenota.
+          </p>
+          <p className="mt-4 text-xs text-ink-muted">
+            Non trovi l'email? Controlla anche nello spam.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
