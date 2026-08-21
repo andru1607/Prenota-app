@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { tables } = (await req.json()) as {
-      tables: { number: string; capacity: number; status?: string }[];
+      tables: { number: string; capacity: number; status?: string; roomId?: string | null }[];
     };
 
     if (!tables || tables.length === 0) {
@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
       number: t.number,
       capacity: t.capacity,
       status: t.status ?? "free",
+      room_id: t.roomId || null,
       restaurant_id: restaurantId,
     }));
 
@@ -81,15 +82,16 @@ export async function PATCH(req: NextRequest) {
   const supabase = createClient();
 
   try {
-    const { id, status, number, capacity } = await req.json();
+    const { id, status, number, capacity, roomId } = await req.json();
 
     if (!id) {
       return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
     }
 
-    if ((number !== undefined || capacity !== undefined) && !(await requireAdmin(supabase))) {
+    const isStructuralChange = number !== undefined || capacity !== undefined || roomId !== undefined;
+    if (isStructuralChange && !(await requireAdmin(supabase))) {
       return NextResponse.json(
-        { error: "Solo un amministratore può modificare numero o capienza dei tavoli." },
+        { error: "Solo un amministratore può modificare numero, capienza o sala dei tavoli." },
         { status: 403 }
       );
     }
@@ -98,6 +100,7 @@ export async function PATCH(req: NextRequest) {
     if (status !== undefined) updates.status = status;
     if (number !== undefined) updates.number = number;
     if (capacity !== undefined) updates.capacity = capacity;
+    if (roomId !== undefined) updates.room_id = roomId || null;
 
     const { data, error } = await supabase
       .from("tables")
