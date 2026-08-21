@@ -65,7 +65,7 @@ function mapTableRow(row: any): RestaurantTable & { roomId: string | null } {
   };
 }
 
-function sortTablesByNumber(tables: RestaurantTable[]): RestaurantTable[] {
+function sortTablesByNumber<T extends { number: string }>(tables: T[]): T[] {
   return [...tables].sort((a, b) => {
     const numA = Number(a.number);
     const numB = Number(b.number);
