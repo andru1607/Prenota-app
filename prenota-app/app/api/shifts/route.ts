@@ -25,7 +25,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Parametro 'date' obbligatorio." }, { status: 400 });
   }
 
-  const { data, error } = await supabase.from("shifts").select("*").eq("date", date);
+  const { data, error } = await supabase
+    .from("shifts")
+    .select("*")
+    .eq("date", date)
+    .order("start_time", { ascending: true });
 
   if (error) {
     console.error("Errore lettura turni:", error);
@@ -46,17 +50,26 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { staffId, date, slot } = await req.json();
+    const { rosterMemberId, date, startTime, endTime } = await req.json();
 
-    if (!staffId || !date || !slot) {
+    if (!rosterMemberId || !date || !startTime || !endTime) {
       return NextResponse.json({ error: "Dati mancanti." }, { status: 400 });
+    }
+    if (!/^\d{1,2}:\d{2}$/.test(startTime) || !/^\d{1,2}:\d{2}$/.test(endTime)) {
+      return NextResponse.json({ error: "Orario non valido." }, { status: 400 });
     }
 
     const restaurantId = await getRestaurantId(supabase);
 
     const { data, error } = await supabase
       .from("shifts")
-      .insert({ restaurant_id: restaurantId, staff_id: staffId, date, slot })
+      .insert({
+        restaurant_id: restaurantId,
+        roster_member_id: rosterMemberId,
+        date,
+        start_time: startTime,
+        end_time: endTime,
+      })
       .select()
       .single();
 
