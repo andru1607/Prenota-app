@@ -2,26 +2,29 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChevronLeft, ChevronRight, Sun, Sunset, Moon, Coffee } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  X,
+  Check,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
 import { getMyRole } from "@/lib/roles";
 
-interface StaffMember {
+interface RosterMember {
   id: string;
-  full_name: string;
+  name: string;
 }
 
 interface Shift {
   id: string;
-  staff_id: string;
-  slot: "mattina" | "pomeriggio" | "sera" | "riposo";
+  roster_member_id: string;
+  start_time: string;
+  end_time: string;
 }
-
-const SLOTS = [
-  { value: "mattina", label: "Mattina", icon: Coffee },
-  { value: "pomeriggio", label: "Pomeriggio", icon: Sun },
-  { value: "sera", label: "Sera", icon: Sunset },
-  { value: "riposo", label: "Riposo", icon: Moon },
-] as const;
 
 function toDateString(d: Date): string {
   const yyyy = d.getFullYear();
@@ -48,21 +51,34 @@ function formatDateLabel(dateStr: string): string {
   return isToday ? `Oggi, ${d.toLocaleDateString("it-IT", { day: "numeric", month: "long" })}` : capitalized;
 }
 
+function formatTimeInput(raw: string) {
+  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return digits.slice(0, 2) + ":" + digits.slice(2);
+}
+
 export default function TurniPage() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedDate, setSelectedDate] = useState(todayDateString());
-  const [staffList, setStaffList] = useState<StaffMember[]>([]);
+  const [members, setMembers] = useState<RosterMember[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadStaff = useCallback(async () => {
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [newMemberName, setNewMemberName] = useState("");
+
+  const [addingShiftFor, setAddingShiftFor] = useState<string | null>(null);
+  const [newStart, setNewStart] = useState("");
+  const [newEnd, setNewEnd] = useState("");
+
+  const loadMembers = useCallback(async () => {
     try {
-      const res = await fetch("/api/staff");
+      const res = await fetch("/api/roster");
       if (!res.ok) return;
-      const { staff } = await res.json();
-      setStaffList((staff ?? []).map((s: any) => ({ id: s.id, full_name: s.full_name })));
+      const { members: data } = await res.json();
+      setMembers(data ?? []);
     } catch (err) {
       console.error(err);
     }
@@ -85,45 +101,84 @@ export default function TurniPage() {
   }, [selectedDate]);
 
   useEffect(() => {
-    loadStaff();
+    loadMembers();
     getMyRole().then((role) => setIsAdmin(role === "admin"));
-  }, [loadStaff]);
+  }, [loadMembers]);
 
   useEffect(() => {
     loadShifts();
   }, [loadShifts]);
 
-  function shiftsFor(staffId: string): Shift[] {
-    return shifts.filter((s) => s.staff_id === staffId);
+  function shiftsFor(memberId: string): Shift[] {
+    return shifts.filter((s) => s.roster_member_id === memberId);
   }
 
-  async function toggleSlot(staffId: string, slot: string) {
-    if (!isAdmin) return;
+  async function handleAddMember() {
+    if (!newMemberName.trim()) return;
+    try {
+      const res = await fetch("/api/roster", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newMemberName.trim() }),
+      });
+      if (!res.ok) throw new Error("Errore creazione");
+      setNewMemberName("");
+      setShowAddMember(false);
+      loadMembers();
+    } catch (err) {
+      console.error(err);
+      setError("Non sono riuscito ad aggiungere la persona.");
+    }
+  }
 
-    const existing = shifts.find((s) => s.staff_id === staffId && s.slot === slot);
+  async function handleRemoveMember(id: string, name: string) {
+    if (!confirm(`Rimuovere ${name} dall'elenco? Verranno eliminati anche i suoi turni.`)) return;
+    try {
+      await fetch(`/api/roster?id=${id}`, { method: "DELETE" });
+      loadMembers();
+      loadShifts();
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
-    if (existing) {
-      setShifts((prev) => prev.filter((s) => s.id !== existing.id));
-      try {
-        const res = await fetch(`/api/shifts?id=${existing.id}`, { method: "DELETE" });
-        if (!res.ok) throw new Error("Errore rimozione");
-      } catch (err) {
-        console.error(err);
-        loadShifts();
-      }
-    } else {
-      try {
-        const res = await fetch("/api/shifts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ staffId, date: selectedDate, slot }),
-        });
-        if (!res.ok) throw new Error("Errore assegnazione");
-        loadShifts();
-      } catch (err) {
-        console.error(err);
-        setError("Non sono riuscito ad assegnare il turno.");
-      }
+  function startAddShift(memberId: string) {
+    setAddingShiftFor(memberId);
+    setNewStart("");
+    setNewEnd("");
+  }
+
+  async function handleAddShift(memberId: string) {
+    if (!/^\d{1,2}:\d{2}$/.test(newStart) || !/^\d{1,2}:\d{2}$/.test(newEnd)) return;
+    try {
+      const res = await fetch("/api/shifts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rosterMemberId: memberId,
+          date: selectedDate,
+          startTime: newStart,
+          endTime: newEnd,
+        }),
+      });
+      if (!res.ok) throw new Error("Errore assegnazione");
+      setAddingShiftFor(null);
+      setNewStart("");
+      setNewEnd("");
+      loadShifts();
+    } catch (err) {
+      console.error(err);
+      setError("Non sono riuscito ad assegnare il turno.");
+    }
+  }
+
+  async function handleDeleteShift(id: string) {
+    setShifts((prev) => prev.filter((s) => s.id !== id));
+    try {
+      await fetch(`/api/shifts?id=${id}`, { method: "DELETE" });
+    } catch (err) {
+      console.error(err);
+      loadShifts();
     }
   }
 
@@ -139,8 +194,51 @@ export default function TurniPage() {
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-lg font-semibold text-ink">Turni</h1>
+        <h1 className="flex-1 text-lg font-semibold text-ink">Turni</h1>
+        {isAdmin && (
+          <button
+            onClick={() => setShowAddMember((v) => !v)}
+            className="touch-target flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-medium text-white"
+          >
+            <UserPlus size={16} />
+            Persona
+          </button>
+        )}
       </div>
+
+      {showAddMember && (
+        <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-sm font-medium text-ink">Nuova persona</p>
+            <button
+              onClick={() => setShowAddMember(false)}
+              className="touch-target grid place-items-center rounded-lg text-ink-muted"
+              aria-label="Chiudi"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <input
+              value={newMemberName}
+              onChange={(e) => setNewMemberName(e.target.value)}
+              placeholder="Nome e cognome"
+              autoFocus
+              className="flex-1 rounded-lg border border-black/10 px-3 py-2 text-sm"
+            />
+            <button
+              onClick={handleAddMember}
+              disabled={!newMemberName.trim()}
+              className="touch-target rounded-lg bg-primary px-4 text-sm font-medium text-white disabled:opacity-40"
+            >
+              <Check size={16} />
+            </button>
+          </div>
+          <p className="mt-1.5 text-xs text-ink-muted">
+            Va bene anche chi non ha un account nell'app.
+          </p>
+        </div>
+      )}
 
       <div className="mb-4 flex items-center gap-2 rounded-xl border border-black/5 bg-white p-2">
         <button
@@ -194,38 +292,95 @@ export default function TurniPage() {
 
       {isLoading ? (
         <p className="py-8 text-center text-sm text-ink-muted">Carico...</p>
-      ) : staffList.length === 0 ? (
-        <p className="py-8 text-center text-sm text-ink-muted">Nessun membro del team trovato.</p>
+      ) : members.length === 0 ? (
+        <p className="py-8 text-center text-sm text-ink-muted">
+          Nessuna persona ancora. {isAdmin && 'Tocca "Persona" qui sopra per aggiungerne una.'}
+        </p>
       ) : (
         <div className="space-y-2">
-          {staffList.map((member) => {
+          {members.map((member) => {
             const memberShifts = shiftsFor(member.id);
             return (
               <div key={member.id} className="rounded-xl border border-black/5 bg-white p-3">
-                <p className="mb-2 text-sm font-semibold text-ink">{member.full_name}</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {SLOTS.map((slot) => {
-                    const isActive = memberShifts.some((s) => s.slot === slot.value);
-                    const Icon = slot.icon;
-                    return (
-                      <button
-                        key={slot.value}
-                        onClick={() => toggleSlot(member.id, slot.value)}
-                        disabled={!isAdmin}
-                        className={`touch-target flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium disabled:opacity-100 ${
-                          isActive
-                            ? slot.value === "riposo"
-                              ? "bg-status-closed text-white"
-                              : "bg-primary text-white"
-                            : "border border-black/10 text-ink-muted"
-                        }`}
-                      >
-                        <Icon size={13} />
-                        {slot.label}
-                      </button>
-                    );
-                  })}
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-sm font-semibold text-ink">{member.name}</p>
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleRemoveMember(member.id, member.name)}
+                      className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                      aria-label="Rimuovi persona"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
                 </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {memberShifts.length === 0 && (
+                    <span className="text-xs text-ink-muted">Nessun turno</span>
+                  )}
+                  {memberShifts.map((shift) => (
+                    <span
+                      key={shift.id}
+                      className="num-tabular flex items-center gap-1.5 rounded-full bg-primary-light px-3 py-1.5 text-xs font-medium text-primary"
+                    >
+                      {shift.start_time}–{shift.end_time}
+                      {isAdmin && (
+                        <button
+                          onClick={() => handleDeleteShift(shift.id)}
+                          aria-label="Rimuovi turno"
+                        >
+                          <X size={13} />
+                        </button>
+                      )}
+                    </span>
+                  ))}
+
+                  {isAdmin && addingShiftFor !== member.id && (
+                    <button
+                      onClick={() => startAddShift(member.id)}
+                      className="touch-target flex items-center gap-1 rounded-full border border-dashed border-black/20 px-3 py-1.5 text-xs font-medium text-ink-muted"
+                    >
+                      <Plus size={13} />
+                      Turno
+                    </button>
+                  )}
+                </div>
+
+                {addingShiftFor === member.id && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <input
+                      value={newStart}
+                      onChange={(e) => setNewStart(formatTimeInput(e.target.value))}
+                      placeholder="Da (09:00)"
+                      inputMode="numeric"
+                      maxLength={5}
+                      autoFocus
+                      className="num-tabular w-24 rounded-lg border border-black/10 px-2 py-1.5 text-sm"
+                    />
+                    <span className="text-ink-muted">–</span>
+                    <input
+                      value={newEnd}
+                      onChange={(e) => setNewEnd(formatTimeInput(e.target.value))}
+                      placeholder="A (15:00)"
+                      inputMode="numeric"
+                      maxLength={5}
+                      className="num-tabular w-24 rounded-lg border border-black/10 px-2 py-1.5 text-sm"
+                    />
+                    <button
+                      onClick={() => handleAddShift(member.id)}
+                      className="touch-target rounded-lg bg-primary px-3 text-white"
+                    >
+                      <Check size={16} />
+                    </button>
+                    <button
+                      onClick={() => setAddingShiftFor(null)}
+                      className="touch-target rounded-lg border border-black/10 px-3 text-ink-muted"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}
