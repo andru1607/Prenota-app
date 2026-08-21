@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { ThemeLoader } from "@/components/ThemeLoader";
 
 export const metadata: Metadata = {
   title: "Prenota — Gestione Prenotazioni",
@@ -30,6 +31,7 @@ export default function RootLayout({
   return (
     <html lang="it">
       <body>
+        <ThemeLoader />
         <div className="flex min-h-screen">
           <Sidebar />
 
