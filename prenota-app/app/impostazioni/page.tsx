@@ -18,9 +18,6 @@ import {
   CalendarX,
   User,
   Users,
-  Truck,
-  CalendarClock,
-  ClipboardCheck,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getMyRole } from "@/lib/roles";
@@ -422,76 +419,6 @@ export default function ImpostazioniPage() {
       </Link>
       </>
       )}
-
-      <Link
-        href="/turni"
-        className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
-      >
-        <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
-            <CalendarClock size={18} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-ink">Turni</p>
-            <p className="text-xs text-ink-muted">
-              {isAdmin ? "Organizza i turni del team" : "Guarda i turni assegnati"}
-            </p>
-          </div>
-        </div>
-        <ChevronRight size={18} className="text-ink-muted" />
-      </Link>
-
-      <Link
-        href="/haccp"
-        className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
-      >
-        <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
-            <ClipboardCheck size={18} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-ink">Registro HACCP</p>
-            <p className="text-xs text-ink-muted">Temperature e checklist pulizie</p>
-          </div>
-        </div>
-        <ChevronRight size={18} className="text-ink-muted" />
-      </Link>
-
-      <Link
-        href="/fornitori"
-        className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
-      >
-        <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
-            <Truck size={18} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-ink">Fornitori e ordini</p>
-            <p className="text-xs text-ink-muted">Rubrica fornitori e lista prodotti da ordinare</p>
-          </div>
-        </div>
-        <ChevronRight size={18} className="text-ink-muted" />
-      </Link>
-
-      <Link
-        href="/tavoli"
-        className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
-      >
-        <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
-            <UtensilsCrossed size={18} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-ink">Tavoli</p>
-            <p className="text-xs text-ink-muted">
-              {isAdmin
-                ? "Aggiungi, modifica ed elimina i tavoli del locale"
-                : "Guarda lo stato dei tavoli"}
-            </p>
-          </div>
-        </div>
-        <ChevronRight size={18} className="text-ink-muted" />
-      </Link>
 
       {isAdmin && (
       <Link
