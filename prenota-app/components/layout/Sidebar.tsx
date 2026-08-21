@@ -2,17 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, CalendarClock, Users, Settings, UtensilsCrossed } from "lucide-react";
+import { LayoutGrid, CalendarClock, Users, Wrench, Settings } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Servizio", icon: LayoutGrid },
   { href: "/prenotazioni", label: "Prenotazioni", icon: CalendarClock },
   { href: "/clienti", label: "Clienti", icon: Users },
-  { href: "/tavoli", label: "Tavoli", icon: UtensilsCrossed },
+  { href: "/strumenti", label: "Strumenti", icon: Wrench },
   { href: "/impostazioni", label: "Impostazioni", icon: Settings },
 ];
 
-// Visibile solo da tablet/desktop in su (md:). Su mobile si usa BottomNav.
 export function Sidebar() {
   const pathname = usePathname();
 
