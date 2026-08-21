@@ -5,14 +5,16 @@ import { getRestaurantId } from "@/lib/restaurant";
 export async function GET(req: NextRequest) {
   const supabase = createClient();
   const search = req.nextUrl.searchParams.get("search");
+  const frequent = req.nextUrl.searchParams.get("frequent");
 
-  let query = supabase
-    .from("products")
-    .select("*, suppliers(id, name)")
-    .order("name", { ascending: true });
+  let query = supabase.from("products").select("*, suppliers(id, name)");
 
-  if (search) {
-    query = query.ilike("name", `%${search}%`);
+  if (frequent === "true") {
+    query = query.gt("use_count", 0).order("use_count", { ascending: false }).limit(8);
+  } else if (search) {
+    query = query.ilike("name", `%${search}%`).order("name", { ascending: true });
+  } else {
+    query = query.order("name", { ascending: true });
   }
 
   const { data, error } = await query;
@@ -54,6 +56,46 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("Errore creazione prodotto:", err);
     return NextResponse.json({ error: "Impossibile aggiungere il prodotto." }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  const supabase = createClient();
+
+  try {
+    const { id, name, defaultQuantity, supplierId, incrementUse } = await req.json();
+
+    if (!id) {
+      return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
+    }
+
+    if (incrementUse) {
+      const { data: current } = await supabase
+        .from("products")
+        .select("use_count")
+        .eq("id", id)
+        .single();
+
+      await supabase
+        .from("products")
+        .update({ use_count: (current?.use_count ?? 0) + 1 })
+        .eq("id", id);
+    }
+
+    const updates: Record<string, unknown> = {};
+    if (name !== undefined) updates.name = name;
+    if (defaultQuantity !== undefined) updates.default_quantity = defaultQuantity || null;
+    if (supplierId !== undefined) updates.supplier_id = supplierId || null;
+
+    if (Object.keys(updates).length > 0) {
+      const { error } = await supabase.from("products").update(updates).eq("id", id);
+      if (error) throw error;
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Errore aggiornamento prodotto:", err);
+    return NextResponse.json({ error: "Impossibile aggiornare il prodotto." }, { status: 500 });
   }
 }
 
