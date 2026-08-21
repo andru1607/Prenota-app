@@ -54,13 +54,14 @@ function mapReservationRow(row: any): Reservation {
   };
 }
 
-function mapTableRow(row: any): RestaurantTable {
+function mapTableRow(row: any): RestaurantTable & { roomId: string | null } {
   return {
     id: row.id,
     number: row.number,
     capacity: row.capacity,
     status: row.status,
     notes: row.notes ?? undefined,
+    roomId: row.room_id ?? null,
   };
 }
 
@@ -82,7 +83,8 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [skippedInfo, setSkippedInfo] = useState<string | null>(null);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [tables, setTables] = useState<RestaurantTable[]>([]);
+  const [tables, setTables] = useState<(RestaurantTable & { roomId: string | null })[]>([]);
+  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const [showTables, setShowTables] = useState(false);
 
   useEffect(() => {
@@ -137,6 +139,10 @@ export default function DashboardPage() {
   useEffect(() => {
     loadReservations();
     loadTables();
+    fetch("/api/rooms")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => setRooms(body?.rooms ?? []))
+      .catch(() => {});
     const interval = setInterval(loadReservations, REFRESH_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [loadReservations, loadTables]);
@@ -336,11 +342,45 @@ export default function DashboardPage() {
             <p className="mb-3 text-xs text-ink-muted">
               Tocca un tavolo per cambiarne lo stato (libero → occupato → riservato).
             </p>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {tables.map((table) => (
-                <TableCard key={table.id} table={table} onClick={() => handleTableTap(table)} />
-              ))}
-            </div>
+            {rooms.length === 0 ? (
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                {tables.map((table) => (
+                  <TableCard key={table.id} table={table} onClick={() => handleTableTap(table)} />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {[
+                  ...rooms.map((room) => ({
+                    room,
+                    roomTables: tables.filter((t) => t.roomId === room.id),
+                  })),
+                  {
+                    room: null,
+                    roomTables: tables.filter(
+                      (t) => !t.roomId || !rooms.some((r) => r.id === t.roomId)
+                    ),
+                  },
+                ]
+                  .filter((g) => g.roomTables.length > 0)
+                  .map((g) => (
+                    <div key={g.room?.id ?? "senza-sala"}>
+                      <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">
+                        {g.room?.name ?? "Senza sala"}
+                      </p>
+                      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                        {g.roomTables.map((table) => (
+                          <TableCard
+                            key={table.id}
+                            table={table}
+                            onClick={() => handleTableTap(table)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
           </>
         ) : (
           <div>
