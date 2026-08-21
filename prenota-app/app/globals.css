@@ -3,20 +3,25 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --color-bg: #FAFAFA;
+    --color-bg-subtle: #F4F4F5;
+    --color-primary: #4F46E5;
+    --color-primary-hover: #4338CA;
+    --color-primary-light: #EEF2FF;
+  }
   html {
     -webkit-tap-highlight-color: transparent;
   }
   body {
     @apply bg-bg text-ink antialiased;
   }
-  /* Numeri sempre allineati e leggibili: orari, coperti, prezzi */
   .num-tabular {
     font-variant-numeric: tabular-nums;
   }
 }
 
 @layer components {
-  /* Target touch minimo 44px, pensato per uso rapido durante il servizio */
   .touch-target {
     @apply min-h-[44px] min-w-[44px];
   }
