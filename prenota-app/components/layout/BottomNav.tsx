@@ -2,17 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, CalendarClock, Users, Settings } from "lucide-react";
+import { LayoutGrid, CalendarClock, Users, Wrench, Settings } from "lucide-react";
 
-// 4 voci essenziali, raggiungibili col pollice. "Tavoli" resta accessibile da Impostazioni su mobile.
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Servizio", icon: LayoutGrid },
   { href: "/prenotazioni", label: "Prenot.", icon: CalendarClock },
   { href: "/clienti", label: "Clienti", icon: Users },
+  { href: "/strumenti", label: "Strumenti", icon: Wrench },
   { href: "/impostazioni", label: "Altro", icon: Settings },
 ];
 
-// Visibile solo su mobile (nascosta da md: in su, dove c'è la Sidebar)
 export function BottomNav() {
   const pathname = usePathname();
 
@@ -28,7 +27,7 @@ export function BottomNav() {
               active ? "text-primary" : "text-ink-muted"
             }`}
           >
-            <Icon size={22} />
+            <Icon size={20} />
             {label}
           </Link>
         );
