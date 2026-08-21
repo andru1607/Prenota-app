@@ -49,8 +49,8 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function buildDuplicateKey(name: string, time: string | null): string {
-  const normalizedName = name.trim().toLowerCase().replace(/\s+/g, " ");
+function buildDuplicateKey(name: string | null | undefined, time: string | null): string {
+  const normalizedName = (name ?? "").trim().toLowerCase().replace(/\s+/g, " ");
   return `${normalizedName}|${time ?? ""}`;
 }
 
