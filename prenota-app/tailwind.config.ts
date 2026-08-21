@@ -1,7 +1,5 @@
 import type { Config } from "tailwindcss";
 
-// Palette del tema: base neutra "gestionale" (stile Notion/Linear) +
-// colori di stato molto marcati per la leggibilità a colpo d'occhio durante il servizio.
 const config: Config = {
   content: [
     "./app/**/*.{ts,tsx}",
@@ -10,30 +8,27 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Neutri base
         bg: {
-          DEFAULT: "#FAFAFA",
-          subtle: "#F4F4F5",
+          DEFAULT: "var(--color-bg)",
+          subtle: "var(--color-bg-subtle)",
         },
         ink: {
-          DEFAULT: "#18181B", // testo principale
-          muted: "#71717A",   // testo secondario
+          DEFAULT: "#18181B",
+          muted: "#71717A",
         },
-        // Colore primario (azioni, elementi attivi)
         primary: {
-          DEFAULT: "#4F46E5",
-          hover: "#4338CA",
-          light: "#EEF2FF",
+          DEFAULT: "var(--color-primary)",
+          hover: "var(--color-primary-hover)",
+          light: "var(--color-primary-light)",
         },
-        // Stati semantici — usati SEMPRE con lo stesso significato in tutta l'app
         status: {
-          free: "#16A34A",      // tavolo libero / confermato
+          free: "#16A34A",
           freeBg: "#F0FDF4",
-          pending: "#D97706",   // in attesa / da confermare / ritardo
+          pending: "#D97706",
           pendingBg: "#FFFBEB",
-          danger: "#DC2626",    // conflitto / cancellazione / urgenza
+          danger: "#DC2626",
           dangerBg: "#FEF2F2",
-          closed: "#71717A",    // chiuso / non disponibile
+          closed: "#71717A",
           closedBg: "#F4F4F5",
         },
       },
