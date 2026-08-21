@@ -7,6 +7,8 @@ import type { Reservation } from "@/types";
 
 type RangeOption = "7" | "30";
 
+const DINNER_START_HOUR = 18;
+
 function mapRow(row: any): Reservation {
   return {
     id: row.id,
@@ -29,9 +31,14 @@ function toDateString(d: Date): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+function isDinner(reservationTime: string): boolean {
+  return new Date(reservationTime).getHours() >= DINNER_START_HOUR;
+}
+
 interface DayStat {
   date: string;
-  coperti: number;
+  copertiPranzo: number;
+  copertiCena: number;
   prenotazioni: number;
 }
 
@@ -81,18 +88,29 @@ export default function StatistichePage() {
       (r) => toDateString(new Date(r.reservationTime)) === dateStr && r.status !== "cancelled"
     );
 
+    const pranzo = dayReservations.filter((r) => !isDinner(r.reservationTime));
+    const cena = dayReservations.filter((r) => isDinner(r.reservationTime));
+
     dayStats.push({
       date: dateStr,
-      coperti: dayReservations.reduce((sum, r) => sum + r.partySize, 0),
+      copertiPranzo: pranzo.reduce((sum, r) => sum + r.partySize, 0),
+      copertiCena: cena.reduce((sum, r) => sum + r.partySize, 0),
       prenotazioni: dayReservations.length,
     });
   }
 
-  const totalCoperti = dayStats.reduce((sum, d) => sum + d.coperti, 0);
+  const totalPranzo = dayStats.reduce((sum, d) => sum + d.copertiPranzo, 0);
+  const totalCena = dayStats.reduce((sum, d) => sum + d.copertiCena, 0);
+  const totalCoperti = totalPranzo + totalCena;
   const totalPrenotazioni = dayStats.reduce((sum, d) => sum + d.prenotazioni, 0);
-  const media = days > 0 ? Math.round(totalCoperti / days) : 0;
-  const maxCoperti = Math.max(1, ...dayStats.map((d) => d.coperti));
-  const bestDay = dayStats.reduce((best, d) => (d.coperti > best.coperti ? d : best), dayStats[0]);
+  const mediaPranzo = days > 0 ? Math.round(totalPranzo / days) : 0;
+  const mediaCena = days > 0 ? Math.round(totalCena / days) : 0;
+
+  const maxCoperti = Math.max(1, ...dayStats.map((d) => d.copertiPranzo + d.copertiCena));
+  const bestDay = dayStats.reduce(
+    (best, d) => (d.copertiPranzo + d.copertiCena > best.copertiPranzo + best.copertiCena ? d : best),
+    dayStats[0]
+  );
 
   function formatDayLabel(dateStr: string): string {
     const d = new Date(dateStr + "T12:00:00");
@@ -144,13 +162,15 @@ export default function StatistichePage() {
         <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
       )}
 
-      <div className="mb-5 grid grid-cols-3 gap-3 rounded-xl border border-black/5 bg-white p-4">
+      <div className="mb-3 grid grid-cols-3 gap-3 rounded-xl border border-black/5 bg-white p-4">
         <div className="text-center">
           <p className="num-tabular text-2xl font-bold text-ink">{totalCoperti}</p>
           <p className="text-xs text-ink-muted">Coperti totali</p>
         </div>
         <div className="text-center">
-          <p className="num-tabular text-2xl font-bold text-ink">{media}</p>
+          <p className="num-tabular text-2xl font-bold text-ink">
+            {Math.round(totalCoperti / days)}
+          </p>
           <p className="text-xs text-ink-muted">Media al giorno</p>
         </div>
         <div className="text-center">
@@ -159,28 +179,69 @@ export default function StatistichePage() {
         </div>
       </div>
 
-      {bestDay && bestDay.coperti > 0 && (
+      <div className="mb-4 grid grid-cols-2 gap-3">
+        <div className="rounded-xl border border-black/5 bg-white p-4 text-center">
+          <p className="mb-1 flex items-center justify-center gap-1.5 text-xs font-medium uppercase text-ink-muted">
+            <span className="h-2 w-2 rounded-full bg-primary/40" />
+            Pranzo
+          </p>
+          <p className="num-tabular text-xl font-bold text-ink">{totalPranzo}</p>
+          <p className="text-xs text-ink-muted">coperti · media {mediaPranzo}/giorno</p>
+        </div>
+        <div className="rounded-xl border border-black/5 bg-white p-4 text-center">
+          <p className="mb-1 flex items-center justify-center gap-1.5 text-xs font-medium uppercase text-ink-muted">
+            <span className="h-2 w-2 rounded-full bg-primary" />
+            Cena
+          </p>
+          <p className="num-tabular text-xl font-bold text-ink">{totalCena}</p>
+          <p className="text-xs text-ink-muted">coperti · media {mediaCena}/giorno</p>
+        </div>
+      </div>
+
+      {bestDay && bestDay.copertiPranzo + bestDay.copertiCena > 0 && (
         <p className="mb-4 text-sm text-ink-muted">
           Giorno più pieno: <span className="font-medium text-ink">{formatDayLabel(bestDay.date)}</span>{" "}
-          con <span className="font-medium text-ink">{bestDay.coperti}</span> coperti.
+          con <span className="font-medium text-ink">{bestDay.copertiPranzo + bestDay.copertiCena}</span> coperti.
         </p>
       )}
 
+      <div className="mb-2 flex items-center gap-4 text-xs text-ink-muted">
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-primary/40" />
+          Pranzo
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-primary" />
+          Cena
+        </span>
+      </div>
+
       <div className="space-y-2">
-        {dayStats.map((d) => (
-          <div key={d.date} className="flex items-center gap-3">
-            <span className="w-16 shrink-0 text-xs text-ink-muted">{formatDayLabel(d.date)}</span>
-            <div className="h-6 flex-1 overflow-hidden rounded-md bg-bg-subtle">
-              <div
-                className="h-full rounded-md bg-primary transition-all"
-                style={{ width: `${(d.coperti / maxCoperti) * 100}%` }}
-              />
+        {dayStats.map((d) => {
+          const total = d.copertiPranzo + d.copertiCena;
+          return (
+            <div key={d.date} className="flex items-center gap-3">
+              <span className="w-16 shrink-0 text-xs text-ink-muted">{formatDayLabel(d.date)}</span>
+              <div className="flex h-6 flex-1 overflow-hidden rounded-md bg-bg-subtle">
+                {d.copertiPranzo > 0 && (
+                  <div
+                    className="h-full bg-primary/40 transition-all"
+                    style={{ width: `${(d.copertiPranzo / maxCoperti) * 100}%` }}
+                  />
+                )}
+                {d.copertiCena > 0 && (
+                  <div
+                    className="h-full bg-primary transition-all"
+                    style={{ width: `${(d.copertiCena / maxCoperti) * 100}%` }}
+                  />
+                )}
+              </div>
+              <span className="num-tabular w-8 shrink-0 text-right text-xs font-medium text-ink">
+                {total}
+              </span>
             </div>
-            <span className="num-tabular w-8 shrink-0 text-right text-xs font-medium text-ink">
-              {d.coperti}
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {totalCoperti === 0 && !isLoading && (
