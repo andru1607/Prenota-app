@@ -4,195 +4,231 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
   Plus,
+  Trash2,
   X,
   Check,
-  Trash2,
-  UserPlus,
-  Users,
+  Thermometer,
+  SprayCan,
+  AlertTriangle,
 } from "lucide-react";
 import { getMyRole } from "@/lib/roles";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListSkeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/ToastProvider";
 
-interface RosterMember {
+interface HaccpPoint {
   id: string;
   name: string;
+  target_min: number | null;
+  target_max: number | null;
 }
 
-interface Shift {
+interface HaccpReading {
   id: string;
-  roster_member_id: string;
-  start_time: string;
-  end_time: string;
+  point_id: string;
+  value: number;
+  recorded_at: string;
 }
 
-function toDateString(d: Date): string {
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
+interface CleaningTask {
+  id: string;
+  name: string;
+  frequency: "daily" | "weekly";
 }
 
-function todayDateString(): string {
-  return toDateString(new Date());
+function timeAgo(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 1) return "adesso";
+  if (minutes < 60) return `${minutes} min fa`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} ${hours === 1 ? "ora" : "ore"} fa`;
+  const days = Math.floor(hours / 24);
+  return `${days} ${days === 1 ? "giorno" : "giorni"} fa`;
 }
 
-function shiftDate(dateStr: string, deltaDays: number): string {
-  const d = new Date(dateStr + "T12:00:00");
-  d.setDate(d.getDate() + deltaDays);
-  return toDateString(d);
-}
-
-function formatDateLabel(dateStr: string): string {
-  const isToday = dateStr === todayDateString();
-  const d = new Date(dateStr + "T12:00:00");
-  const label = d.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
-  const capitalized = label.charAt(0).toUpperCase() + label.slice(1);
-  return isToday ? `Oggi, ${d.toLocaleDateString("it-IT", { day: "numeric", month: "long" })}` : capitalized;
-}
-
-function formatTimeInput(raw: string) {
-  const digits = raw.replace(/\D/g, "").slice(0, 4);
-  if (digits.length <= 2) return digits;
-  return digits.slice(0, 2) + ":" + digits.slice(2);
-}
-
-export default function TurniPage() {
+export default function HaccpPage() {
   const router = useRouter();
   const { show } = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(todayDateString());
-  const [members, setMembers] = useState<RosterMember[]>([]);
-  const [shifts, setShifts] = useState<Shift[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [showAddMember, setShowAddMember] = useState(false);
-  const [newMemberName, setNewMemberName] = useState("");
+  const [points, setPoints] = useState<HaccpPoint[]>([]);
+  const [latestReadings, setLatestReadings] = useState<Map<string, HaccpReading>>(new Map());
+  const [showPointForm, setShowPointForm] = useState(false);
+  const [pointName, setPointName] = useState("");
+  const [pointMin, setPointMin] = useState("");
+  const [pointMax, setPointMax] = useState("");
+  const [recordingPointId, setRecordingPointId] = useState<string | null>(null);
+  const [recordingValue, setRecordingValue] = useState("");
 
-  const [addingShiftFor, setAddingShiftFor] = useState<string | null>(null);
-  const [newStart, setNewStart] = useState("");
-  const [newEnd, setNewEnd] = useState("");
+  const [tasks, setTasks] = useState<CleaningTask[]>([]);
+  const [lastCleaningLogs, setLastCleaningLogs] = useState<Map<string, string>>(new Map());
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  const [taskName, setTaskName] = useState("");
+  const [taskFrequency, setTaskFrequency] = useState<"daily" | "weekly">("daily");
 
-  const loadMembers = useCallback(async () => {
-    try {
-      const res = await fetch("/api/roster");
-      if (!res.ok) return;
-      const { members: data } = await res.json();
-      setMembers(data ?? []);
-    } catch (err) {
-      console.error(err);
-    }
-  }, []);
-
-  const loadShifts = useCallback(async () => {
+  const load = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/shifts?date=${selectedDate}`);
-      if (!res.ok) throw new Error("Errore nel caricamento");
-      const { shifts: data } = await res.json();
-      setShifts(data ?? []);
+      const [pointsRes, readingsRes, tasksRes, logsRes] = await Promise.all([
+        fetch("/api/haccp/points"),
+        fetch("/api/haccp/readings?latest=true"),
+        fetch("/api/haccp/tasks"),
+        fetch("/api/haccp/cleaning-logs"),
+      ]);
+
+      if (pointsRes.ok) {
+        const { points: p } = await pointsRes.json();
+        setPoints(p ?? []);
+      }
+      if (readingsRes.ok) {
+        const { readings } = await readingsRes.json();
+        const map = new Map<string, HaccpReading>();
+        for (const r of readings ?? []) {
+          if (!map.has(r.point_id)) map.set(r.point_id, r);
+        }
+        setLatestReadings(map);
+      }
+      if (tasksRes.ok) {
+        const { tasks: t } = await tasksRes.json();
+        setTasks(t ?? []);
+      }
+      if (logsRes.ok) {
+        const { logs } = await logsRes.json();
+        const map = new Map<string, string>();
+        for (const l of logs ?? []) {
+          if (!map.has(l.task_id)) map.set(l.task_id, l.done_at);
+        }
+        setLastCleaningLogs(map);
+      }
     } catch (err) {
       console.error(err);
-      setError("Non sono riuscito a caricare i turni.");
+      setError("Non sono riuscito a caricare i dati.");
     } finally {
       setIsLoading(false);
     }
-  }, [selectedDate]);
+  }, []);
 
   useEffect(() => {
-    loadMembers();
+    load();
     getMyRole().then((role) => setIsAdmin(role === "admin"));
-  }, [loadMembers]);
+  }, [load]);
 
-  useEffect(() => {
-    loadShifts();
-  }, [loadShifts]);
-
-  function shiftsFor(memberId: string): Shift[] {
-    return shifts.filter((s) => s.roster_member_id === memberId);
-  }
-
-  async function handleAddMember() {
-    if (!newMemberName.trim()) return;
+  async function handleAddPoint() {
+    if (!pointName.trim()) return;
     try {
-      const res = await fetch("/api/roster", {
+      const res = await fetch("/api/haccp/points", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newMemberName.trim() }),
+        body: JSON.stringify({ name: pointName.trim(), targetMin: pointMin, targetMax: pointMax }),
       });
       if (!res.ok) throw new Error("Errore creazione");
-      const addedName = newMemberName.trim();
-      setNewMemberName("");
-      setShowAddMember(false);
-      show(`${addedName} aggiunto`);
-      loadMembers();
+      setPointName("");
+      setPointMin("");
+      setPointMax("");
+      setShowPointForm(false);
+      show("Punto di controllo aggiunto");
+      load();
     } catch (err) {
       console.error(err);
-      show("Non sono riuscito ad aggiungere la persona.", "error");
+      show("Non sono riuscito a creare il punto di controllo.", "error");
     }
   }
 
-  async function handleRemoveMember(id: string, name: string) {
-    if (!confirm(`Rimuovere ${name} dall'elenco? Verranno eliminati anche i suoi turni.`)) return;
+  async function handleDeletePoint(id: string) {
+    if (!confirm("Eliminare questo punto di controllo?")) return;
     try {
-      await fetch(`/api/roster?id=${id}`, { method: "DELETE" });
-      show(`${name} rimosso`);
-      loadMembers();
-      loadShifts();
+      await fetch(`/api/haccp/points?id=${id}`, { method: "DELETE" });
+      show("Punto di controllo eliminato");
+      load();
     } catch (err) {
       console.error(err);
-      show("Non sono riuscito a rimuovere la persona.", "error");
+      show("Non sono riuscito a eliminare.", "error");
     }
   }
 
-  function startAddShift(memberId: string) {
-    setAddingShiftFor(memberId);
-    setNewStart("");
-    setNewEnd("");
-  }
-
-  async function handleAddShift(memberId: string) {
-    if (!/^\d{1,2}:\d{2}$/.test(newStart) || !/^\d{1,2}:\d{2}$/.test(newEnd)) return;
+  async function handleRecordReading(pointId: string) {
+    if (!recordingValue) return;
     try {
-      const res = await fetch("/api/shifts", {
+      const res = await fetch("/api/haccp/readings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rosterMemberId: memberId,
-          date: selectedDate,
-          startTime: newStart,
-          endTime: newEnd,
-        }),
+        body: JSON.stringify({ pointId, value: recordingValue }),
       });
-      if (!res.ok) throw new Error("Errore assegnazione");
-      setAddingShiftFor(null);
-      setNewStart("");
-      setNewEnd("");
-      show("Turno assegnato");
-      loadShifts();
+      if (!res.ok) throw new Error("Errore registrazione");
+      setRecordingPointId(null);
+      setRecordingValue("");
+      show("Lettura registrata");
+      load();
     } catch (err) {
       console.error(err);
-      show("Non sono riuscito ad assegnare il turno.", "error");
+      show("Non sono riuscito a registrare la lettura.", "error");
     }
   }
 
-  async function handleDeleteShift(id: string) {
-    setShifts((prev) => prev.filter((s) => s.id !== id));
+  async function handleAddTask() {
+    if (!taskName.trim()) return;
     try {
-      await fetch(`/api/shifts?id=${id}`, { method: "DELETE" });
+      const res = await fetch("/api/haccp/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: taskName.trim(), frequency: taskFrequency }),
+      });
+      if (!res.ok) throw new Error("Errore creazione");
+      setTaskName("");
+      setTaskFrequency("daily");
+      setShowTaskForm(false);
+      show("Attività aggiunta");
+      load();
     } catch (err) {
       console.error(err);
-      loadShifts();
+      show("Non sono riuscito a creare l'attività.", "error");
     }
   }
 
-  const isToday = selectedDate === todayDateString();
+  async function handleDeleteTask(id: string) {
+    if (!confirm("Eliminare questa attività?")) return;
+    try {
+      await fetch(`/api/haccp/tasks?id=${id}`, { method: "DELETE" });
+      show("Attività eliminata");
+      load();
+    } catch (err) {
+      console.error(err);
+      show("Non sono riuscito a eliminare.", "error");
+    }
+  }
+
+  async function handleMarkDone(taskId: string, taskLabel: string) {
+    try {
+      await fetch("/api/haccp/cleaning-logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskId }),
+      });
+      show(`"${taskLabel}" segnata come fatta`);
+      load();
+    } catch (err) {
+      console.error(err);
+      show("Non sono riuscito a registrare.", "error");
+    }
+  }
+
+  function isOutOfRange(point: HaccpPoint, value: number): boolean {
+    if (point.target_min !== null && value < point.target_min) return true;
+    if (point.target_max !== null && value > point.target_max) return true;
+    return false;
+  }
+
+  function isTaskOverdue(task: CleaningTask): boolean {
+    const lastDone = lastCleaningLogs.get(task.id);
+    if (!lastDone) return true;
+    const diffHours = (Date.now() - new Date(lastDone).getTime()) / 36e5;
+    return task.frequency === "daily" ? diffHours > 24 : diffHours > 24 * 7;
+  }
 
   return (
     <div className="p-4">
@@ -204,200 +240,257 @@ export default function TurniPage() {
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="flex-1 text-lg font-semibold text-ink">Turni</h1>
-        {isAdmin && (
-          <button
-            onClick={() => setShowAddMember((v) => !v)}
-            className="touch-target flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-medium text-white"
-          >
-            <UserPlus size={16} />
-            Persona
-          </button>
-        )}
+        <h1 className="text-lg font-semibold text-ink">Registro HACCP</h1>
       </div>
-
-      {showAddMember && (
-        <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-sm font-medium text-ink">Nuova persona</p>
-            <button
-              onClick={() => setShowAddMember(false)}
-              className="touch-target grid place-items-center rounded-lg text-ink-muted"
-              aria-label="Chiudi"
-            >
-              <X size={16} />
-            </button>
-          </div>
-          <div className="flex gap-2">
-            <input
-              value={newMemberName}
-              onChange={(e) => setNewMemberName(e.target.value)}
-              placeholder="Nome e cognome"
-              autoFocus
-              className="flex-1 rounded-lg border border-black/10 px-3 py-2 text-sm"
-            />
-            <button
-              onClick={handleAddMember}
-              disabled={!newMemberName.trim()}
-              className="touch-target rounded-lg bg-primary px-4 text-sm font-medium text-white disabled:opacity-40"
-            >
-              <Check size={16} />
-            </button>
-          </div>
-          <p className="mt-1.5 text-xs text-ink-muted">
-            Va bene anche chi non ha un account nell'app.
-          </p>
-        </div>
-      )}
-
-      <div className="mb-4 flex items-center gap-2 rounded-xl border border-black/5 bg-white p-2">
-        <button
-          onClick={() => setSelectedDate((d) => shiftDate(d, -1))}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
-          aria-label="Giorno precedente"
-        >
-          <ChevronLeft size={20} />
-        </button>
-
-        <div className="relative flex-1">
-          <p className="pointer-events-none text-center text-sm font-medium text-ink">
-            {formatDateLabel(selectedDate)}
-          </p>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-            aria-label="Scegli data"
-          />
-        </div>
-
-        <button
-          onClick={() => setSelectedDate((d) => shiftDate(d, 1))}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
-          aria-label="Giorno successivo"
-        >
-          <ChevronRight size={20} />
-        </button>
-      </div>
-
-      {!isToday && (
-        <button
-          onClick={() => setSelectedDate(todayDateString())}
-          className="mb-4 text-sm font-medium text-primary"
-        >
-          Torna a oggi
-        </button>
-      )}
-
-      {!isAdmin && (
-        <p className="mb-3 rounded-lg bg-status-pendingBg p-3 text-sm text-status-pending">
-          Solo un amministratore può modificare i turni.
-        </p>
-      )}
 
       {error && (
         <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
       )}
 
-      {isLoading ? (
-        <ListSkeleton rows={4} />
-      ) : members.length === 0 ? (
-        <EmptyState
-          icon={Users}
-          title="Nessuna persona ancora"
-          description={isAdmin ? 'Tocca "Persona" qui sopra per aggiungerne una.' : undefined}
-        />
-      ) : (
-        <div className="space-y-2">
-          {members.map((member) => {
-            const memberShifts = shiftsFor(member.id);
-            return (
-              <div key={member.id} className="animate-fade-in rounded-xl border border-black/5 bg-white p-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-ink">{member.name}</p>
-                  {isAdmin && (
-                    <button
-                      onClick={() => handleRemoveMember(member.id, member.name)}
-                      className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
-                      aria-label="Rimuovi persona"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {memberShifts.length === 0 && (
-                    <span className="text-xs text-ink-muted">Nessun turno</span>
-                  )}
-                  {memberShifts.map((shift) => (
-                    <span
-                      key={shift.id}
-                      className="num-tabular flex items-center gap-1.5 rounded-full bg-primary-light px-3 py-1.5 text-xs font-medium text-primary"
-                    >
-                      {shift.start_time}–{shift.end_time}
-                      {isAdmin && (
-                        <button
-                          onClick={() => handleDeleteShift(shift.id)}
-                          aria-label="Rimuovi turno"
-                        >
-                          <X size={13} />
-                        </button>
-                      )}
-                    </span>
-                  ))}
-
-                  {isAdmin && addingShiftFor !== member.id && (
-                    <button
-                      onClick={() => startAddShift(member.id)}
-                      className="touch-target flex items-center gap-1 rounded-full border border-dashed border-black/20 px-3 py-1.5 text-xs font-medium text-ink-muted"
-                    >
-                      <Plus size={13} />
-                      Turno
-                    </button>
-                  )}
-                </div>
-
-                {addingShiftFor === member.id && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <input
-                      value={newStart}
-                      onChange={(e) => setNewStart(formatTimeInput(e.target.value))}
-                      placeholder="Da (09:00)"
-                      inputMode="numeric"
-                      maxLength={5}
-                      autoFocus
-                      className="num-tabular w-24 rounded-lg border border-black/10 px-2 py-1.5 text-sm"
-                    />
-                    <span className="text-ink-muted">–</span>
-                    <input
-                      value={newEnd}
-                      onChange={(e) => setNewEnd(formatTimeInput(e.target.value))}
-                      placeholder="A (15:00)"
-                      inputMode="numeric"
-                      maxLength={5}
-                      className="num-tabular w-24 rounded-lg border border-black/10 px-2 py-1.5 text-sm"
-                    />
-                    <button
-                      onClick={() => handleAddShift(member.id)}
-                      className="touch-target rounded-lg bg-primary px-3 text-white"
-                    >
-                      <Check size={16} />
-                    </button>
-                    <button
-                      onClick={() => setAddingShiftFor(null)}
-                      className="touch-target rounded-lg border border-black/10 px-3 text-ink-muted"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+      <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="flex items-center gap-1.5 text-sm font-medium text-ink">
+            <Thermometer size={16} />
+            Temperature
+          </p>
+          {isAdmin && (
+            <button
+              onClick={() => setShowPointForm((v) => !v)}
+              className="touch-target flex items-center gap-1 text-xs font-medium text-primary"
+            >
+              <Plus size={14} />
+              Aggiungi
+            </button>
+          )}
         </div>
-      )}
+
+        {showPointForm && (
+          <div className="mb-3 rounded-lg bg-bg-subtle p-3">
+            <div className="space-y-2">
+              <input
+                value={pointName}
+                onChange={(e) => setPointName(e.target.value)}
+                placeholder="Es. Frigo cucina"
+                autoFocus
+                className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  value={pointMin}
+                  onChange={(e) => setPointMin(e.target.value)}
+                  placeholder="Min °C"
+                  type="number"
+                  className="num-tabular rounded-lg border border-black/10 px-3 py-2 text-sm"
+                />
+                <input
+                  value={pointMax}
+                  onChange={(e) => setPointMax(e.target.value)}
+                  placeholder="Max °C"
+                  type="number"
+                  className="num-tabular rounded-lg border border-black/10 px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+            <button
+              onClick={handleAddPoint}
+              className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2 text-sm font-medium text-white"
+            >
+              <Check size={16} />
+              Salva
+            </button>
+          </div>
+        )}
+
+        {isLoading ? (
+          <ListSkeleton rows={2} />
+        ) : points.length === 0 ? (
+          <EmptyState icon={Thermometer} title="Nessun punto di controllo ancora" />
+        ) : (
+          <div className="space-y-1.5">
+            {points.map((point) => {
+              const reading = latestReadings.get(point.id);
+              const outOfRange = reading ? isOutOfRange(point, reading.value) : false;
+              return (
+                <div key={point.id} className="animate-fade-in rounded-lg bg-bg-subtle p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-ink">{point.name}</p>
+                      {reading ? (
+                        <p
+                          className={`num-tabular flex items-center gap-1 text-xs ${
+                            outOfRange ? "font-medium text-status-danger" : "text-ink-muted"
+                          }`}
+                        >
+                          {outOfRange && <AlertTriangle size={11} />}
+                          {reading.value}°C · {timeAgo(reading.recorded_at)}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-ink-muted">Nessuna lettura ancora</p>
+                      )}
+                    </div>
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleDeletePoint(point.id)}
+                        className="touch-target grid shrink-0 place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                        aria-label="Elimina"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
+                  </div>
+
+                  {recordingPointId === point.id ? (
+                    <div className="mt-2 flex gap-2">
+                      <input
+                        value={recordingValue}
+                        onChange={(e) => setRecordingValue(e.target.value)}
+                        placeholder="°C"
+                        type="number"
+                        step="0.1"
+                        autoFocus
+                        className="num-tabular flex-1 rounded-lg border border-black/10 px-2 py-1.5 text-sm"
+                      />
+                      <button
+                        onClick={() => handleRecordReading(point.id)}
+                        className="touch-target rounded-lg bg-primary px-3 text-white"
+                      >
+                        <Check size={16} />
+                      </button>
+                      <button
+                        onClick={() => setRecordingPointId(null)}
+                        className="touch-target rounded-lg border border-black/10 px-3 text-ink-muted"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setRecordingPointId(point.id);
+                        setRecordingValue("");
+                      }}
+                      className="touch-target mt-2 w-full rounded-lg border border-black/10 py-1.5 text-xs font-medium text-primary"
+                    >
+                      Registra lettura
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-xl border border-black/5 bg-white p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="flex items-center gap-1.5 text-sm font-medium text-ink">
+            <SprayCan size={16} />
+            Pulizie
+          </p>
+          {isAdmin && (
+            <button
+              onClick={() => setShowTaskForm((v) => !v)}
+              className="touch-target flex items-center gap-1 text-xs font-medium text-primary"
+            >
+              <Plus size={14} />
+              Aggiungi
+            </button>
+          )}
+        </div>
+
+        {showTaskForm && (
+          <div className="mb-3 rounded-lg bg-bg-subtle p-3">
+            <input
+              value={taskName}
+              onChange={(e) => setTaskName(e.target.value)}
+              placeholder="Es. Sanificazione banco"
+              autoFocus
+              className="mb-2 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setTaskFrequency("daily")}
+                className={`touch-target flex-1 rounded-lg text-xs font-medium ${
+                  taskFrequency === "daily"
+                    ? "bg-primary text-white"
+                    : "border border-black/10 text-ink-muted"
+                }`}
+              >
+                Giornaliera
+              </button>
+              <button
+                onClick={() => setTaskFrequency("weekly")}
+                className={`touch-target flex-1 rounded-lg text-xs font-medium ${
+                  taskFrequency === "weekly"
+                    ? "bg-primary text-white"
+                    : "border border-black/10 text-ink-muted"
+                }`}
+              >
+                Settimanale
+              </button>
+            </div>
+            <button
+              onClick={handleAddTask}
+              className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2 text-sm font-medium text-white"
+            >
+              <Check size={16} />
+              Salva
+            </button>
+          </div>
+        )}
+
+        {isLoading ? (
+          <ListSkeleton rows={2} />
+        ) : tasks.length === 0 ? (
+          <EmptyState icon={SprayCan} title="Nessuna attività ancora" />
+        ) : (
+          <div className="space-y-1.5">
+            {tasks.map((task) => {
+              const lastDone = lastCleaningLogs.get(task.id);
+              const overdue = isTaskOverdue(task);
+              return (
+                <div
+                  key={task.id}
+                  className="animate-fade-in flex items-center justify-between gap-2 rounded-lg bg-bg-subtle p-3"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-medium text-ink">{task.name}</p>
+                      <span className="rounded-full bg-white px-1.5 py-0.5 text-[10px] text-ink-muted">
+                        {task.frequency === "daily" ? "Giornaliera" : "Settimanale"}
+                      </span>
+                    </div>
+                    <p
+                      className={`text-xs ${
+                        overdue ? "font-medium text-status-danger" : "text-ink-muted"
+                      }`}
+                    >
+                      {lastDone ? `Ultima volta: ${timeAgo(lastDone)}` : "Mai fatta"}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      onClick={() => handleMarkDone(task.id, task.name)}
+                      className="touch-target rounded-lg bg-status-free px-3 py-1.5 text-xs font-medium text-white"
+                    >
+                      Fatto
+                    </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleDeleteTask(task.id)}
+                        className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                        aria-label="Elimina"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
