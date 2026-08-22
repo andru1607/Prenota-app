@@ -4,7 +4,11 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, fullName, restaurantName } = await req.json();
+    const { email, password, fullName, restaurantName, website } = await req.json();
+
+    if (website) {
+      return NextResponse.json({ success: true });
+    }
 
     if (!email || !password || !restaurantName) {
       return NextResponse.json({ error: "Compila tutti i campi obbligatori." }, { status: 400 });
