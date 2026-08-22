@@ -47,13 +47,27 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { restaurantId, customerName, phone, date, time, partySize } = await req.json();
+    const { restaurantId, customerName, phone, date, time, partySize, website } = await req.json();
+
+    if (website) {
+      return NextResponse.json({ success: true, status: "confirmed" });
+    }
 
     if (!restaurantId || !customerName || !date || !time || !partySize) {
       return NextResponse.json({ error: "Compila tutti i campi." }, { status: 400 });
     }
     if (!/^\d{1,2}:\d{2}$/.test(time)) {
       return NextResponse.json({ error: "Orario non valido." }, { status: 400 });
+    }
+    if (customerName.length > 100) {
+      return NextResponse.json({ error: "Nome troppo lungo." }, { status: 400 });
+    }
+    if (phone && phone.length > 30) {
+      return NextResponse.json({ error: "Numero di telefono non valido." }, { status: 400 });
+    }
+    const size = Number(partySize);
+    if (!Number.isInteger(size) || size < 1 || size > 50) {
+      return NextResponse.json({ error: "Numero di persone non valido." }, { status: 400 });
     }
 
     const supabase = createAdminClient();
@@ -66,6 +80,23 @@ export async function POST(req: NextRequest) {
 
     if (!restaurant) {
       return NextResponse.json({ error: "Ristorante non trovato." }, { status: 404 });
+    }
+
+    if (phone) {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { count } = await supabase
+        .from("reservations")
+        .select("*", { count: "exact", head: true })
+        .eq("phone", phone)
+        .eq("source", "public")
+        .gte("created_at", oneHourAgo);
+
+      if ((count ?? 0) >= 3) {
+        return NextResponse.json(
+          { error: "Troppe richieste inviate di recente. Riprova tra qualche minuto." },
+          { status: 429 }
+        );
+      }
     }
 
     const { data: exceptionRow } = await supabase
@@ -88,7 +119,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const size = Number(partySize);
     const status = size <= 6 ? "confirmed" : "pending";
     const reservationTime = toItalyIso(date, time);
 
