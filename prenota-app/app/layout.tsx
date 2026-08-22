@@ -3,6 +3,7 @@ import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { ThemeLoader } from "@/components/ThemeLoader";
+import { ToastProvider } from "@/components/ui/ToastProvider";
 
 export const metadata: Metadata = {
   title: "Prenota — Gestione Prenotazioni",
@@ -32,13 +33,15 @@ export default function RootLayout({
     <html lang="it">
       <body>
         <ThemeLoader />
-        <div className="flex min-h-screen">
-          <Sidebar />
+        <ToastProvider>
+          <div className="flex min-h-screen">
+            <Sidebar />
 
-          <main className="flex-1 pb-20 md:pb-0">{children}</main>
-        </div>
+            <main className="flex-1 pb-20 md:pb-0">{children}</main>
+          </div>
 
-        <BottomNav />
+          <BottomNav />
+        </ToastProvider>
       </body>
     </html>
   );
