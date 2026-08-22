@@ -70,6 +70,10 @@ export function ReservationCard({
 
   function handleTouchStart(e: React.TouchEvent) {
     if (!canSwipe) return;
+    if (e.touches.length > 1) {
+      dragDirection.current = "vertical";
+      return;
+    }
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
     dragDirection.current = null;
@@ -80,6 +84,13 @@ export function ReservationCard({
     if (!el || !canSwipe) return;
 
     function onTouchMove(e: TouchEvent) {
+      if (e.touches.length > 1) {
+        dragDirection.current = "vertical";
+        setIsDragging(false);
+        setDragX(0);
+        return;
+      }
+
       const deltaX = e.touches[0].clientX - touchStartX.current;
       const deltaY = e.touches[0].clientY - touchStartY.current;
 
