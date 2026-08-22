@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { BottomNav } from "@/components/layout/BottomNav";
+import { AppChrome } from "@/components/layout/AppChrome";
 import { ThemeLoader } from "@/components/ThemeLoader";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 
@@ -34,13 +33,7 @@ export default function RootLayout({
       <body>
         <ThemeLoader />
         <ToastProvider>
-          <div className="flex min-h-screen">
-            <Sidebar />
-
-            <main className="flex-1 pb-20 md:pb-0">{children}</main>
-          </div>
-
-          <BottomNav />
+          <AppChrome>{children}</AppChrome>
         </ToastProvider>
       </body>
     </html>
