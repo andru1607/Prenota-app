@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, Check, UserX, StickyNote, X, Trash2, Pencil, Phone, RotateCcw } from "lucide-react";
+import { Users, Check, UserX, StickyNote, X, Trash2, Pencil, Phone, RotateCcw, CheckCheck } from "lucide-react";
 import type { Reservation, ReservationStatus } from "@/types";
 
 const STATUS_BAR_COLOR: Record<ReservationStatus, string> = {
@@ -83,6 +83,17 @@ export function ReservationCard({
                   Tavolo {tableNumber}
                 </span>
               )}
+              {reservation.status === "confirmed" &&
+                (reservation.customerConfirmedAt ? (
+                  <span className="flex items-center gap-1 rounded-full bg-status-freeBg px-1.5 py-0.5 text-[10px] font-medium text-status-free">
+                    <CheckCheck size={11} />
+                    Confermata dal cliente
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-bg-subtle px-1.5 py-0.5 text-[10px] font-medium text-ink-muted">
+                    Non confermata
+                  </span>
+                ))}
               {isFinal && (
                 <span className="text-xs">{STATUS_LABEL[reservation.status]}</span>
               )}
