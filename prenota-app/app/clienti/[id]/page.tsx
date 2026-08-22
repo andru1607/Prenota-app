@@ -2,8 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Star, Trash2, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Star, Trash2, Check, Loader2, CalendarClock } from "lucide-react";
 import { ReservationCard } from "@/components/ui/ReservationCard";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/ToastProvider";
 import { getMyRole } from "@/lib/roles";
 import type { Customer, Reservation } from "@/types";
 
@@ -36,6 +39,7 @@ function mapReservationRow(row: any): Reservation {
 export default function ClienteDettaglioPage() {
   const params = useParams();
   const router = useRouter();
+  const { show } = useToast();
   const customerId = params.id as string;
 
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -46,7 +50,6 @@ export default function ClienteDettaglioPage() {
 
   const [notes, setNotes] = useState("");
   const [isSavingNotes, setIsSavingNotes] = useState(false);
-  const [notesSaved, setNotesSaved] = useState(false);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -98,10 +101,10 @@ export default function ClienteDettaglioPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: customer.id, notes }),
       });
-      setNotesSaved(true);
-      setTimeout(() => setNotesSaved(false), 2000);
+      show("Note salvate");
     } catch (err) {
       console.error(err);
+      show("Non sono riuscito a salvare le note.", "error");
     } finally {
       setIsSavingNotes(false);
     }
@@ -111,14 +114,25 @@ export default function ClienteDettaglioPage() {
     if (!customer || !confirm(`Eliminare la scheda di ${customer.name}?`)) return;
     try {
       await fetch(`/api/customers?id=${customer.id}`, { method: "DELETE" });
+      show("Cliente eliminato");
       router.push("/clienti");
     } catch (err) {
       console.error(err);
+      show("Non sono riuscito a eliminare il cliente.", "error");
     }
   }
 
   if (isLoading) {
-    return <p className="p-4 text-center text-sm text-ink-muted">Carico...</p>;
+    return (
+      <div className="p-4">
+        <div className="mb-4 flex items-center gap-3">
+          <Skeleton className="h-9 w-9 rounded-lg" />
+          <Skeleton className="h-6 w-32" />
+        </div>
+        <Skeleton className="mb-4 h-20 w-full" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    );
   }
 
   if (error || !customer) {
@@ -181,17 +195,19 @@ export default function ClienteDettaglioPage() {
           className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2 text-sm font-medium text-white disabled:opacity-50"
         >
           {isSavingNotes && <Loader2 size={16} className="animate-spin" />}
-          {notesSaved ? "Salvato!" : "Salva note"}
+          Salva note
         </button>
       </div>
 
       <p className="mb-2 text-xs font-medium uppercase text-ink-muted">Storico prenotazioni</p>
       {!customer.phone ? (
-        <p className="py-6 text-center text-sm text-ink-muted">
-          Aggiungi un telefono per vedere lo storico delle prenotazioni collegate.
-        </p>
+        <EmptyState
+          icon={CalendarClock}
+          title="Nessun telefono associato"
+          description="Aggiungi un telefono per vedere lo storico delle prenotazioni collegate."
+        />
       ) : history.length === 0 ? (
-        <p className="py-6 text-center text-sm text-ink-muted">Nessuna prenotazione trovata.</p>
+        <EmptyState icon={CalendarClock} title="Nessuna prenotazione trovata" />
       ) : (
         <div className="space-y-2">
           {history.map((r) => (
