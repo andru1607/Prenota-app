@@ -2,7 +2,10 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus, Star, Loader2, ChevronRight, X, Check } from "lucide-react";
+import { Search, Plus, Star, Loader2, ChevronRight, X, Check, Users } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ListSkeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/ToastProvider";
 import type { Customer } from "@/types";
 
 function mapCustomerRow(row: any): Customer {
@@ -18,6 +21,7 @@ function mapCustomerRow(row: any): Customer {
 
 export default function ClientiPage() {
   const router = useRouter();
+  const { show } = useToast();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,10 +81,11 @@ export default function ClientiPage() {
       setNewPhone("");
       setNewNotes("");
       setShowForm(false);
+      show("Cliente aggiunto");
       loadCustomers(search || undefined);
     } catch (err) {
       console.error(err);
-      setError("Non sono riuscito ad aggiungere il cliente.");
+      show("Non sono riuscito ad aggiungere il cliente.", "error");
     } finally {
       setIsAdding(false);
     }
@@ -162,20 +167,24 @@ export default function ClientiPage() {
       )}
 
       {isLoading ? (
-        <p className="py-8 text-center text-sm text-ink-muted">Carico i clienti...</p>
+        <ListSkeleton rows={5} />
       ) : customers.length === 0 ? (
-        <p className="py-8 text-center text-sm text-ink-muted">
-          {search
-            ? "Nessun cliente trovato."
-            : "Nessun cliente ancora. I clienti che prenotano dal QR code con il loro telefono vengono aggiunti automaticamente."}
-        </p>
+        <EmptyState
+          icon={Users}
+          title={search ? "Nessun cliente trovato" : "Nessun cliente ancora"}
+          description={
+            search
+              ? undefined
+              : "I clienti che prenotano dal QR code con il loro telefono vengono aggiunti automaticamente."
+          }
+        />
       ) : (
         <div className="space-y-2">
           {customers.map((customer) => (
             <button
               key={customer.id}
               onClick={() => router.push(`/clienti/${customer.id}`)}
-              className="touch-target flex w-full items-center justify-between rounded-xl border border-black/5 bg-white p-3 text-left"
+              className="animate-fade-in touch-target flex w-full items-center justify-between rounded-xl border border-black/5 bg-white p-3 text-left"
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
