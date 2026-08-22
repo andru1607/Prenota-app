@@ -12,9 +12,12 @@
   }
   html {
     -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
   }
   body {
     @apply bg-bg text-ink antialiased;
+    overflow-x: hidden;
   }
   .num-tabular {
     font-variant-numeric: tabular-nums;
