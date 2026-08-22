@@ -10,6 +10,7 @@ import {
   Users,
   Loader2,
   RefreshCw,
+  Pencil,
 } from "lucide-react";
 
 interface ReservationInfo {
@@ -26,6 +27,19 @@ interface RestaurantBranding {
   primary_color: string;
 }
 
+function toDateString(d: Date): string {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function formatTimeInput(raw: string) {
+  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return digits.slice(0, 2) + ":" + digits.slice(2);
+}
+
 export default function BadgePrenotazionePage() {
   const params = useParams();
   const reservationId = params.id as string;
@@ -35,7 +49,13 @@ export default function BadgePrenotazionePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
-  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editDate, setEditDate] = useState("");
+  const [editTime, setEditTime] = useState("");
+  const [editPartySize, setEditPartySize] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   async function load() {
     setError(null);
@@ -58,10 +78,52 @@ export default function BadgePrenotazionePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reservationId]);
 
+  function openEditForm() {
+    if (!reservation) return;
+    const d = new Date(reservation.reservationTime);
+    setEditDate(toDateString(d));
+    setEditTime(
+      d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+    );
+    setEditPartySize(String(reservation.partySize));
+    setActionError(null);
+    setShowEditForm(true);
+  }
+
+  async function handleSaveEdit() {
+    if (!editDate || !/^\d{1,2}:\d{2}$/.test(editTime) || Number(editPartySize) < 1) return;
+    setIsSaving(true);
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/prenotazione/${reservationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "modify",
+          date: editDate,
+          time: editTime,
+          partySize: Number(editPartySize),
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        setActionError(body.error || "Non sono riuscito a modificare la prenotazione.");
+        return;
+      }
+      setShowEditForm(false);
+      await load();
+    } catch (err) {
+      console.error(err);
+      setActionError("Non sono riuscito a modificare la prenotazione. Riprova.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   async function handleCancel() {
     if (!confirm("Sei sicuro di voler disdire questa prenotazione?")) return;
     setIsCancelling(true);
-    setCancelError(null);
+    setActionError(null);
     try {
       const res = await fetch(`/api/prenotazione/${reservationId}`, {
         method: "PATCH",
@@ -72,7 +134,7 @@ export default function BadgePrenotazionePage() {
       await load();
     } catch (err) {
       console.error(err);
-      setCancelError("Non sono riuscito a disdire la prenotazione. Riprova.");
+      setActionError("Non sono riuscito a disdire la prenotazione. Riprova.");
     } finally {
       setIsCancelling(false);
     }
@@ -108,6 +170,7 @@ export default function BadgePrenotazionePage() {
   const isConfirmed = reservation.status === "confirmed";
   const isPending = reservation.status === "pending";
   const isCancelled = reservation.status === "cancelled";
+  const canManage = isConfirmed || isPending;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg p-4">
@@ -174,20 +237,86 @@ export default function BadgePrenotazionePage() {
           </div>
         </div>
 
-        {isConfirmed && (
+        {isConfirmed && !showEditForm && (
           <p className="mt-4 text-center text-xs text-ink-muted">
             Mostra questa pagina all'arrivo. Puoi anche salvarla o farne uno screenshot.
           </p>
         )}
-        {isPending && (
+        {isPending && !showEditForm && (
           <p className="mt-4 text-center text-xs text-ink-muted">
             Il ristorante deve ancora confermare. Torna su questo stesso link più tardi per
             controllare, oppure aggiorna ora.
           </p>
         )}
 
-        {(isConfirmed || isPending) && (
+        {canManage && showEditForm && (
+          <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
+            <p className="mb-3 text-sm font-semibold text-ink">Modifica prenotazione</p>
+            <div className="space-y-2">
+              <input
+                type="date"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+                className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm text-ink"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  value={editTime}
+                  onChange={(e) => setEditTime(formatTimeInput(e.target.value))}
+                  placeholder="Orario (HH:MM)"
+                  inputMode="numeric"
+                  maxLength={5}
+                  className="num-tabular rounded-lg border border-black/10 px-3 py-2.5 text-sm"
+                />
+                <input
+                  type="number"
+                  value={editPartySize}
+                  onChange={(e) => setEditPartySize(e.target.value)}
+                  placeholder="Persone"
+                  className="num-tabular rounded-lg border border-black/10 px-3 py-2.5 text-sm"
+                />
+              </div>
+            </div>
+
+            {actionError && (
+              <p className="mt-2 text-xs text-status-danger">{actionError}</p>
+            )}
+
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={() => setShowEditForm(false)}
+                disabled={isSaving}
+                className="touch-target flex-1 rounded-xl border border-black/10 text-sm font-medium text-ink-muted disabled:opacity-40"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={isSaving}
+                style={{ backgroundColor: color }}
+                className="touch-target flex flex-1 items-center justify-center gap-2 rounded-xl text-sm font-medium text-white disabled:opacity-50"
+              >
+                {isSaving && <Loader2 size={15} className="animate-spin" />}
+                Salva
+              </button>
+            </div>
+            <p className="mt-2 text-center text-xs text-ink-muted">
+              Se porti il gruppo oltre le 6 persone, la prenotazione tornerà "in attesa" di
+              conferma da parte del ristorante.
+            </p>
+          </div>
+        )}
+
+        {canManage && !showEditForm && (
           <div className="mt-4 space-y-2">
+            <button
+              onClick={openEditForm}
+              style={{ backgroundColor: color }}
+              className="touch-target flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium text-white"
+            >
+              <Pencil size={15} />
+              Modifica prenotazione
+            </button>
             <button
               onClick={load}
               className="touch-target flex w-full items-center justify-center gap-2 rounded-xl border border-black/10 py-2.5 text-sm font-medium text-ink-muted"
@@ -195,8 +324,8 @@ export default function BadgePrenotazionePage() {
               <RefreshCw size={15} />
               Aggiorna stato
             </button>
-            {cancelError && (
-              <p className="text-center text-xs text-status-danger">{cancelError}</p>
+            {actionError && (
+              <p className="text-center text-xs text-status-danger">{actionError}</p>
             )}
             <button
               onClick={handleCancel}
