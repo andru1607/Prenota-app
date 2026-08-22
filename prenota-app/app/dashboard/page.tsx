@@ -2,12 +2,15 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Loader2, Eye, EyeOff, ChevronRight } from "lucide-react";
+import { Camera, Loader2, Eye, EyeOff, ChevronRight, CalendarClock } from "lucide-react";
 import { StatusBar } from "@/components/ui/StatusBar";
 import { TableCard } from "@/components/ui/TableCard";
 import { ReservationCard } from "@/components/ui/ReservationCard";
 import { PhotoImportReview } from "@/components/ui/PhotoImportReview";
 import { OnboardingGuide } from "@/components/ui/OnboardingGuide";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { TableCardSkeleton, ReservationCardSkeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/ToastProvider";
 import type { ParsedReservationDraft, Reservation, RestaurantTable, TableStatus } from "@/types";
 
 const DEFAULT_TABLES = [
@@ -77,6 +80,7 @@ function sortTablesByNumber<T extends { number: string }>(tables: T[]): T[] {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { show } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -84,6 +88,7 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [skippedInfo, setSkippedInfo] = useState<string | null>(null);
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
   const [tables, setTables] = useState<(RestaurantTable & { roomId: string | null })[]>([]);
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const [roomFilter, setRoomFilter] = useState<string>("all");
@@ -147,8 +152,7 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    loadReservations();
-    loadTables();
+    Promise.all([loadReservations(), loadTables()]).finally(() => setIsLoadingData(false));
     fetch("/api/rooms")
       .then((res) => (res.ok ? res.json() : null))
       .then((body) => setRooms(body?.rooms ?? []))
@@ -268,6 +272,7 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error("Errore nel salvataggio");
 
       setDrafts(null);
+      show(`${confirmed.length} prenotazion${confirmed.length === 1 ? "e" : "i"} salvat${confirmed.length === 1 ? "a" : "e"}`);
       router.push("/prenotazioni");
     } catch (err) {
       console.error(err);
@@ -394,6 +399,16 @@ export default function DashboardPage() {
             )}
 
             {(() => {
+              if (isLoadingData) {
+                return (
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <TableCardSkeleton key={i} />
+                    ))}
+                  </div>
+                );
+              }
+
               const filteredTables =
                 roomFilter === "all"
                   ? tables
@@ -422,10 +437,18 @@ export default function DashboardPage() {
           <div>
             <p className="mb-3 text-xs text-ink-muted">Prossime prenotazioni.</p>
 
-            {previewList.length === 0 ? (
-              <p className="py-8 text-center text-sm text-ink-muted">
-                Nessuna prenotazione attiva al momento.
-              </p>
+            {isLoadingData ? (
+              <div className="space-y-2">
+                <ReservationCardSkeleton />
+                <ReservationCardSkeleton />
+                <ReservationCardSkeleton />
+              </div>
+            ) : previewList.length === 0 ? (
+              <EmptyState
+                icon={CalendarClock}
+                title="Nessuna prenotazione attiva al momento"
+                description="Le prossime prenotazioni appariranno qui."
+              />
             ) : (
               <div className="space-y-2">
                 {previewList.map((r, index) => {
