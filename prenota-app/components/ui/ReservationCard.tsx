@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
 import { Users, Check, UserX, StickyNote, X, Trash2, Pencil, Phone } from "lucide-react";
 import type { Reservation, ReservationStatus } from "@/types";
 
@@ -21,9 +20,6 @@ const STATUS_LABEL: Record<ReservationStatus, string> = {
   completed: "Presente",
   no_show: "Assente",
 };
-
-const SWIPE_THRESHOLD = 64;
-const SWIPE_MAX = 96;
 
 interface ReservationCardProps {
   reservation: Reservation;
@@ -59,229 +55,133 @@ export function ReservationCard({
     reservation.status === "cancelled";
 
   const isPending = reservation.status === "pending";
-  const canSwipe = !isFinal && !isPending && !!(onCheckIn || onCancel);
-
-  const [dragX, setDragX] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-  const dragDirection = useRef<"horizontal" | "vertical" | null>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  function handleTouchStart(e: React.TouchEvent) {
-    if (!canSwipe) return;
-    if (e.touches.length > 1) {
-      dragDirection.current = "vertical";
-      return;
-    }
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-    dragDirection.current = null;
-  }
-
-  useEffect(() => {
-    const el = cardRef.current;
-    if (!el || !canSwipe) return;
-
-    function onTouchMove(e: TouchEvent) {
-      if (e.touches.length > 1) {
-        dragDirection.current = "vertical";
-        setIsDragging(false);
-        setDragX(0);
-        return;
-      }
-
-      const deltaX = e.touches[0].clientX - touchStartX.current;
-      const deltaY = e.touches[0].clientY - touchStartY.current;
-
-      if (dragDirection.current === null && (Math.abs(deltaX) > 8 || Math.abs(deltaY) > 8)) {
-        dragDirection.current = Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
-        if (dragDirection.current === "horizontal") setIsDragging(true);
-      }
-
-      if (dragDirection.current === "horizontal") {
-        e.preventDefault();
-        setDragX(Math.max(-SWIPE_MAX, Math.min(SWIPE_MAX, deltaX)));
-      }
-    }
-
-    el.addEventListener("touchmove", onTouchMove, { passive: false });
-    return () => el.removeEventListener("touchmove", onTouchMove);
-  }, [canSwipe]);
-
-  function handleTouchEnd() {
-    if (!canSwipe) return;
-    if (dragDirection.current === "horizontal") {
-      setIsDragging(false);
-      if (dragX > SWIPE_THRESHOLD && onCheckIn) {
-        onCheckIn();
-      } else if (dragX < -SWIPE_THRESHOLD && onCancel) {
-        onCancel();
-      }
-    }
-    setDragX(0);
-    dragDirection.current = null;
-  }
 
   return (
-    <div className="animate-fade-in relative overflow-hidden rounded-xl">
-      {canSwipe && (
-        <div className="absolute inset-0 flex items-center justify-between px-4">
-          <span
-            className={`flex items-center gap-1.5 text-sm font-semibold text-status-free transition-opacity ${
-              dragX > 16 ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <Check size={18} />
-            Presente
-          </span>
-          <span
-            className={`flex items-center gap-1.5 text-sm font-semibold text-status-danger transition-opacity ${
-              dragX < -16 ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            Cancella
-            <X size={18} />
-          </span>
+    <div className="animate-fade-in overflow-hidden rounded-xl bg-white shadow-sm">
+      <div className="flex">
+        <div className={`w-1.5 ${STATUS_BAR_COLOR[reservation.status]}`} />
+
+        <div className="flex flex-1 items-center justify-between p-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <p className="truncate font-semibold text-ink">{reservation.customerName}</p>
+              {reservation.source === "public" && (
+                <span className="shrink-0 rounded-full bg-primary-light px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                  Richiesta cliente
+                </span>
+              )}
+            </div>
+            <div className="mt-0.5 flex items-center gap-3 text-sm text-ink-muted">
+              <span className="num-tabular font-medium text-ink">{time}</span>
+              <span className="flex items-center gap-1">
+                <Users size={14} /> {reservation.partySize}
+              </span>
+              {tableNumber && (
+                <span className="rounded bg-bg-subtle px-1.5 py-0.5 text-xs font-medium text-ink-muted">
+                  Tavolo {tableNumber}
+                </span>
+              )}
+              {isFinal && (
+                <span className="text-xs">{STATUS_LABEL[reservation.status]}</span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-1">
+            {reservation.phone && (
+              <a
+                href={`tel:${reservation.phone}`}
+                onClick={(e) => e.stopPropagation()}
+                className="touch-target grid place-items-center rounded-lg text-primary hover:bg-primary-light"
+                aria-label={`Chiama ${reservation.customerName}`}
+                title="Chiama"
+              >
+                <Phone size={18} />
+              </a>
+            )}
+            {isPending && onAccept && (
+              <button
+                onClick={onAccept}
+                className="touch-target grid place-items-center rounded-lg text-status-free hover:bg-status-freeBg"
+                aria-label="Accetta richiesta"
+                title="Accetta"
+              >
+                <Check size={20} />
+              </button>
+            )}
+            {isPending && onReject && (
+              <button
+                onClick={onReject}
+                className="touch-target grid place-items-center rounded-lg text-status-danger hover:bg-status-dangerBg"
+                aria-label="Rifiuta richiesta"
+                title="Rifiuta"
+              >
+                <X size={20} />
+              </button>
+            )}
+
+            {!isFinal && !isPending && onCheckIn && (
+              <button
+                onClick={onCheckIn}
+                className="touch-target grid place-items-center rounded-lg text-status-free hover:bg-status-freeBg"
+                aria-label="Presente"
+                title="Segna come presente"
+              >
+                <Check size={20} />
+              </button>
+            )}
+            {!isFinal && !isPending && onNoShow && (
+              <button
+                onClick={onNoShow}
+                className="touch-target grid place-items-center rounded-lg text-status-danger hover:bg-status-dangerBg"
+                aria-label="Assente"
+                title="Segna come mancata presenza"
+              >
+                <UserX size={20} />
+              </button>
+            )}
+
+            {!isFinal && onEdit && (
+              <button
+                onClick={onEdit}
+                className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+                aria-label="Modifica prenotazione"
+                title="Modifica"
+              >
+                <Pencil size={16} />
+              </button>
+            )}
+
+            {!isFinal && !isPending && onCancel && (
+              <button
+                onClick={onCancel}
+                className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+                aria-label="Cancella"
+                title="Cancella prenotazione"
+              >
+                <X size={18} />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={onDelete}
+                className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                aria-label="Elimina definitivamente"
+                title="Elimina definitivamente"
+              >
+                <Trash2 size={17} />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {reservation.notes && (
+        <div className="flex items-start gap-1.5 border-t border-black/5 bg-bg-subtle px-3 py-2 text-xs text-ink-muted">
+          <StickyNote size={13} className="mt-0.5 shrink-0" />
+          <span>{reservation.notes}</span>
         </div>
       )}
-
-      <div
-        ref={cardRef}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        style={{
-          transform: `translateX(${dragX}px)`,
-          transition: isDragging ? "none" : "transform 0.2s ease-out",
-          touchAction: "pan-y",
-        }}
-        className="relative overflow-hidden rounded-xl bg-white shadow-sm"
-      >
-        <div className="flex">
-          <div className={`w-1.5 ${STATUS_BAR_COLOR[reservation.status]}`} />
-
-          <div className="flex flex-1 items-center justify-between p-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <p className="truncate font-semibold text-ink">{reservation.customerName}</p>
-                {reservation.source === "public" && (
-                  <span className="shrink-0 rounded-full bg-primary-light px-1.5 py-0.5 text-[10px] font-medium text-primary">
-                    Richiesta cliente
-                  </span>
-                )}
-              </div>
-              <div className="mt-0.5 flex items-center gap-3 text-sm text-ink-muted">
-                <span className="num-tabular font-medium text-ink">{time}</span>
-                <span className="flex items-center gap-1">
-                  <Users size={14} /> {reservation.partySize}
-                </span>
-                {tableNumber && (
-                  <span className="rounded bg-bg-subtle px-1.5 py-0.5 text-xs font-medium text-ink-muted">
-                    Tavolo {tableNumber}
-                  </span>
-                )}
-                {isFinal && (
-                  <span className="text-xs">{STATUS_LABEL[reservation.status]}</span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1">
-              {reservation.phone && (
-                <a
-                  href={`tel:${reservation.phone}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="touch-target grid place-items-center rounded-lg text-primary hover:bg-primary-light"
-                  aria-label={`Chiama ${reservation.customerName}`}
-                  title="Chiama"
-                >
-                  <Phone size={18} />
-                </a>
-              )}
-              {isPending && onAccept && (
-                <button
-                  onClick={onAccept}
-                  className="touch-target grid place-items-center rounded-lg text-status-free hover:bg-status-freeBg"
-                  aria-label="Accetta richiesta"
-                  title="Accetta"
-                >
-                  <Check size={20} />
-                </button>
-              )}
-              {isPending && onReject && (
-                <button
-                  onClick={onReject}
-                  className="touch-target grid place-items-center rounded-lg text-status-danger hover:bg-status-dangerBg"
-                  aria-label="Rifiuta richiesta"
-                  title="Rifiuta"
-                >
-                  <X size={20} />
-                </button>
-              )}
-
-              {!isFinal && !isPending && onCheckIn && (
-                <button
-                  onClick={onCheckIn}
-                  className="touch-target grid place-items-center rounded-lg text-status-free hover:bg-status-freeBg"
-                  aria-label="Presente"
-                  title="Segna come presente"
-                >
-                  <Check size={20} />
-                </button>
-              )}
-              {!isFinal && !isPending && onNoShow && (
-                <button
-                  onClick={onNoShow}
-                  className="touch-target grid place-items-center rounded-lg text-status-danger hover:bg-status-dangerBg"
-                  aria-label="Assente"
-                  title="Segna come mancata presenza"
-                >
-                  <UserX size={20} />
-                </button>
-              )}
-
-              {!isFinal && onEdit && (
-                <button
-                  onClick={onEdit}
-                  className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
-                  aria-label="Modifica prenotazione"
-                  title="Modifica"
-                >
-                  <Pencil size={16} />
-                </button>
-              )}
-
-              {!isFinal && !isPending && onCancel && (
-                <button
-                  onClick={onCancel}
-                  className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
-                  aria-label="Cancella"
-                  title="Cancella prenotazione"
-                >
-                  <X size={18} />
-                </button>
-              )}
-              {onDelete && (
-                <button
-                  onClick={onDelete}
-                  className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
-                  aria-label="Elimina definitivamente"
-                  title="Elimina definitivamente"
-                >
-                  <Trash2 size={17} />
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {reservation.notes && (
-          <div className="flex items-start gap-1.5 border-t border-black/5 bg-bg-subtle px-3 py-2 text-xs text-ink-muted">
-            <StickyNote size={13} className="mt-0.5 shrink-0" />
-            <span>{reservation.notes}</span>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
