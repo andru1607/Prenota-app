@@ -9,6 +9,7 @@ export default function SignupPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [website, setWebsite] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export default function SignupPage() {
       const res = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, fullName, restaurantName }),
+        body: JSON.stringify({ email, password, fullName, restaurantName, website }),
       });
       const body = await res.json();
 
@@ -63,6 +64,16 @@ export default function SignupPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg p-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-sm">
+        <input
+          type="text"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px" }}
+        />
+
         <div className="mb-4 flex flex-col items-center gap-2 text-center">
           <div className="grid h-12 w-12 place-items-center rounded-full bg-primary-light text-primary">
             <Store size={22} />
