@@ -401,7 +401,12 @@ export default function PrenotazioniPage() {
           <p className="mb-2 text-xs font-medium uppercase text-ink-muted">Concluse</p>
           <div className="space-y-2 opacity-70">
             {done.map((r) => (
-              <ReservationCard key={r.id} reservation={r} onDelete={() => deleteOne(r.id)} />
+              <ReservationCard
+                key={r.id}
+                reservation={r}
+                onDelete={() => deleteOne(r.id)}
+                onRestore={() => updateStatus(r.id, "confirmed", "Prenotazione ripristinata")}
+              />
             ))}
           </div>
         </div>
