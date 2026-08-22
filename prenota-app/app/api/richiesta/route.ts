@@ -122,17 +122,21 @@ export async function POST(req: NextRequest) {
     const status = size <= 6 ? "confirmed" : "pending";
     const reservationTime = toItalyIso(date, time);
 
-    const { error } = await supabase.from("reservations").insert({
-      restaurant_id: restaurantId,
-      customer_name: customerName,
-      phone: phone || null,
-      party_size: size,
-      reservation_time: reservationTime,
-      status,
-      source: "public",
-    });
+    const { data: insertedReservation, error } = await supabase
+      .from("reservations")
+      .insert({
+        restaurant_id: restaurantId,
+        customer_name: customerName,
+        phone: phone || null,
+        party_size: size,
+        reservation_time: reservationTime,
+        status,
+        source: "public",
+      })
+      .select("id")
+      .single();
 
-    if (error) {
+    if (error || !insertedReservation) {
       console.error("Errore richiesta pubblica:", error);
       return NextResponse.json({ error: "Impossibile inviare la richiesta." }, { status: 500 });
     }
@@ -154,7 +158,7 @@ export async function POST(req: NextRequest) {
       console.error("Errore invio notifica:", err);
     }
 
-    return NextResponse.json({ success: true, status });
+    return NextResponse.json({ success: true, status, reservationId: insertedReservation.id });
   } catch (err) {
     console.error("Errore richiesta pubblica:", err);
     return NextResponse.json({ error: "Richiesta non valida." }, { status: 400 });
