@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { RefreshCw, Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { RefreshCw, Plus, Trash2, ChevronLeft, ChevronRight, CalendarX } from "lucide-react";
 import { ReservationCard } from "@/components/ui/ReservationCard";
 import { ManualReservationForm } from "@/components/ui/ManualReservationForm";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ReservationCardSkeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/ToastProvider";
 import type { Reservation } from "@/types";
 
 interface TableOption {
@@ -61,6 +64,7 @@ function sortTablesByNumber(tables: TableOption[]): TableOption[] {
 }
 
 export default function PrenotazioniPage() {
+  const { show } = useToast();
   const [selectedDate, setSelectedDate] = useState(todayDateString());
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [tables, setTables] = useState<TableOption[]>([]);
@@ -107,7 +111,7 @@ export default function PrenotazioniPage() {
 
   const tableNumberById = new Map(tables.map((t) => [t.id, t.number]));
 
-  async function updateStatus(id: string, status: Reservation["status"]) {
+  async function updateStatus(id: string, status: Reservation["status"], toastMessage?: string) {
     setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
     try {
       const res = await fetch("/api/reservations", {
@@ -116,8 +120,10 @@ export default function PrenotazioniPage() {
         body: JSON.stringify({ id, status }),
       });
       if (!res.ok) throw new Error("Errore aggiornamento");
+      if (toastMessage) show(toastMessage);
     } catch (err) {
       console.error(err);
+      show("Non sono riuscito ad aggiornare la prenotazione.", "error");
       loadReservations();
     }
   }
@@ -128,8 +134,10 @@ export default function PrenotazioniPage() {
     try {
       const res = await fetch(`/api/reservations?id=${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Errore eliminazione");
+      show("Prenotazione eliminata");
     } catch (err) {
       console.error(err);
+      show("Non sono riuscito a eliminare.", "error");
       loadReservations();
     }
   }
@@ -146,9 +154,10 @@ export default function PrenotazioniPage() {
       const ids = reservations.map((r) => r.id);
       await Promise.all(ids.map((id) => fetch(`/api/reservations?id=${id}`, { method: "DELETE" })));
       setReservations([]);
+      show("Tutte le prenotazioni del giorno sono state eliminate");
     } catch (err) {
       console.error(err);
-      alert("Non sono riuscito a eliminare tutte le prenotazioni.");
+      show("Non sono riuscito a eliminare tutte le prenotazioni.", "error");
       loadReservations();
     } finally {
       setIsDeletingAll(false);
@@ -199,6 +208,7 @@ export default function PrenotazioniPage() {
       }
 
       closeForm();
+      show("Modifiche salvate");
 
       if (data.date === selectedDate) {
         loadReservations();
@@ -233,6 +243,7 @@ export default function PrenotazioniPage() {
     }
 
     closeForm();
+    show("Prenotazione aggiunta");
 
     if (data.date === selectedDate) {
       loadReservations();
@@ -249,6 +260,7 @@ export default function PrenotazioniPage() {
   );
 
   const isToday = selectedDate === todayDateString();
+  const showInitialSkeleton = isLoading && reservations.length === 0;
 
   return (
     <div className="p-4">
@@ -349,10 +361,20 @@ export default function PrenotazioniPage() {
         <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
       )}
 
+      {showInitialSkeleton && (
+        <div className="space-y-2">
+          <ReservationCardSkeleton />
+          <ReservationCardSkeleton />
+          <ReservationCardSkeleton />
+        </div>
+      )}
+
       {!isLoading && reservations.length === 0 && !error && !showForm && (
-        <p className="py-8 text-center text-sm text-ink-muted">
-          Nessuna prenotazione per questo giorno. Usa "Nuova" qui sopra per aggiungerne una.
-        </p>
+        <EmptyState
+          icon={CalendarX}
+          title="Nessuna prenotazione per questo giorno"
+          description='Usa "Nuova" qui sopra per aggiungerne una.'
+        />
       )}
 
       {upcoming.length > 0 && (
@@ -361,12 +383,12 @@ export default function PrenotazioniPage() {
             <ReservationCard
               key={r.id}
               reservation={r}
-              onCheckIn={() => updateStatus(r.id, "completed")}
-              onNoShow={() => updateStatus(r.id, "no_show")}
-              onCancel={() => updateStatus(r.id, "cancelled")}
+              onCheckIn={() => updateStatus(r.id, "completed", "Cliente segnato come presente")}
+              onNoShow={() => updateStatus(r.id, "no_show", "Segnato come assente")}
+              onCancel={() => updateStatus(r.id, "cancelled", "Prenotazione cancellata")}
               onDelete={() => deleteOne(r.id)}
-              onAccept={() => updateStatus(r.id, "confirmed")}
-              onReject={() => updateStatus(r.id, "cancelled")}
+              onAccept={() => updateStatus(r.id, "confirmed", "Richiesta accettata")}
+              onReject={() => updateStatus(r.id, "cancelled", "Richiesta rifiutata")}
               onEdit={() => openEditForm(r)}
               tableNumber={r.tableId ? tableNumberById.get(r.tableId) : undefined}
             />
