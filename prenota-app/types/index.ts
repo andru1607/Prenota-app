@@ -1,17 +1,18 @@
+// Stato di una prenotazione — la codifica colori nell'UI si basa SEMPRE su questi valori
 export type ReservationStatus =
-  | "confirmed"
-  | "pending"
-  | "late"
-  | "cancelled"
-  | "completed"
-  | "no_show";
+  | "confirmed"   // verde — confermata
+  | "pending"     // ambra — da confermare / in attesa
+  | "late"        // ambra/rosso — in ritardo rispetto all'orario
+  | "cancelled"   // rosso — cancellata
+  | "completed"   // verde forte — cliente arrivato (presente)
+  | "no_show";    // rosso — mancata presenza
 
 export type TableStatus = "free" | "occupied" | "reserved" | "closed";
 
 export interface RestaurantTable {
   id: string;
-  number: string;
-  capacity: number;
+  number: string;       // es. "12" o "T12"
+  capacity: number;      // numero coperti max
   status: TableStatus;
   notes?: string;
 }
@@ -20,8 +21,8 @@ export interface Customer {
   id: string;
   name: string;
   phone?: string;
-  notes?: string;
-  isRegular: boolean;
+  notes?: string;        // es. allergie, preferenze
+  isRegular: boolean;    // cliente abituale
   reservationCount: number;
 }
 
@@ -30,18 +31,20 @@ export interface Reservation {
   customerName: string;
   phone?: string;
   partySize: number;
-  reservationTime: string;
+  reservationTime: string; // ISO datetime
   status: ReservationStatus;
   tableId?: string;
   notes?: string;
-  source: "manual" | "photo" | "public";
+  source: "manual" | "photo" | "public"; // "public" = richiesta dal cliente via QR code
   createdAt: string;
+  customerConfirmedAt?: string; // quando il cliente ha confermato la presenza dal badge, se l'ha fatto
 }
 
+// Risultato grezzo estratto da una foto dell'agenda, PRIMA della conferma dello staff
 export interface ParsedReservationDraft {
   customerName: string;
   partySize: number | null;
-  reservationTime: string | null;
+  reservationTime: string | null; // orario letto, es. "20:30" — da normalizzare
   notes?: string;
-  confidence: "high" | "medium" | "low";
+  confidence: "high" | "medium" | "low"; // quanto il modello è sicuro della lettura
 }
