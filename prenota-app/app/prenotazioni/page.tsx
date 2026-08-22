@@ -26,6 +26,7 @@ function mapRow(row: any): Reservation {
     notes: row.notes ?? undefined,
     source: row.source,
     createdAt: row.created_at,
+    customerConfirmedAt: row.customer_confirmed_at ?? undefined,
   };
 }
 
