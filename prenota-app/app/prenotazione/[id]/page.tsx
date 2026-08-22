@@ -11,6 +11,7 @@ import {
   Loader2,
   RefreshCw,
   Pencil,
+  CheckCheck,
 } from "lucide-react";
 
 interface ReservationInfo {
@@ -19,6 +20,7 @@ interface ReservationInfo {
   partySize: number;
   reservationTime: string;
   status: string;
+  customerConfirmedAt: string | null;
 }
 
 interface RestaurantBranding {
@@ -49,6 +51,7 @@ export default function BadgePrenotazionePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isConfirmingAttendance, setIsConfirmingAttendance] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const [showEditForm, setShowEditForm] = useState(false);
@@ -117,6 +120,25 @@ export default function BadgePrenotazionePage() {
       setActionError("Non sono riuscito a modificare la prenotazione. Riprova.");
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleConfirmAttendance() {
+    setIsConfirmingAttendance(true);
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/prenotazione/${reservationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "confirm" }),
+      });
+      if (!res.ok) throw new Error("Errore conferma");
+      await load();
+    } catch (err) {
+      console.error(err);
+      setActionError("Non sono riuscito a confermare. Riprova.");
+    } finally {
+      setIsConfirmingAttendance(false);
     }
   }
 
@@ -238,9 +260,35 @@ export default function BadgePrenotazionePage() {
         </div>
 
         {isConfirmed && !showEditForm && (
-          <p className="mt-4 text-center text-xs text-ink-muted">
-            Mostra questa pagina all'arrivo. Puoi anche salvarla o farne uno screenshot.
-          </p>
+          <>
+            {reservation.customerConfirmedAt ? (
+              <div className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-status-freeBg px-4 py-3 text-sm font-medium text-status-free">
+                <CheckCheck size={16} />
+                Hai confermato la tua presenza
+              </div>
+            ) : (
+              <div className="mt-4">
+                <button
+                  onClick={handleConfirmAttendance}
+                  disabled={isConfirmingAttendance}
+                  className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-status-free py-3 text-sm font-medium text-white disabled:opacity-50"
+                >
+                  {isConfirmingAttendance ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <CheckCheck size={16} />
+                  )}
+                  Confermo che vengo
+                </button>
+                <p className="mt-2 text-center text-xs text-ink-muted">
+                  Fai sapere al ristorante che sei ancora in arrivo.
+                </p>
+              </div>
+            )}
+            <p className="mt-3 text-center text-xs text-ink-muted">
+              Mostra questa pagina all'arrivo. Puoi anche salvarla o farne uno screenshot.
+            </p>
+          </>
         )}
         {isPending && !showEditForm && (
           <p className="mt-4 text-center text-xs text-ink-muted">
