@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Users, Check, UserX, StickyNote, X, Trash2, Pencil, Phone } from "lucide-react";
 import type { Reservation, ReservationStatus } from "@/types";
 
@@ -66,6 +66,7 @@ export function ReservationCard({
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const dragDirection = useRef<"horizontal" | "vertical" | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   function handleTouchStart(e: React.TouchEvent) {
     if (!canSwipe) return;
@@ -74,20 +75,28 @@ export function ReservationCard({
     dragDirection.current = null;
   }
 
-  function handleTouchMove(e: React.TouchEvent) {
-    if (!canSwipe) return;
-    const deltaX = e.touches[0].clientX - touchStartX.current;
-    const deltaY = e.touches[0].clientY - touchStartY.current;
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || !canSwipe) return;
 
-    if (dragDirection.current === null && (Math.abs(deltaX) > 8 || Math.abs(deltaY) > 8)) {
-      dragDirection.current = Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
-      if (dragDirection.current === "horizontal") setIsDragging(true);
+    function onTouchMove(e: TouchEvent) {
+      const deltaX = e.touches[0].clientX - touchStartX.current;
+      const deltaY = e.touches[0].clientY - touchStartY.current;
+
+      if (dragDirection.current === null && (Math.abs(deltaX) > 8 || Math.abs(deltaY) > 8)) {
+        dragDirection.current = Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
+        if (dragDirection.current === "horizontal") setIsDragging(true);
+      }
+
+      if (dragDirection.current === "horizontal") {
+        e.preventDefault();
+        setDragX(Math.max(-SWIPE_MAX, Math.min(SWIPE_MAX, deltaX)));
+      }
     }
 
-    if (dragDirection.current === "horizontal") {
-      setDragX(Math.max(-SWIPE_MAX, Math.min(SWIPE_MAX, deltaX)));
-    }
-  }
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    return () => el.removeEventListener("touchmove", onTouchMove);
+  }, [canSwipe]);
 
   function handleTouchEnd() {
     if (!canSwipe) return;
@@ -127,8 +136,8 @@ export function ReservationCard({
       )}
 
       <div
+        ref={cardRef}
         onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
           transform: `translateX(${dragX}px)`,
