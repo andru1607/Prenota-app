@@ -18,6 +18,9 @@ import {
   Zap,
 } from "lucide-react";
 import { getMyRole } from "@/lib/roles";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ListSkeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface Supplier {
   id: string;
@@ -47,6 +50,7 @@ interface OrderItem {
 
 export default function FornitoriPage() {
   const router = useRouter();
+  const { show } = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -149,10 +153,11 @@ export default function FornitoriPage() {
 
       setQuery("");
       setSearchResults([]);
+      show(`"${product.name}" aggiunto alla lista`);
       load();
     } catch (err) {
       console.error(err);
-      setError("Non sono riuscito ad aggiungere il prodotto.");
+      show("Non sono riuscito ad aggiungere il prodotto.", "error");
     }
   }
 
@@ -182,14 +187,16 @@ export default function FornitoriPage() {
         });
       }
 
+      const addedName = query.trim();
       setQuery("");
       setNewItemQuantity("");
       setNewItemSupplier("");
       setShowNewItemForm(false);
+      show(`"${addedName}" aggiunto alla lista`);
       load();
     } catch (err) {
       console.error(err);
-      setError("Non sono riuscito ad aggiungere il prodotto.");
+      show("Non sono riuscito ad aggiungere il prodotto.", "error");
     }
   }
 
@@ -245,9 +252,11 @@ export default function FornitoriPage() {
     if (!confirm("Svuotare tutti i prodotti già ordinati dalla lista?")) return;
     try {
       await fetch("/api/order-items?clearOrdered=true", { method: "DELETE" });
+      show("Lista ripulita");
       load();
     } catch (err) {
       console.error(err);
+      show("Non sono riuscito a svuotare la lista.", "error");
     }
   }
 
@@ -290,11 +299,13 @@ export default function FornitoriPage() {
             body: JSON.stringify(payload),
           });
       if (!res.ok) throw new Error("Errore salvataggio fornitore");
+      const wasEditing = !!editingSupplierId;
       resetSupplierForm();
+      show(wasEditing ? "Fornitore aggiornato" : "Fornitore aggiunto");
       load();
     } catch (err) {
       console.error(err);
-      setError("Non sono riuscito a salvare il fornitore.");
+      show("Non sono riuscito a salvare il fornitore.", "error");
     }
   }
 
@@ -302,9 +313,11 @@ export default function FornitoriPage() {
     if (!confirm("Eliminare questo fornitore?")) return;
     try {
       await fetch(`/api/suppliers?id=${id}`, { method: "DELETE" });
+      show("Fornitore eliminato");
       load();
     } catch (err) {
       console.error(err);
+      show("Non sono riuscito a eliminare il fornitore.", "error");
     }
   }
 
@@ -321,7 +334,7 @@ export default function FornitoriPage() {
     <div className="p-4">
       <div className="mb-4 flex items-center gap-2">
         <button
-          onClick={() => router.push("/impostazioni")}
+          onClick={() => router.push("/strumenti")}
           className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
           aria-label="Indietro"
         >
@@ -480,11 +493,13 @@ export default function FornitoriPage() {
         </div>
 
         {isLoading ? (
-          <p className="py-4 text-center text-sm text-ink-muted">Carico...</p>
+          <ListSkeleton rows={3} />
         ) : orderItems.length === 0 ? (
-          <p className="py-4 text-center text-sm text-ink-muted">
-            Nessun prodotto in lista. Usa la ricerca qui sopra per aggiungerne.
-          </p>
+          <EmptyState
+            icon={Truck}
+            title="Nessun prodotto in lista"
+            description="Usa la ricerca qui sopra per aggiungerne."
+          />
         ) : (
           <div className="space-y-4">
             {Array.from(groupedItems.entries()).map(([supplierName, items]) => (
@@ -497,14 +512,14 @@ export default function FornitoriPage() {
                   {items.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between gap-2 rounded-lg bg-bg-subtle p-2.5"
+                      className="animate-fade-in flex items-center justify-between gap-2 rounded-lg bg-bg-subtle p-2.5"
                     >
                       <button
                         onClick={() => toggleOrdered(item)}
                         className="flex min-w-0 flex-1 items-center gap-2 text-left"
                       >
                         <span
-                          className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 ${
+                          className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition-colors ${
                             item.is_ordered
                               ? "border-status-free bg-status-free text-white"
                               : "border-black/20"
@@ -624,7 +639,7 @@ export default function FornitoriPage() {
             )}
 
             {suppliers.length === 0 ? (
-              <p className="py-4 text-center text-sm text-ink-muted">Nessun fornitore ancora.</p>
+              <EmptyState icon={Truck} title="Nessun fornitore ancora" />
             ) : (
               <div className="space-y-1.5">
                 {suppliers.map((s) => (
