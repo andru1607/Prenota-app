@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { CalendarCheck, Loader2, Check, CalendarX, MapPin, Phone, Clock, UtensilsCrossed } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { CalendarCheck, Loader2, CalendarX, MapPin, Phone, Clock, UtensilsCrossed } from "lucide-react";
 import { isDateOpen, type ScheduleException } from "@/lib/schedule";
 
 interface RestaurantBranding {
@@ -44,6 +44,7 @@ function groupMenuByCategory(items: MenuItem[]): { category: string; items: Menu
 
 export default function RichiestaPage() {
   const params = useParams();
+  const router = useRouter();
   const restaurantId = params.restaurantId as string;
 
   const [branding, setBranding] = useState<RestaurantBranding | null>(null);
@@ -60,7 +61,6 @@ export default function RichiestaPage() {
   const [website, setWebsite] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<"confirmed" | "pending" | null>(null);
 
   useEffect(() => {
     fetch(`/api/richiesta?restaurantId=${restaurantId}`)
@@ -120,41 +120,13 @@ export default function RichiestaPage() {
         return;
       }
 
-      setResult(body.status);
+      router.push(`/prenotazione/${body.reservationId}`);
     } catch (err) {
       console.error(err);
       setError("Qualcosa è andato storto. Riprova.");
     } finally {
       setIsLoading(false);
     }
-  }
-
-  if (result) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-bg p-4">
-        <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-sm">
-          <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-status-freeBg text-status-free">
-            <Check size={24} />
-          </div>
-          {result === "confirmed" ? (
-            <>
-              <h1 className="text-lg font-semibold text-ink">Prenotazione confermata!</h1>
-              <p className="mt-2 text-sm text-ink-muted">
-                Ti aspettiamo il {date} alle {time} per {partySize} persone.
-              </p>
-            </>
-          ) : (
-            <>
-              <h1 className="text-lg font-semibold text-ink">Richiesta inviata!</h1>
-              <p className="mt-2 text-sm text-ink-muted">
-                Per gruppi numerosi il ristorante deve confermare la disponibilità.
-                Ti contatteranno al più presto.
-              </p>
-            </>
-          )}
-        </div>
-      </div>
-    );
   }
 
   const menuGroups = groupMenuByCategory(menuItems);
