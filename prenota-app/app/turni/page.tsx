@@ -11,8 +11,12 @@ import {
   Check,
   Trash2,
   UserPlus,
+  Users,
 } from "lucide-react";
 import { getMyRole } from "@/lib/roles";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ListSkeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface RosterMember {
   id: string;
@@ -59,6 +63,7 @@ function formatTimeInput(raw: string) {
 
 export default function TurniPage() {
   const router = useRouter();
+  const { show } = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedDate, setSelectedDate] = useState(todayDateString());
   const [members, setMembers] = useState<RosterMember[]>([]);
@@ -122,12 +127,14 @@ export default function TurniPage() {
         body: JSON.stringify({ name: newMemberName.trim() }),
       });
       if (!res.ok) throw new Error("Errore creazione");
+      const addedName = newMemberName.trim();
       setNewMemberName("");
       setShowAddMember(false);
+      show(`${addedName} aggiunto`);
       loadMembers();
     } catch (err) {
       console.error(err);
-      setError("Non sono riuscito ad aggiungere la persona.");
+      show("Non sono riuscito ad aggiungere la persona.", "error");
     }
   }
 
@@ -135,10 +142,12 @@ export default function TurniPage() {
     if (!confirm(`Rimuovere ${name} dall'elenco? Verranno eliminati anche i suoi turni.`)) return;
     try {
       await fetch(`/api/roster?id=${id}`, { method: "DELETE" });
+      show(`${name} rimosso`);
       loadMembers();
       loadShifts();
     } catch (err) {
       console.error(err);
+      show("Non sono riuscito a rimuovere la persona.", "error");
     }
   }
 
@@ -165,10 +174,11 @@ export default function TurniPage() {
       setAddingShiftFor(null);
       setNewStart("");
       setNewEnd("");
+      show("Turno assegnato");
       loadShifts();
     } catch (err) {
       console.error(err);
-      setError("Non sono riuscito ad assegnare il turno.");
+      show("Non sono riuscito ad assegnare il turno.", "error");
     }
   }
 
@@ -188,7 +198,7 @@ export default function TurniPage() {
     <div className="p-4">
       <div className="mb-4 flex items-center gap-2">
         <button
-          onClick={() => router.push("/impostazioni")}
+          onClick={() => router.push("/strumenti")}
           className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
           aria-label="Indietro"
         >
@@ -291,17 +301,19 @@ export default function TurniPage() {
       )}
 
       {isLoading ? (
-        <p className="py-8 text-center text-sm text-ink-muted">Carico...</p>
+        <ListSkeleton rows={4} />
       ) : members.length === 0 ? (
-        <p className="py-8 text-center text-sm text-ink-muted">
-          Nessuna persona ancora. {isAdmin && 'Tocca "Persona" qui sopra per aggiungerne una.'}
-        </p>
+        <EmptyState
+          icon={Users}
+          title="Nessuna persona ancora"
+          description={isAdmin ? 'Tocca "Persona" qui sopra per aggiungerne una.' : undefined}
+        />
       ) : (
         <div className="space-y-2">
           {members.map((member) => {
             const memberShifts = shiftsFor(member.id);
             return (
-              <div key={member.id} className="rounded-xl border border-black/5 bg-white p-3">
+              <div key={member.id} className="animate-fade-in rounded-xl border border-black/5 bg-white p-3">
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-sm font-semibold text-ink">{member.name}</p>
                   {isAdmin && (
