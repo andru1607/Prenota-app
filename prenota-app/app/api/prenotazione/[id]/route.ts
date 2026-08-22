@@ -8,7 +8,9 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
   const { data: reservation, error } = await supabase
     .from("reservations")
-    .select("id, customer_name, party_size, reservation_time, status, restaurant_id")
+    .select(
+      "id, customer_name, party_size, reservation_time, status, restaurant_id, customer_confirmed_at"
+    )
     .eq("id", params.id)
     .single();
 
@@ -29,6 +31,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       partySize: reservation.party_size,
       reservationTime: reservation.reservation_time,
       status: reservation.status,
+      customerConfirmedAt: reservation.customer_confirmed_at,
     },
     restaurant: restaurant ?? null,
   });
@@ -41,7 +44,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const body = await req.json();
     const { action } = body;
 
-    if (action !== "cancel" && action !== "modify") {
+    if (action !== "cancel" && action !== "modify" && action !== "confirm") {
       return NextResponse.json({ error: "Azione non valida." }, { status: 400 });
     }
 
@@ -60,6 +63,27 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         { error: "Questa prenotazione non può più essere modificata." },
         { status: 400 }
       );
+    }
+
+    if (action === "confirm") {
+      if (existing.status !== "confirmed") {
+        return NextResponse.json(
+          { error: "Questa prenotazione deve prima essere confermata dal ristorante." },
+          { status: 400 }
+        );
+      }
+
+      const { error } = await supabase
+        .from("reservations")
+        .update({ customer_confirmed_at: new Date().toISOString() })
+        .eq("id", params.id);
+
+      if (error) {
+        console.error("Errore conferma cliente:", error);
+        return NextResponse.json({ error: "Impossibile confermare." }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true });
     }
 
     if (action === "cancel") {
