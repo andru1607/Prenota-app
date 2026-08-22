@@ -57,6 +57,7 @@ export default function RichiestaPage() {
   const [date, setDate] = useState(todayDateString());
   const [time, setTime] = useState("");
   const [partySize, setPartySize] = useState("");
+  const [website, setWebsite] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<"confirmed" | "pending" | null>(null);
@@ -109,6 +110,7 @@ export default function RichiestaPage() {
           date,
           time,
           partySize: Number(partySize),
+          website,
         }),
       });
 
@@ -279,6 +281,16 @@ export default function RichiestaPage() {
         {showForm && (
           <form onSubmit={handleSubmit} className="rounded-2xl bg-white p-6 shadow-sm">
             <h2 className="mb-3 text-base font-semibold text-ink">Richiedi una prenotazione</h2>
+
+            <input
+              type="text"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px" }}
+            />
 
             <div className="space-y-2">
               <input
