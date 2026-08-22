@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, Check, UserX, StickyNote, X, Trash2, Pencil, Phone } from "lucide-react";
+import { Users, Check, UserX, StickyNote, X, Trash2, Pencil, Phone, RotateCcw } from "lucide-react";
 import type { Reservation, ReservationStatus } from "@/types";
 
 const STATUS_BAR_COLOR: Record<ReservationStatus, string> = {
@@ -30,6 +30,7 @@ interface ReservationCardProps {
   onAccept?: () => void;
   onReject?: () => void;
   onEdit?: () => void;
+  onRestore?: () => void;
   tableNumber?: string;
 }
 
@@ -42,6 +43,7 @@ export function ReservationCard({
   onAccept,
   onReject,
   onEdit,
+  onRestore,
   tableNumber,
 }: ReservationCardProps) {
   const time = new Date(reservation.reservationTime).toLocaleTimeString("it-IT", {
@@ -162,6 +164,18 @@ export function ReservationCard({
                 <X size={18} />
               </button>
             )}
+            {isFinal &&
+              (reservation.status === "completed" || reservation.status === "no_show") &&
+              onRestore && (
+                <button
+                  onClick={onRestore}
+                  className="touch-target grid place-items-center rounded-lg text-primary hover:bg-primary-light"
+                  aria-label="Ripristina prenotazione"
+                  title="Segnato per errore? Riporta a confermata"
+                >
+                  <RotateCcw size={17} />
+                </button>
+              )}
             {onDelete && (
               <button
                 onClick={onDelete}
