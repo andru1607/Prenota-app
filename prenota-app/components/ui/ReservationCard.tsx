@@ -64,28 +64,43 @@ export function ReservationCard({
   const [dragX, setDragX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const dragDirection = useRef<"horizontal" | "vertical" | null>(null);
 
   function handleTouchStart(e: React.TouchEvent) {
     if (!canSwipe) return;
     touchStartX.current = e.touches[0].clientX;
-    setIsDragging(true);
+    touchStartY.current = e.touches[0].clientY;
+    dragDirection.current = null;
   }
 
   function handleTouchMove(e: React.TouchEvent) {
-    if (!canSwipe || !isDragging) return;
-    const delta = e.touches[0].clientX - touchStartX.current;
-    setDragX(Math.max(-SWIPE_MAX, Math.min(SWIPE_MAX, delta)));
+    if (!canSwipe) return;
+    const deltaX = e.touches[0].clientX - touchStartX.current;
+    const deltaY = e.touches[0].clientY - touchStartY.current;
+
+    if (dragDirection.current === null && (Math.abs(deltaX) > 8 || Math.abs(deltaY) > 8)) {
+      dragDirection.current = Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
+      if (dragDirection.current === "horizontal") setIsDragging(true);
+    }
+
+    if (dragDirection.current === "horizontal") {
+      setDragX(Math.max(-SWIPE_MAX, Math.min(SWIPE_MAX, deltaX)));
+    }
   }
 
   function handleTouchEnd() {
     if (!canSwipe) return;
-    setIsDragging(false);
-    if (dragX > SWIPE_THRESHOLD && onCheckIn) {
-      onCheckIn();
-    } else if (dragX < -SWIPE_THRESHOLD && onCancel) {
-      onCancel();
+    if (dragDirection.current === "horizontal") {
+      setIsDragging(false);
+      if (dragX > SWIPE_THRESHOLD && onCheckIn) {
+        onCheckIn();
+      } else if (dragX < -SWIPE_THRESHOLD && onCancel) {
+        onCancel();
+      }
     }
     setDragX(0);
+    dragDirection.current = null;
   }
 
   return (
@@ -118,6 +133,7 @@ export function ReservationCard({
         style={{
           transform: `translateX(${dragX}px)`,
           transition: isDragging ? "none" : "transform 0.2s ease-out",
+          touchAction: "pan-y",
         }}
         className="relative overflow-hidden rounded-xl bg-white shadow-sm"
       >
