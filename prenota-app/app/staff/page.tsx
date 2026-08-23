@@ -2,8 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Check, Plus, Trash2, X, Shield, User as UserIcon } from "lucide-react";
+import { ArrowLeft, Loader2, Check, Plus, Trash2, X, Shield, User as UserIcon, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ListSkeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface StaffMember {
   id: string;
@@ -15,6 +18,7 @@ interface StaffMember {
 
 export default function StaffPage() {
   const router = useRouter();
+  const { show } = useToast();
   const [members, setMembers] = useState<StaffMember[]>([]);
   const [myStaffId, setMyStaffId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -78,11 +82,13 @@ export default function StaffPage() {
         return;
       }
 
+      const addedName = fullName;
       setFullName("");
       setEmail("");
       setPassword("");
       setRole("staff");
       setShowForm(false);
+      show(`${addedName} aggiunto al team`);
       loadMembers();
     } catch (err) {
       console.error(err);
@@ -101,8 +107,10 @@ export default function StaffPage() {
         const body = await res.json();
         throw new Error(body.error || "Errore rimozione");
       }
+      show(`${name} rimosso dal team`);
     } catch (err) {
       console.error(err);
+      show("Non sono riuscito a rimuovere il collaboratore.", "error");
       loadMembers();
     }
   }
@@ -216,15 +224,15 @@ export default function StaffPage() {
       )}
 
       {isLoading ? (
-        <p className="py-8 text-center text-sm text-ink-muted">Carico il team...</p>
+        <ListSkeleton rows={4} />
       ) : members.length === 0 ? (
-        <p className="py-8 text-center text-sm text-ink-muted">Nessun membro trovato.</p>
+        <EmptyState icon={Users} title="Nessun membro trovato" />
       ) : (
         <div className="space-y-2">
           {members.map((member) => (
             <div
               key={member.id}
-              className="flex items-center justify-between rounded-xl border border-black/5 bg-white p-3"
+              className="animate-fade-in flex items-center justify-between rounded-xl border border-black/5 bg-white p-3"
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
