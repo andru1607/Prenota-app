@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -16,11 +16,15 @@ import {
   ChevronDown,
   ChevronRight as ChevronRightIcon,
   Zap,
+  Receipt,
+  Loader2,
 } from "lucide-react";
 import { getMyRole } from "@/lib/roles";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListSkeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/ToastProvider";
+import { InvoiceImportReview, type InvoiceConfirmData } from "@/components/ui/InvoiceImportReview";
+import type { ParsedInvoiceResult } from "@/lib/parseInvoicePhoto";
 
 interface Supplier {
   id: string;
@@ -46,6 +50,18 @@ interface OrderItem {
   is_ordered: boolean;
   supplier_id: string | null;
   suppliers: { id: string; name: string } | null;
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      resolve(result.split(",")[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 export default function FornitoriPage() {
@@ -78,6 +94,12 @@ export default function FornitoriPage() {
   const [supplierPhone, setSupplierPhone] = useState("");
   const [supplierEmail, setSupplierEmail] = useState("");
   const [supplierCategory, setSupplierCategory] = useState("");
+
+  // Lettura fattura
+  const invoiceInputRef = useRef<HTMLInputElement>(null);
+  const [isReadingInvoice, setIsReadingInvoice] = useState(false);
+  const [invoiceResult, setInvoiceResult] = useState<ParsedInvoiceResult | null>(null);
+  const [isSavingInvoice, setIsSavingInvoice] = useState(false);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -321,6 +343,95 @@ export default function FornitoriPage() {
     }
   }
 
+  // --- Lettura fattura ---
+
+  async function handleInvoiceSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsReadingInvoice(true);
+    setError(null);
+    try {
+      const base64 = await fileToBase64(file);
+      const res = await fetch("/api/parse-invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64, mediaType: file.type }),
+      });
+
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Errore lettura fattura");
+
+      if (!body.products || body.products.length === 0) {
+        show("Non ho trovato prodotti leggibili in questa foto.", "error");
+        return;
+      }
+
+      setInvoiceResult(body);
+    } catch (err) {
+      console.error(err);
+      show("Non sono riuscito a leggere la fattura. Riprova con una foto più nitida.", "error");
+    } finally {
+      setIsReadingInvoice(false);
+      e.target.value = "";
+    }
+  }
+
+  async function handleConfirmInvoice(data: InvoiceConfirmData) {
+    setIsSavingInvoice(true);
+    try {
+      let supplierId: string | null = null;
+
+      if (data.supplierMode === "existing") {
+        supplierId = data.existingSupplierId ?? null;
+      } else if (data.supplierMode === "new" && data.newSupplier) {
+        const res = await fetch("/api/suppliers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data.newSupplier),
+        });
+        if (!res.ok) throw new Error("Errore creazione fornitore");
+        const { supplier } = await res.json();
+        supplierId = supplier.id;
+      }
+
+      await Promise.all(
+        data.products.map((p) =>
+          fetch("/api/products", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: p.name,
+              defaultQuantity: p.quantity || undefined,
+              supplierId: supplierId || undefined,
+            }),
+          })
+        )
+      );
+
+      show(`${data.products.length} prodott${data.products.length === 1 ? "o aggiunto" : "i aggiunti"} al catalogo`);
+      setInvoiceResult(null);
+      load();
+    } catch (err) {
+      console.error(err);
+      show("Non sono riuscito a salvare i dati della fattura.", "error");
+    } finally {
+      setIsSavingInvoice(false);
+    }
+  }
+
+  if (invoiceResult) {
+    return (
+      <InvoiceImportReview
+        result={invoiceResult}
+        suppliers={suppliers}
+        onConfirm={handleConfirmInvoice}
+        onCancel={() => setInvoiceResult(null)}
+        isSaving={isSavingInvoice}
+      />
+    );
+  }
+
   const groupedItems = new Map<string, OrderItem[]>();
   for (const item of orderItems) {
     const key = item.suppliers?.name ?? "Senza fornitore";
@@ -340,7 +451,31 @@ export default function FornitoriPage() {
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-lg font-semibold text-ink">Fornitori e ordini</h1>
+        <h1 className="flex-1 text-lg font-semibold text-ink">Fornitori e ordini</h1>
+        {isAdmin && (
+          <>
+            <input
+              ref={invoiceInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleInvoiceSelected}
+            />
+            <button
+              onClick={() => invoiceInputRef.current?.click()}
+              disabled={isReadingInvoice}
+              className="touch-target flex items-center gap-1.5 rounded-xl border border-black/10 px-3 py-2 text-xs font-medium text-ink-muted disabled:opacity-60"
+              title="Leggi fattura"
+            >
+              {isReadingInvoice ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <Receipt size={15} />
+              )}
+              Leggi fattura
+            </button>
+          </>
+        )}
       </div>
 
       {error && (
