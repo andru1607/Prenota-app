@@ -20,7 +20,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
   const { data: restaurant } = await supabase
     .from("restaurants")
-    .select("name, logo_url, primary_color")
+    .select("name, logo_url, primary_color, address, contact_phone")
     .eq("id", reservation.restaurant_id)
     .single();
 
