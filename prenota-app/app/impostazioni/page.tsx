@@ -402,16 +402,12 @@ export default function ImpostazioniPage() {
               {copied ? <Check size={16} /> : <Copy size={16} />}
             </button>
           </div>
-          <a
-            href={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
-              link
-            )}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 block text-center text-xs font-medium text-primary"
+          <button
+            onClick={() => router.push("/qr")}
+            className="mt-2 block w-full text-center text-xs font-medium text-primary"
           >
-            Genera QR code da stampare
-          </a>
+            Vedi e stampa il QR code
+          </button>
         </div>
       )}
 
