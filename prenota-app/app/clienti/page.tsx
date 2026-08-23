@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus, Star, Loader2, ChevronRight, X, Check, Users } from "lucide-react";
+import { Search, Plus, Star, Loader2, ChevronRight, X, Check, Users, Phone } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListSkeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/ToastProvider";
@@ -181,28 +181,52 @@ export default function ClientiPage() {
       ) : (
         <div className="space-y-2">
           {customers.map((customer) => (
-            <button
+            <div
               key={customer.id}
-              onClick={() => router.push(`/clienti/${customer.id}`)}
-              className="animate-fade-in touch-target flex w-full items-center justify-between rounded-xl border border-black/5 bg-white p-3 text-left"
+              className="animate-fade-in flex w-full items-center justify-between rounded-xl border border-black/5 bg-white p-3"
             >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <p className="truncate font-semibold text-ink">{customer.name}</p>
-                  {customer.isRegular && (
-                    <span title="Cliente abituale">
-                      <Star size={13} className="shrink-0 fill-status-pending text-status-pending" />
-                    </span>
-                  )}
+              <button
+                onClick={() => router.push(`/clienti/${customer.id}`)}
+                className="touch-target flex min-w-0 flex-1 items-center text-left"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <p className="truncate font-semibold text-ink">{customer.name}</p>
+                    {customer.isRegular && (
+                      <span title="Cliente abituale">
+                        <Star size={13} className="shrink-0 fill-status-pending text-status-pending" />
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-ink-muted">
+                    {customer.phone || "Nessun telefono"}
+                    {customer.reservationCount > 0 &&
+                      ` · ${customer.reservationCount} prenotazion${customer.reservationCount === 1 ? "e" : "i"}`}
+                  </p>
                 </div>
-                <p className="text-sm text-ink-muted">
-                  {customer.phone || "Nessun telefono"}
-                  {customer.reservationCount > 0 &&
-                    ` · ${customer.reservationCount} prenotazion${customer.reservationCount === 1 ? "e" : "i"}`}
-                </p>
+              </button>
+
+              <div className="flex shrink-0 items-center gap-1">
+                {customer.phone && (
+                  <a
+                    href={`tel:${customer.phone}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="touch-target grid place-items-center rounded-lg text-primary hover:bg-primary-light"
+                    aria-label={`Chiama ${customer.name}`}
+                    title="Chiama"
+                  >
+                    <Phone size={18} />
+                  </a>
+                )}
+                <button
+                  onClick={() => router.push(`/clienti/${customer.id}`)}
+                  className="touch-target grid place-items-center rounded-lg text-ink-muted"
+                  aria-label="Apri scheda cliente"
+                >
+                  <ChevronRight size={18} />
+                </button>
               </div>
-              <ChevronRight size={18} className="shrink-0 text-ink-muted" />
-            </button>
+            </div>
           ))}
         </div>
       )}
