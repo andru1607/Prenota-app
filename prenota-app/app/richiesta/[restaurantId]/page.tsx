@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { CalendarCheck, Loader2, CalendarX, MapPin, Phone, Clock, UtensilsCrossed } from "lucide-react";
 import { isDateOpen, type ScheduleException } from "@/lib/schedule";
+import { useLang } from "@/lib/hooks/useLang";
+import { LOCALE_BY_LANG } from "@/lib/i18n/translations";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 
 interface RestaurantBranding {
   name: string;
@@ -46,6 +49,7 @@ export default function RichiestaPage() {
   const params = useParams();
   const router = useRouter();
   const restaurantId = params.restaurantId as string;
+  const { lang, setLang, t } = useLang();
 
   const [branding, setBranding] = useState<RestaurantBranding | null>(null);
   const [exceptions, setExceptions] = useState<ScheduleException[]>([]);
@@ -116,14 +120,14 @@ export default function RichiestaPage() {
 
       const body = await res.json();
       if (!res.ok) {
-        setError(body.error || "Qualcosa è andato storto. Riprova.");
+        setError(body.error || t("genericError"));
         return;
       }
 
       router.push(`/prenotazione/${body.reservationId}`);
     } catch (err) {
       console.error(err);
-      setError("Qualcosa è andato storto. Riprova.");
+      setError(t("genericError"));
     } finally {
       setIsLoading(false);
     }
@@ -134,6 +138,10 @@ export default function RichiestaPage() {
   return (
     <div className="min-h-screen bg-bg p-4">
       <div className="mx-auto w-full max-w-sm">
+        <div className="mb-3">
+          <LanguageSwitcher lang={lang} onChange={setLang} accentColor={color} />
+        </div>
+
         <div className="mb-4 flex flex-col items-center gap-2 text-center">
           {branding?.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -201,10 +209,10 @@ export default function RichiestaPage() {
             >
               <span className="flex items-center gap-2 text-sm font-semibold text-ink">
                 <UtensilsCrossed size={16} style={{ color }} />
-                Menu
+                {t("menu")}
               </span>
               <span className="text-xs font-medium" style={{ color }}>
-                {showMenu ? "Nascondi" : "Vedi il menu"}
+                {showMenu ? t("hideMenu") : t("viewMenu")}
               </span>
             </button>
 
@@ -246,13 +254,13 @@ export default function RichiestaPage() {
             className="touch-target flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-medium text-white"
           >
             <CalendarCheck size={18} />
-            Prenota un tavolo
+            {t("bookTable")}
           </button>
         )}
 
         {showForm && (
           <form onSubmit={handleSubmit} className="rounded-2xl bg-white p-6 shadow-sm">
-            <h2 className="mb-3 text-base font-semibold text-ink">Richiedi una prenotazione</h2>
+            <h2 className="mb-3 text-base font-semibold text-ink">{t("requestReservation")}</h2>
 
             <input
               type="text"
@@ -268,7 +276,7 @@ export default function RichiestaPage() {
               <input
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Nome e cognome"
+                placeholder={t("fullName")}
                 autoFocus
                 className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm"
               />
@@ -276,7 +284,7 @@ export default function RichiestaPage() {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="Telefono"
+                placeholder={t("phone")}
                 className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm"
               />
               <input
@@ -289,7 +297,7 @@ export default function RichiestaPage() {
                 <input
                   value={time}
                   onChange={(e) => setTime(formatTimeInput(e.target.value))}
-                  placeholder="Orario (HH:MM)"
+                  placeholder={t("timePlaceholder")}
                   inputMode="numeric"
                   maxLength={5}
                   className="num-tabular rounded-lg border border-black/10 px-3 py-2.5 text-sm"
@@ -298,7 +306,7 @@ export default function RichiestaPage() {
                   type="number"
                   value={partySize}
                   onChange={(e) => setPartySize(e.target.value)}
-                  placeholder="Persone"
+                  placeholder={t("people")}
                   className="num-tabular rounded-lg border border-black/10 px-3 py-2.5 text-sm"
                 />
               </div>
@@ -307,7 +315,7 @@ export default function RichiestaPage() {
             {!isRestaurantOpen && (
               <p className="mt-2 flex items-center gap-1.5 text-sm text-status-danger">
                 <CalendarX size={15} />
-                Il ristorante è chiuso in questa data. Scegli un altro giorno.
+                {t("closedOnThisDate")}
               </p>
             )}
 
@@ -320,13 +328,10 @@ export default function RichiestaPage() {
               className="touch-target mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium text-white disabled:opacity-40"
             >
               {isLoading && <Loader2 size={18} className="animate-spin" />}
-              {isLoading ? "Invio..." : "Invia richiesta"}
+              {isLoading ? t("sending") : t("sendRequest")}
             </button>
 
-            <p className="mt-3 text-center text-xs text-ink-muted">
-              Fino a 6 persone la prenotazione viene confermata subito. Per gruppi più
-              numerosi il ristorante ti contatterà per confermare.
-            </p>
+            <p className="mt-3 text-center text-xs text-ink-muted">{t("upToSixNote")}</p>
           </form>
         )}
       </div>
