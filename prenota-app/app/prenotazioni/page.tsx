@@ -260,6 +260,14 @@ export default function PrenotazioniPage() {
     (r) => r.status === "cancelled" || r.status === "completed" || r.status === "no_show"
   );
 
+  const DINNER_START_HOUR = 18;
+  const upcomingPranzo = upcoming.filter(
+    (r) => new Date(r.reservationTime).getHours() < DINNER_START_HOUR
+  );
+  const upcomingCena = upcoming.filter(
+    (r) => new Date(r.reservationTime).getHours() >= DINNER_START_HOUR
+  );
+
   const isToday = selectedDate === todayDateString();
   const showInitialSkeleton = isLoading && reservations.length === 0;
 
@@ -306,112 +314,4 @@ export default function PrenotazioniPage() {
         </button>
 
         <div className="relative flex-1">
-          <p className="pointer-events-none text-center text-sm font-medium text-ink">
-            {formatDateLabel(selectedDate)}
-          </p>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-            aria-label="Scegli data"
-          />
-        </div>
-
-        <button
-          onClick={() => setSelectedDate((d) => shiftDate(d, 1))}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
-          aria-label="Giorno successivo"
-        >
-          <ChevronRight size={20} />
-        </button>
-      </div>
-
-      {!isToday && (
-        <button
-          onClick={() => setSelectedDate(todayDateString())}
-          className="mb-4 text-sm font-medium text-primary"
-        >
-          Torna a oggi
-        </button>
-      )}
-
-      {showForm && (
-        <div className="mb-4">
-          <ManualReservationForm
-            onSave={handleFormSave}
-            onCancel={closeForm}
-            initialDate={selectedDate}
-            tables={tables}
-            editingReservation={
-              editingReservation
-                ? {
-                    customerName: editingReservation.customerName,
-                    reservationTime: editingReservation.reservationTime,
-                    partySize: editingReservation.partySize,
-                    notes: editingReservation.notes,
-                    tableId: editingReservation.tableId,
-                  }
-                : undefined
-            }
-          />
-        </div>
-      )}
-
-      {error && (
-        <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
-      )}
-
-      {showInitialSkeleton && (
-        <div className="space-y-2">
-          <ReservationCardSkeleton />
-          <ReservationCardSkeleton />
-          <ReservationCardSkeleton />
-        </div>
-      )}
-
-      {!isLoading && reservations.length === 0 && !error && !showForm && (
-        <EmptyState
-          icon={CalendarX}
-          title="Nessuna prenotazione per questo giorno"
-          description='Usa "Nuova" qui sopra per aggiungerne una.'
-        />
-      )}
-
-      {upcoming.length > 0 && (
-        <div className="space-y-2">
-          {upcoming.map((r) => (
-            <ReservationCard
-              key={r.id}
-              reservation={r}
-              onCheckIn={() => updateStatus(r.id, "completed", "Cliente segnato come presente")}
-              onNoShow={() => updateStatus(r.id, "no_show", "Segnato come assente")}
-              onCancel={() => updateStatus(r.id, "cancelled", "Prenotazione cancellata")}
-              onDelete={() => deleteOne(r.id)}
-              onAccept={() => updateStatus(r.id, "confirmed", "Richiesta accettata")}
-              onReject={() => updateStatus(r.id, "cancelled", "Richiesta rifiutata")}
-              onEdit={() => openEditForm(r)}
-              tableNumber={r.tableId ? tableNumberById.get(r.tableId) : undefined}
-            />
-          ))}
-        </div>
-      )}
-
-      {done.length > 0 && (
-        <div className="mt-6">
-          <p className="mb-2 text-xs font-medium uppercase text-ink-muted">Concluse</p>
-          <div className="space-y-2 opacity-70">
-            {done.map((r) => (
-              <ReservationCard
-                key={r.id}
-                reservation={r}
-                onDelete={() => deleteOne(r.id)}
-                onRestore={() => updateStatus(r.id, "confirmed", "Prenotazione ripristinata")}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+          
