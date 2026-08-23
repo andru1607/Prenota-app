@@ -3,6 +3,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Plus, Trash2, CalendarX, CalendarCheck } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface ScheduleException {
   id: string;
@@ -35,6 +38,7 @@ function formatDate(dateStr: string): string {
 
 export default function OrariPage() {
   const router = useRouter();
+  const { show } = useToast();
   const [closedWeekdays, setClosedWeekdays] = useState<number[]>([]);
   const [exceptions, setExceptions] = useState<ScheduleException[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -84,7 +88,7 @@ export default function OrariPage() {
       if (!res.ok) throw new Error("Errore salvataggio");
     } catch (err) {
       console.error(err);
-      setError("Non sono riuscito a salvare. Riprova.");
+      show("Non sono riuscito a salvare. Riprova.", "error");
       load();
     } finally {
       setIsSavingWeekdays(false);
@@ -109,10 +113,11 @@ export default function OrariPage() {
       setExceptionFrom(todayDateString());
       setExceptionTo("");
       setShowExceptionForm(false);
+      show("Eccezione salvata");
       load();
     } catch (err) {
       console.error(err);
-      setError("Non sono riuscito a salvare l'eccezione.");
+      show("Non sono riuscito a salvare l'eccezione.", "error");
     } finally {
       setIsSavingException(false);
     }
@@ -123,8 +128,10 @@ export default function OrariPage() {
     try {
       const res = await fetch(`/api/schedule?id=${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Errore eliminazione");
+      show("Eccezione eliminata");
     } catch (err) {
       console.error(err);
+      show("Non sono riuscito a eliminare.", "error");
       load();
     }
   }
@@ -153,7 +160,11 @@ export default function OrariPage() {
         </p>
 
         {isLoading ? (
-          <p className="py-4 text-center text-sm text-ink-muted">Carico...</p>
+          <div className="grid grid-cols-4 gap-2">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Skeleton key={i} className="h-11 w-full" />
+            ))}
+          </div>
         ) : (
           <div className="grid grid-cols-4 gap-2">
             {WEEKDAYS.map((day) => {
@@ -251,14 +262,19 @@ export default function OrariPage() {
           </div>
         )}
 
-        {exceptions.length === 0 ? (
-          <p className="py-3 text-center text-sm text-ink-muted">Nessuna eccezione programmata.</p>
+        {isLoading ? (
+          <div className="space-y-1.5">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        ) : exceptions.length === 0 ? (
+          <EmptyState icon={CalendarCheck} title="Nessuna eccezione programmata" />
         ) : (
           <div className="space-y-1.5">
             {exceptions.map((ex) => (
               <div
                 key={ex.id}
-                className="flex items-center justify-between rounded-lg bg-bg-subtle px-3 py-2"
+                className="animate-fade-in flex items-center justify-between rounded-lg bg-bg-subtle px-3 py-2"
               >
                 <div className="flex items-center gap-2">
                   {ex.is_open ? (
