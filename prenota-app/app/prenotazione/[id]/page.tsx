@@ -13,6 +13,9 @@ import {
   Pencil,
   CheckCheck,
 } from "lucide-react";
+import { useLang } from "@/lib/hooks/useLang";
+import { LOCALE_BY_LANG } from "@/lib/i18n/translations";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 
 interface ReservationInfo {
   id: string;
@@ -45,6 +48,7 @@ function formatTimeInput(raw: string) {
 export default function BadgePrenotazionePage() {
   const params = useParams();
   const reservationId = params.id as string;
+  const { lang, setLang, t } = useLang();
 
   const [reservation, setReservation] = useState<ReservationInfo | null>(null);
   const [restaurant, setRestaurant] = useState<RestaurantBranding | null>(null);
@@ -70,7 +74,7 @@ export default function BadgePrenotazionePage() {
       setRestaurant(body.restaurant);
     } catch (err) {
       console.error(err);
-      setError("Non sono riuscito a trovare questa prenotazione.");
+      setError(t("errorLoadReservation"));
     } finally {
       setIsLoading(false);
     }
@@ -110,14 +114,14 @@ export default function BadgePrenotazionePage() {
       });
       const body = await res.json();
       if (!res.ok) {
-        setActionError(body.error || "Non sono riuscito a modificare la prenotazione.");
+        setActionError(body.error || t("errorSaveEdit"));
         return;
       }
       setShowEditForm(false);
       await load();
     } catch (err) {
       console.error(err);
-      setActionError("Non sono riuscito a modificare la prenotazione. Riprova.");
+      setActionError(t("errorSaveEdit"));
     } finally {
       setIsSaving(false);
     }
@@ -136,14 +140,14 @@ export default function BadgePrenotazionePage() {
       await load();
     } catch (err) {
       console.error(err);
-      setActionError("Non sono riuscito a confermare. Riprova.");
+      setActionError(t("errorConfirm"));
     } finally {
       setIsConfirmingAttendance(false);
     }
   }
 
   async function handleCancel() {
-    if (!confirm("Sei sicuro di voler disdire questa prenotazione?")) return;
+    if (!confirm(t("confirmCancelPrompt"))) return;
     setIsCancelling(true);
     setActionError(null);
     try {
@@ -156,7 +160,7 @@ export default function BadgePrenotazionePage() {
       await load();
     } catch (err) {
       console.error(err);
-      setActionError("Non sono riuscito a disdire la prenotazione. Riprova.");
+      setActionError(t("errorCancel"));
     } finally {
       setIsCancelling(false);
     }
@@ -174,20 +178,21 @@ export default function BadgePrenotazionePage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg p-4">
         <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-sm">
-          <p className="text-sm text-status-danger">{error || "Prenotazione non trovata."}</p>
+          <p className="text-sm text-status-danger">{error || t("reservationNotFound")}</p>
         </div>
       </div>
     );
   }
 
   const color = restaurant?.primary_color || "#4F46E5";
+  const locale = LOCALE_BY_LANG[lang];
   const date = new Date(reservation.reservationTime);
-  const dateLabel = date.toLocaleDateString("it-IT", {
+  const dateLabel = date.toLocaleDateString(locale, {
     weekday: "long",
     day: "numeric",
     month: "long",
   });
-  const timeLabel = date.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+  const timeLabel = date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
 
   const isConfirmed = reservation.status === "confirmed";
   const isPending = reservation.status === "pending";
@@ -197,6 +202,10 @@ export default function BadgePrenotazionePage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg p-4">
       <div className="w-full max-w-sm">
+        <div className="mb-3">
+          <LanguageSwitcher lang={lang} onChange={setLang} accentColor={color} />
+        </div>
+
         <div className="mb-4 flex flex-col items-center gap-2 text-center">
           {restaurant?.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -225,9 +234,9 @@ export default function BadgePrenotazionePage() {
             {isPending && <Clock size={32} />}
             {isCancelled && <X size={32} />}
             <p className="text-lg font-semibold">
-              {isConfirmed && "Prenotazione confermata"}
-              {isPending && "In attesa di conferma"}
-              {isCancelled && "Prenotazione disdetta"}
+              {isConfirmed && t("statusConfirmed")}
+              {isPending && t("statusPending")}
+              {isCancelled && t("statusCancelled")}
             </p>
           </div>
 
@@ -237,20 +246,20 @@ export default function BadgePrenotazionePage() {
 
           <div className="space-y-3 p-6">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-ink-muted">Nome</span>
+              <span className="text-sm text-ink-muted">{t("labelName")}</span>
               <span className="text-sm font-medium text-ink">{reservation.customerName}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-ink-muted">Data</span>
+              <span className="text-sm text-ink-muted">{t("labelDate")}</span>
               <span className="text-sm font-medium capitalize text-ink">{dateLabel}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-ink-muted">Orario</span>
+              <span className="text-sm text-ink-muted">{t("labelTime")}</span>
               <span className="num-tabular text-sm font-medium text-ink">{timeLabel}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1 text-sm text-ink-muted">
-                <Users size={14} /> Persone
+                <Users size={14} /> {t("labelPeople")}
               </span>
               <span className="num-tabular text-sm font-medium text-ink">
                 {reservation.partySize}
@@ -264,7 +273,7 @@ export default function BadgePrenotazionePage() {
             {reservation.customerConfirmedAt ? (
               <div className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-status-freeBg px-4 py-3 text-sm font-medium text-status-free">
                 <CheckCheck size={16} />
-                Hai confermato la tua presenza
+                {t("youConfirmedAttendance")}
               </div>
             ) : (
               <div className="mt-4">
@@ -278,28 +287,21 @@ export default function BadgePrenotazionePage() {
                   ) : (
                     <CheckCheck size={16} />
                   )}
-                  Confermo che vengo
+                  {t("confirmAttendanceBtn")}
                 </button>
-                <p className="mt-2 text-center text-xs text-ink-muted">
-                  Fai sapere al ristorante che sei ancora in arrivo.
-                </p>
+                <p className="mt-2 text-center text-xs text-ink-muted">{t("letRestaurantKnow")}</p>
               </div>
             )}
-            <p className="mt-3 text-center text-xs text-ink-muted">
-              Mostra questa pagina all'arrivo. Puoi anche salvarla o farne uno screenshot.
-            </p>
+            <p className="mt-3 text-center text-xs text-ink-muted">{t("showAtArrival")}</p>
           </>
         )}
         {isPending && !showEditForm && (
-          <p className="mt-4 text-center text-xs text-ink-muted">
-            Il ristorante deve ancora confermare. Torna su questo stesso link più tardi per
-            controllare, oppure aggiorna ora.
-          </p>
+          <p className="mt-4 text-center text-xs text-ink-muted">{t("pendingNote")}</p>
         )}
 
         {canManage && showEditForm && (
           <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
-            <p className="mb-3 text-sm font-semibold text-ink">Modifica prenotazione</p>
+            <p className="mb-3 text-sm font-semibold text-ink">{t("editReservation")}</p>
             <div className="space-y-2">
               <input
                 type="date"
@@ -311,7 +313,7 @@ export default function BadgePrenotazionePage() {
                 <input
                   value={editTime}
                   onChange={(e) => setEditTime(formatTimeInput(e.target.value))}
-                  placeholder="Orario (HH:MM)"
+                  placeholder={t("timePlaceholder")}
                   inputMode="numeric"
                   maxLength={5}
                   className="num-tabular rounded-lg border border-black/10 px-3 py-2.5 text-sm"
@@ -320,7 +322,7 @@ export default function BadgePrenotazionePage() {
                   type="number"
                   value={editPartySize}
                   onChange={(e) => setEditPartySize(e.target.value)}
-                  placeholder="Persone"
+                  placeholder={t("people")}
                   className="num-tabular rounded-lg border border-black/10 px-3 py-2.5 text-sm"
                 />
               </div>
@@ -336,7 +338,7 @@ export default function BadgePrenotazionePage() {
                 disabled={isSaving}
                 className="touch-target flex-1 rounded-xl border border-black/10 text-sm font-medium text-ink-muted disabled:opacity-40"
               >
-                Annulla
+                {t("cancel")}
               </button>
               <button
                 onClick={handleSaveEdit}
@@ -345,13 +347,10 @@ export default function BadgePrenotazionePage() {
                 className="touch-target flex flex-1 items-center justify-center gap-2 rounded-xl text-sm font-medium text-white disabled:opacity-50"
               >
                 {isSaving && <Loader2 size={15} className="animate-spin" />}
-                Salva
+                {t("save")}
               </button>
             </div>
-            <p className="mt-2 text-center text-xs text-ink-muted">
-              Se porti il gruppo oltre le 6 persone, la prenotazione tornerà "in attesa" di
-              conferma da parte del ristorante.
-            </p>
+            <p className="mt-2 text-center text-xs text-ink-muted">{t("over6Note")}</p>
           </div>
         )}
 
@@ -363,14 +362,14 @@ export default function BadgePrenotazionePage() {
               className="touch-target flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium text-white"
             >
               <Pencil size={15} />
-              Modifica prenotazione
+              {t("editReservation")}
             </button>
             <button
               onClick={load}
               className="touch-target flex w-full items-center justify-center gap-2 rounded-xl border border-black/10 py-2.5 text-sm font-medium text-ink-muted"
             >
               <RefreshCw size={15} />
-              Aggiorna stato
+              {t("refreshStatus")}
             </button>
             {actionError && (
               <p className="text-center text-xs text-status-danger">{actionError}</p>
@@ -381,7 +380,7 @@ export default function BadgePrenotazionePage() {
               className="touch-target flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium text-status-danger disabled:opacity-50"
             >
               {isCancelling && <Loader2 size={15} className="animate-spin" />}
-              Disdici la prenotazione
+              {t("cancelReservationBtn")}
             </button>
           </div>
         )}
