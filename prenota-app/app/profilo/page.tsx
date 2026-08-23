@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Check, User, Store, Mail, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function ProfiloPage() {
   const router = useRouter();
+  const { show } = useToast();
 
   const [staffId, setStaffId] = useState<string | null>(null);
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
@@ -20,7 +23,6 @@ export default function ProfiloPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const [profileSaved, setProfileSaved] = useState(false);
 
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [newEmail, setNewEmail] = useState("");
@@ -73,7 +75,6 @@ export default function ProfiloPage() {
     if (!staffId || !restaurantId) return;
     setIsSavingProfile(true);
     setError(null);
-    setProfileSaved(false);
 
     try {
       const supabase = createClient();
@@ -92,11 +93,10 @@ export default function ProfiloPage() {
         if (restaurantError) throw restaurantError;
       }
 
-      setProfileSaved(true);
-      setTimeout(() => setProfileSaved(false), 2500);
+      show("Profilo salvato");
     } catch (err) {
       console.error(err);
-      setError("Non sono riuscito a salvare il profilo. Riprova.");
+      show("Non sono riuscito a salvare il profilo.", "error");
     } finally {
       setIsSavingProfile(false);
     }
@@ -142,13 +142,10 @@ export default function ProfiloPage() {
       const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
       if (updateError) throw updateError;
 
-      setPasswordMessage("Password aggiornata con successo.");
+      show("Password aggiornata");
       setNewPassword("");
       setConfirmPassword("");
-      setTimeout(() => {
-        setShowPasswordForm(false);
-        setPasswordMessage(null);
-      }, 2000);
+      setShowPasswordForm(false);
     } catch (err) {
       console.error(err);
       setPasswordMessage("Non sono riuscito ad aggiornare la password. Riprova.");
@@ -158,7 +155,17 @@ export default function ProfiloPage() {
   }
 
   if (isLoading) {
-    return <p className="p-4 text-center text-sm text-ink-muted">Carico...</p>;
+    return (
+      <div className="p-4">
+        <div className="mb-4 flex items-center gap-3">
+          <Skeleton className="h-9 w-9 rounded-lg" />
+          <Skeleton className="h-6 w-24" />
+        </div>
+        <Skeleton className="mb-3 h-44 w-full" />
+        <Skeleton className="mb-3 h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    );
   }
 
   return (
@@ -178,7 +185,7 @@ export default function ProfiloPage() {
         <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
       )}
 
-      <div className="mb-3 rounded-xl border border-black/5 bg-white p-4">
+      <div className="animate-fade-in mb-3 rounded-xl border border-black/5 bg-white p-4">
         <div className="mb-3 flex items-center gap-2">
           <User size={16} className="text-ink-muted" />
           <p className="text-sm font-medium text-ink">Il tuo nome</p>
@@ -218,11 +225,11 @@ export default function ProfiloPage() {
           className="touch-target mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-50"
         >
           {isSavingProfile && <Loader2 size={16} className="animate-spin" />}
-          {profileSaved ? "Salvato!" : "Salva"}
+          Salva
         </button>
       </div>
 
-      <div className="mb-3 rounded-xl border border-black/5 bg-white p-4">
+      <div className="animate-fade-in mb-3 rounded-xl border border-black/5 bg-white p-4">
         <div className="mb-2 flex items-center gap-2">
           <Mail size={16} className="text-ink-muted" />
           <p className="text-sm font-medium text-ink">Email di accesso</p>
@@ -273,7 +280,7 @@ export default function ProfiloPage() {
         )}
       </div>
 
-      <div className="rounded-xl border border-black/5 bg-white p-4">
+      <div className="animate-fade-in rounded-xl border border-black/5 bg-white p-4">
         <div className="mb-2 flex items-center gap-2">
           <Lock size={16} className="text-ink-muted" />
           <p className="text-sm font-medium text-ink">Password</p>
@@ -303,13 +310,7 @@ export default function ProfiloPage() {
               className="mb-2 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
             />
             {passwordMessage && (
-              <p
-                className={`mb-2 text-xs ${
-                  passwordMessage.includes("successo") ? "text-status-free" : "text-status-danger"
-                }`}
-              >
-                {passwordMessage}
-              </p>
+              <p className="mb-2 text-xs text-status-danger">{passwordMessage}</p>
             )}
             <div className="flex gap-2">
               <button
