@@ -7,7 +7,10 @@ import {
   Clock,
   X,
   CalendarCheck,
+  CalendarPlus,
   Users,
+  MapPin,
+  Phone,
   Loader2,
   RefreshCw,
   Pencil,
@@ -30,6 +33,8 @@ interface RestaurantBranding {
   name: string;
   logo_url: string | null;
   primary_color: string;
+  address: string | null;
+  contact_phone: string | null;
 }
 
 function toDateString(d: Date): string {
@@ -43,6 +48,10 @@ function formatTimeInput(raw: string) {
   const digits = raw.replace(/\D/g, "").slice(0, 4);
   if (digits.length <= 2) return digits;
   return digits.slice(0, 2) + ":" + digits.slice(2);
+}
+
+function toIcsDate(d: Date): string {
+  return d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
 }
 
 export default function BadgePrenotazionePage() {
@@ -166,6 +175,39 @@ export default function BadgePrenotazionePage() {
     }
   }
 
+  function handleAddToCalendar() {
+    if (!reservation || !restaurant) return;
+
+    const start = new Date(reservation.reservationTime);
+    const end = new Date(start.getTime() + 90 * 60000);
+
+    const lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Prenota App//IT",
+      "BEGIN:VEVENT",
+      `UID:${reservation.id}@prenota-app`,
+      `DTSTAMP:${toIcsDate(new Date())}`,
+      `DTSTART:${toIcsDate(start)}`,
+      `DTEND:${toIcsDate(end)}`,
+      `SUMMARY:Prenotazione da ${restaurant.name}`,
+      restaurant.address ? `LOCATION:${restaurant.address.replace(/,/g, "\\,")}` : "",
+      `DESCRIPTION:Prenotazione per ${reservation.partySize} persone a nome di ${reservation.customerName}`,
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].filter(Boolean);
+
+    const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "prenotazione.ics";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg p-4">
@@ -265,18 +307,60 @@ export default function BadgePrenotazionePage() {
                 {reservation.partySize}
               </span>
             </div>
+
+            {(restaurant?.address || restaurant?.contact_phone) && (
+              <div className="space-y-2 border-t border-black/5 pt-3">
+                {restaurant.address && (
+                  <a
+                    href={`https://maps.google.com/?q=${encodeURIComponent(restaurant.address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start gap-2"
+                  >
+                    <MapPin size={14} className="mt-0.5 shrink-0" style={{ color }} />
+                    <div className="min-w-0">
+                      <p className="text-[11px] text-ink-muted">{t("labelAddress")}</p>
+                      <p className="text-sm text-ink underline decoration-black/20 underline-offset-2">
+                        {restaurant.address}
+                      </p>
+                    </div>
+                  </a>
+                )}
+                {restaurant.contact_phone && (
+                  <a href={`tel:${restaurant.contact_phone}`} className="flex items-start gap-2">
+                    <Phone size={14} className="mt-0.5 shrink-0" style={{ color }} />
+                    <div className="min-w-0">
+                      <p className="text-[11px] text-ink-muted">{t("labelPhone")}</p>
+                      <p className="text-sm text-ink underline decoration-black/20 underline-offset-2">
+                        {restaurant.contact_phone}
+                      </p>
+                    </div>
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
+
+        {(isConfirmed || isPending) && !showEditForm && (
+          <button
+            onClick={handleAddToCalendar}
+            className="touch-target mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-black/10 py-2.5 text-sm font-medium text-ink-muted"
+          >
+            <CalendarPlus size={15} />
+            {t("addToCalendar")}
+          </button>
+        )}
 
         {isConfirmed && !showEditForm && (
           <>
             {reservation.customerConfirmedAt ? (
-              <div className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-status-freeBg px-4 py-3 text-sm font-medium text-status-free">
+              <div className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-status-freeBg px-4 py-3 text-sm font-medium text-status-free">
                 <CheckCheck size={16} />
                 {t("youConfirmedAttendance")}
               </div>
             ) : (
-              <div className="mt-4">
+              <div className="mt-3">
                 <button
                   onClick={handleConfirmAttendance}
                   disabled={isConfirmingAttendance}
@@ -296,7 +380,7 @@ export default function BadgePrenotazionePage() {
           </>
         )}
         {isPending && !showEditForm && (
-          <p className="mt-4 text-center text-xs text-ink-muted">{t("pendingNote")}</p>
+          <p className="mt-3 text-center text-xs text-ink-muted">{t("pendingNote")}</p>
         )}
 
         {canManage && showEditForm && (
