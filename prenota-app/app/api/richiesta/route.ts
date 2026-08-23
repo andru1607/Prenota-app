@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { restaurantId, customerName, phone, date, time, partySize, website } = await req.json();
+    const { restaurantId, customerName, phone, date, time, partySize, notes, website } = await req.json();
 
     if (website) {
       return NextResponse.json({ success: true, status: "confirmed" });
@@ -64,6 +64,9 @@ export async function POST(req: NextRequest) {
     }
     if (phone && phone.length > 30) {
       return NextResponse.json({ error: "Numero di telefono non valido." }, { status: 400 });
+    }
+    if (notes && notes.length > 300) {
+      return NextResponse.json({ error: "Le richieste particolari sono troppo lunghe." }, { status: 400 });
     }
     const size = Number(partySize);
     if (!Number.isInteger(size) || size < 1 || size > 50) {
@@ -130,6 +133,7 @@ export async function POST(req: NextRequest) {
         phone: phone || null,
         party_size: size,
         reservation_time: reservationTime,
+        notes: notes?.trim() || null,
         status,
         source: "public",
       })
