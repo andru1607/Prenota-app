@@ -12,24 +12,43 @@ export async function GET() {
     return NextResponse.json({ error: "Non autenticato." }, { status: 401 });
   }
 
-  const { data, error } = await supabase
+  const { data: staffRows, error: staffError } = await supabase
     .from("staff")
-    .select("role, restaurants(id, name, logo_url)")
+    .select("role, restaurant_id")
     .eq("auth_user_id", user.id);
 
-  if (error) {
-    console.error("Errore lettura ristoranti:", error);
+  if (staffError) {
+    console.error("Errore lettura staff:", staffError);
     return NextResponse.json({ error: "Impossibile leggere i ristoranti." }, { status: 500 });
   }
 
-  const restaurants = (data ?? [])
-    .filter((row: any) => row.restaurants)
-    .map((row: any) => ({
-      id: row.restaurants.id,
-      name: row.restaurants.name,
-      logoUrl: row.restaurants.logo_url,
-      role: row.role,
-    }));
+  if (!staffRows || staffRows.length === 0) {
+    return NextResponse.json({ restaurants: [] });
+  }
+
+  const restaurantIds = staffRows.map((r) => r.restaurant_id);
+  const { data: restaurantRows, error: restaurantsError } = await supabase
+    .from("restaurants")
+    .select("id, name, logo_url")
+    .in("id", restaurantIds);
+
+  if (restaurantsError) {
+    console.error("Errore lettura ristoranti:", restaurantsError);
+    return NextResponse.json({ error: "Impossibile leggere i ristoranti." }, { status: 500 });
+  }
+
+  const restaurants = staffRows
+    .map((staffRow) => {
+      const restaurant = (restaurantRows ?? []).find((r) => r.id === staffRow.restaurant_id);
+      if (!restaurant) return null;
+      return {
+        id: restaurant.id,
+        name: restaurant.name,
+        logoUrl: restaurant.logo_url,
+        role: staffRow.role,
+      };
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null);
 
   return NextResponse.json({ restaurants });
 }
