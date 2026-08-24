@@ -13,9 +13,6 @@ interface RestaurantOption {
   role: string;
 }
 
-// Visibile solo se l'utente ha più di un ristorante o vuole crearne uno
-// nuovo — chi gestisce un solo locale non la vede nemmeno, per non
-// aggiungere confusione a chi non ne ha bisogno.
 export function RestaurantSwitcher() {
   const router = useRouter();
   const { show } = useToast();
@@ -30,16 +27,24 @@ export function RestaurantSwitcher() {
 
   async function load() {
     setIsLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/restaurants");
-      if (!res.ok) return;
-      const { restaurants: data } = await res.json();
-      const list: RestaurantOption[] = data ?? [];
+      const body = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        setError(`Errore ${res.status}: ${body?.error || "sconosciuto"}`);
+        setRestaurants([]);
+        return;
+      }
+
+      const list: RestaurantOption[] = body?.restaurants ?? [];
       setRestaurants(list);
       const current = getActiveRestaurantId();
       setActiveIdState(current && list.some((r) => r.id === current) ? current : list[0]?.id ?? null);
     } catch (err) {
       console.error(err);
+      setError("Errore di rete nel caricare i ristoranti.");
     } finally {
       setIsLoading(false);
     }
@@ -86,7 +91,6 @@ export function RestaurantSwitcher() {
     }
   }
 
-  // Niente da mostrare finché non sappiamo quanti ristoranti ci sono
   if (isLoading) return null;
 
   return (
@@ -95,6 +99,10 @@ export function RestaurantSwitcher() {
         <Store size={16} className="text-ink-muted" />
         {restaurants.length > 1 ? "I tuoi ristoranti" : "Il tuo ristorante"}
       </p>
+
+      {error && (
+        <p className="mb-3 rounded-lg bg-status-dangerBg p-2.5 text-xs text-status-danger">{error}</p>
+      )}
 
       {restaurants.length > 0 && (
         <div className="space-y-1.5">
@@ -128,8 +136,6 @@ export function RestaurantSwitcher() {
           ))}
         </div>
       )}
-
-      {error && <p className="mt-2 text-xs text-status-danger">{error}</p>}
 
       {showNewForm ? (
         <div className="mt-3 rounded-lg bg-bg-subtle p-3">
