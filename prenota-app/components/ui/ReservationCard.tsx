@@ -83,7 +83,8 @@ export function ReservationCard({
                   Tavolo {tableNumber}
                 </span>
               )}
-              {reservation.status === "confirmed" &&
+              {reservation.source === "public" &&
+                reservation.status === "confirmed" &&
                 (reservation.customerConfirmedAt ? (
                   <span className="flex items-center gap-1 rounded-full bg-status-freeBg px-1.5 py-0.5 text-[10px] font-medium text-status-free">
                     <CheckCheck size={11} />
