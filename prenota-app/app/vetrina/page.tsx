@@ -10,8 +10,13 @@ import {
   Trash2,
   Pencil,
   X,
+  UtensilsCrossed,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { getMyStaffRow } from "@/lib/roles";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ListSkeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface MenuItem {
   id: string;
@@ -23,6 +28,7 @@ interface MenuItem {
 
 export default function VetrinaPage() {
   const router = useRouter();
+  const { show } = useToast();
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
 
   const [description, setDescription] = useState("");
@@ -30,7 +36,6 @@ export default function VetrinaPage() {
   const [contactPhone, setContactPhone] = useState("");
   const [openingHoursText, setOpeningHoursText] = useState("");
   const [isSavingInfo, setIsSavingInfo] = useState(false);
-  const [infoSaved, setInfoSaved] = useState(false);
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [isLoadingMenu, setIsLoadingMenu] = useState(true);
@@ -46,25 +51,15 @@ export default function VetrinaPage() {
 
   useEffect(() => {
     async function loadInfo() {
+      const staffRow = await getMyStaffRow();
+      if (!staffRow) return;
+      setRestaurantId(staffRow.restaurantId);
+
       const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: staffRow } = await supabase
-        .from("staff")
-        .select("restaurant_id")
-        .eq("auth_user_id", user.id)
-        .single();
-
-      if (!staffRow?.restaurant_id) return;
-      setRestaurantId(staffRow.restaurant_id);
-
       const { data: restaurant } = await supabase
         .from("restaurants")
         .select("description, address, contact_phone, opening_hours_text")
-        .eq("id", staffRow.restaurant_id)
+        .eq("id", staffRow.restaurantId)
         .single();
 
       if (restaurant) {
@@ -100,7 +95,6 @@ export default function VetrinaPage() {
     if (!restaurantId) return;
     setIsSavingInfo(true);
     setError(null);
-    setInfoSaved(false);
     try {
       const supabase = createClient();
       const { error: updateError } = await supabase
@@ -115,11 +109,10 @@ export default function VetrinaPage() {
 
       if (updateError) throw updateError;
 
-      setInfoSaved(true);
-      setTimeout(() => setInfoSaved(false), 2500);
+      show("Informazioni salvate");
     } catch (err) {
       console.error(err);
-      setError("Non sono riuscito a salvare le informazioni.");
+      show("Non sono riuscito a salvare le informazioni.", "error");
     } finally {
       setIsSavingInfo(false);
     }
@@ -169,11 +162,13 @@ export default function VetrinaPage() {
 
       if (!res.ok) throw new Error("Errore salvataggio piatto");
 
+      const wasEditing = !!editingItemId;
       resetItemForm();
+      show(wasEditing ? "Piatto aggiornato" : "Piatto aggiunto al menu");
       loadMenu();
     } catch (err) {
       console.error(err);
-      setError("Non sono riuscito a salvare il piatto.");
+      show("Non sono riuscito a salvare il piatto.", "error");
     } finally {
       setIsSavingItem(false);
     }
@@ -185,8 +180,10 @@ export default function VetrinaPage() {
     try {
       const res = await fetch(`/api/menu?id=${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Errore eliminazione");
+      show("Piatto eliminato");
     } catch (err) {
       console.error(err);
+      show("Non sono riuscito a eliminare il piatto.", "error");
       loadMenu();
     }
   }
@@ -245,7 +242,7 @@ export default function VetrinaPage() {
           className="touch-target mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-50"
         >
           {isSavingInfo && <Loader2 size={16} className="animate-spin" />}
-          {infoSaved ? "Salvato!" : "Salva informazioni"}
+          Salva informazioni
         </button>
       </div>
 
@@ -322,15 +319,15 @@ export default function VetrinaPage() {
         )}
 
         {isLoadingMenu ? (
-          <p className="py-4 text-center text-sm text-ink-muted">Carico il menu...</p>
+          <ListSkeleton rows={3} />
         ) : menuItems.length === 0 ? (
-          <p className="py-4 text-center text-sm text-ink-muted">Nessun piatto ancora.</p>
+          <EmptyState icon={UtensilsCrossed} title="Nessun piatto ancora" />
         ) : (
           <div className="space-y-2">
             {menuItems.map((item) => (
               <div
                 key={item.id}
-                className="flex items-start justify-between gap-2 rounded-lg bg-bg-subtle p-3"
+                className="animate-fade-in flex items-start justify-between gap-2 rounded-lg bg-bg-subtle p-3"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
