@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Loader2, Eye, EyeOff, ChevronRight, CalendarClock } from "lucide-react";
+import { Camera, Loader2, Eye, EyeOff, ChevronRight, CalendarClock, Image as ImageIcon } from "lucide-react";
 import { StatusBar } from "@/components/ui/StatusBar";
 import { TableCard } from "@/components/ui/TableCard";
 import { ReservationCard } from "@/components/ui/ReservationCard";
@@ -55,6 +55,7 @@ function mapReservationRow(row: any): Reservation {
     notes: row.notes ?? undefined,
     source: row.source,
     createdAt: row.created_at,
+    customerConfirmedAt: row.customer_confirmed_at ?? undefined,
   };
 }
 
@@ -82,6 +83,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const { show } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [drafts, setDrafts] = useState<ParsedReservationDraft[] | null>(null);
@@ -316,10 +318,27 @@ export default function DashboardPage() {
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handlePhotoSelected}
+            />
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
               multiple
               className="hidden"
               onChange={handlePhotoSelected}
             />
+            <button
+              onClick={() => galleryInputRef.current?.click()}
+              disabled={isProcessing}
+              className="touch-target grid place-items-center rounded-xl border border-black/10 text-ink-muted disabled:opacity-60"
+              aria-label="Carica foto dalla galleria"
+              title="Carica dalla galleria"
+            >
+              <ImageIcon size={18} />
+            </button>
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isProcessing}
