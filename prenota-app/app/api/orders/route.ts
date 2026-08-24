@@ -4,6 +4,7 @@ import { getRestaurantId } from "@/lib/restaurant";
 
 const ACTIVE_STATUSES = ["open", "sent", "ready", "served"];
 const ITEM_STATUSES = ["pending", "in_progress", "ready", "served"];
+const COURSES = [1, 2, 3, 4];
 
 async function findOrder(supabase: ReturnType<typeof createClient>, id: string, restaurantId: string) {
   const { data, error } = await supabase
@@ -37,7 +38,7 @@ export async function GET() {
 
     const { data: items, error: itemsError } = await supabase
       .from("customer_order_items")
-      .select("id, order_id, menu_item_id, name, quantity, notes, status, created_at")
+      .select("id, order_id, menu_item_id, name, quantity, notes, status, course, sent_at, created_at")
       .in("order_id", orderIds)
       .order("created_at", { ascending: true });
     if (itemsError) throw itemsError;
@@ -104,7 +105,8 @@ export async function PATCH(req: NextRequest) {
   const supabase = createClient();
 
   try {
-    const { action, orderId, itemId, menuItemId, quantity, notes, status } = await req.json();
+    const body = await req.json();
+    const { action, orderId, itemId, menuItemId, quantity, notes, status } = body;
     const restaurantId = await getRestaurantId(supabase);
 
     if (!orderId) return NextResponse.json({ error: "Comanda obbligatoria." }, { status: 400 });
@@ -112,9 +114,10 @@ export async function PATCH(req: NextRequest) {
     if (!order) return NextResponse.json({ error: "Comanda non trovata." }, { status: 404 });
 
     if (action === "add_item") {
-      if (order.status !== "open") {
-        return NextResponse.json({ error: "La comanda è già stata inviata." }, { status: 400 });
+      if (order.status === "closed") {
+        return NextResponse.json({ error: "Questa comanda è chiusa." }, { status: 400 });
       }
+      const course = COURSES.includes(Number(body.course)) ? Number(body.course) : 1;
       if (!menuItemId || !Number.isInteger(quantity) || quantity < 1) {
         return NextResponse.json({ error: "Piatto o quantità non validi." }, { status: 400 });
       }
@@ -126,6 +129,26 @@ export async function PATCH(req: NextRequest) {
         .maybeSingle();
       if (!menuItem) return NextResponse.json({ error: "Piatto non trovato nel menu." }, { status: 404 });
 
+      const { data: existingLine } = await supabase
+        .from("customer_order_items")
+        .select("id, quantity")
+        .eq("order_id", orderId)
+        .eq("menu_item_id", menuItem.id)
+        .eq("course", course)
+        .is("sent_at", null)
+        .maybeSingle();
+
+      if (existingLine) {
+        const { data, error } = await supabase
+          .from("customer_order_items")
+          .update({ quantity: existingLine.quantity + quantity })
+          .eq("id", existingLine.id)
+          .select()
+          .single();
+        if (error) throw error;
+        return NextResponse.json({ item: data });
+      }
+
       const { data, error } = await supabase
         .from("customer_order_items")
         .insert({
@@ -134,47 +157,63 @@ export async function PATCH(req: NextRequest) {
           name: menuItem.name,
           quantity,
           notes: notes?.trim() || null,
+          course,
+          sent_at: course === 1 ? new Date().toISOString() : null,
         })
         .select()
         .single();
       if (error) throw error;
+
+      if (course === 1 && order.status === "open") {
+        await supabase.from("orders").update({ status: "sent" }).eq("id", orderId);
+      }
       return NextResponse.json({ item: data });
     }
 
     if (action === "remove_item") {
-      if (order.status !== "open") {
-        return NextResponse.json({ error: "La comanda è già stata inviata." }, { status: 400 });
-      }
       if (!itemId) return NextResponse.json({ error: "Piatto obbligatorio." }, { status: 400 });
-      const { error } = await supabase
+      const { data: item } = await supabase
         .from("customer_order_items")
-        .delete()
+        .select("id, sent_at")
         .eq("id", itemId)
-        .eq("order_id", orderId);
+        .eq("order_id", orderId)
+        .maybeSingle();
+      if (!item) return NextResponse.json({ error: "Piatto non trovato." }, { status: 404 });
+      if (item.sent_at) {
+        return NextResponse.json({ error: "Questo piatto è già stato inviato in cucina." }, { status: 400 });
+      }
+      const { error } = await supabase.from("customer_order_items").delete().eq("id", itemId);
       if (error) throw error;
       return NextResponse.json({ success: true });
     }
 
-    if (action === "send") {
-      if (order.status !== "open") {
-        return NextResponse.json({ error: "Questa comanda è già stata inviata." }, { status: 400 });
-      }
-      const { count, error: countError } = await supabase
+    if (action === "send_course") {
+      const course = COURSES.includes(Number(body.course)) ? Number(body.course) : null;
+      if (!course) return NextResponse.json({ error: "Portata non valida." }, { status: 400 });
+
+      const { data: pending } = await supabase
         .from("customer_order_items")
-        .select("*", { count: "exact", head: true })
-        .eq("order_id", orderId);
-      if (countError) throw countError;
-      if (!count) {
-        return NextResponse.json({ error: "Aggiungi almeno un piatto prima di inviare." }, { status: 400 });
+        .select("id")
+        .eq("order_id", orderId)
+        .eq("course", course)
+        .is("sent_at", null);
+
+      if (!pending || pending.length === 0) {
+        return NextResponse.json({ error: "Niente da inviare per questa portata." }, { status: 400 });
       }
-      const { data, error } = await supabase
-        .from("orders")
-        .update({ status: "sent" })
-        .eq("id", orderId)
-        .select()
-        .single();
+
+      const { error } = await supabase
+        .from("customer_order_items")
+        .update({ sent_at: new Date().toISOString() })
+        .eq("order_id", orderId)
+        .eq("course", course)
+        .is("sent_at", null);
       if (error) throw error;
-      return NextResponse.json({ order: data });
+
+      if (order.status === "open") {
+        await supabase.from("orders").update({ status: "sent" }).eq("id", orderId);
+      }
+      return NextResponse.json({ success: true });
     }
 
     if (action === "item_status") {
@@ -199,8 +238,9 @@ export async function PATCH(req: NextRequest) {
 
       const { data: items, error: itemsError } = await supabase
         .from("customer_order_items")
-        .select("status")
-        .eq("order_id", orderId);
+        .select("status, sent_at")
+        .eq("order_id", orderId)
+        .not("sent_at", "is", null);
       if (itemsError) throw itemsError;
 
       const allServed = Boolean(items?.length) && items!.every((row) => row.status === "served");
