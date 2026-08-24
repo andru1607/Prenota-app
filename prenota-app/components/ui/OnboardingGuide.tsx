@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { X, Palette, QrCode, UtensilsCrossed, CalendarX, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { getMyStaffRow } from "@/lib/roles";
 
 const STEPS = [
   {
@@ -38,25 +39,16 @@ export function OnboardingGuide() {
 
   useEffect(() => {
     async function check() {
+      const staffRow = await getMyStaffRow();
+      if (!staffRow) return;
+
+      setRestaurantId(staffRow.restaurantId);
+
       const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: staffRow } = await supabase
-        .from("staff")
-        .select("restaurant_id")
-        .eq("auth_user_id", user.id)
-        .single();
-
-      if (!staffRow?.restaurant_id) return;
-      setRestaurantId(staffRow.restaurant_id);
-
       const { data: restaurant } = await supabase
         .from("restaurants")
         .select("onboarding_completed")
-        .eq("id", staffRow.restaurant_id)
+        .eq("id", staffRow.restaurantId)
         .single();
 
       if (restaurant && restaurant.onboarding_completed === false) {
