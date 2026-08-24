@@ -11,6 +11,8 @@ interface OrderItem {
   quantity: number;
   notes: string | null;
   status: "pending" | "in_progress" | "ready" | "served";
+  course: number;
+  sent_at: string | null;
 }
 
 interface Order {
@@ -56,7 +58,11 @@ export default function CucinaPage() {
       const res = await fetch("/api/orders");
       if (!res.ok) throw new Error("Errore");
       const { orders: data } = await res.json();
-      setOrders((data ?? []).filter((o: Order) => o.status !== "open"));
+      const activeOrders = (data ?? [])
+        .filter((o: Order) => o.status !== "open")
+        .map((o: Order) => ({ ...o, items: o.items.filter((i) => i.sent_at) }))
+        .filter((o: Order) => o.items.length > 0);
+      setOrders(activeOrders);
       setError(null);
     } catch (err) {
       console.error(err);
