@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Check, User, Store, Mail, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { getMyStaffRow } from "@/lib/roles";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/ToastProvider";
+import { RestaurantSwitcher } from "@/components/ui/RestaurantSwitcher";
 
 export default function ProfiloPage() {
   const router = useRouter();
@@ -45,10 +47,17 @@ export default function ProfiloPage() {
 
       setCurrentEmail(user.email ?? "");
 
+      const activeStaffRow = await getMyStaffRow();
+      if (!activeStaffRow) {
+        setIsLoading(false);
+        return;
+      }
+
       const { data: staffRow } = await supabase
         .from("staff")
         .select("id, full_name, role, restaurant_id")
         .eq("auth_user_id", user.id)
+        .eq("restaurant_id", activeStaffRow.restaurantId)
         .single();
 
       if (staffRow) {
@@ -184,6 +193,8 @@ export default function ProfiloPage() {
       {error && (
         <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
       )}
+
+      <RestaurantSwitcher />
 
       <div className="animate-fade-in mb-3 rounded-xl border border-black/5 bg-white p-4">
         <div className="mb-3 flex items-center gap-2">
