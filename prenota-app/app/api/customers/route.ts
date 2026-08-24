@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getRestaurantId } from "@/lib/restaurant";
+import { requireAdmin } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   const supabase = createClient();
@@ -106,13 +107,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Non autenticato." }, { status: 401 });
   }
 
-  const { data: requesterStaff } = await supabase
-    .from("staff")
-    .select("role")
-    .eq("auth_user_id", user.id)
-    .single();
-
-  if (requesterStaff?.role !== "admin") {
+  if (!(await requireAdmin(supabase))) {
     return NextResponse.json(
       { error: "Solo un amministratore può eliminare i clienti." },
       { status: 403 }
