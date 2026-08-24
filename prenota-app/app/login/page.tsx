@@ -84,7 +84,9 @@ function LoginForm() {
             <Lock size={22} />
           </div>
           <h1 className="text-lg font-semibold text-ink">Prenota</h1>
-          <p className="text-sm text-ink-muted">Accedi con il tuo account</p>
+          <p className="text-sm text-ink-muted">
+            Prenotazioni, sala e menu sempre allineati — niente da ricopiare a mano
+          </p>
         </div>
 
         <div className="space-y-2">
