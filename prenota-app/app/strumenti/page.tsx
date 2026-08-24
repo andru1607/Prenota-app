@@ -1,9 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { UtensilsCrossed, Truck, CalendarClock, ClipboardCheck, ChevronRight } from "lucide-react";
+import {
+  UtensilsCrossed,
+  Truck,
+  CalendarClock,
+  ClipboardCheck,
+  ChevronRight,
+  ClipboardList,
+  ChefHat,
+} from "lucide-react";
 
 const TOOLS = [
+  {
+    href: "/comande",
+    icon: ClipboardList,
+    title: "Comande",
+    description: "Apri comande per tavolo e invia in cucina",
+  },
+  {
+    href: "/cucina",
+    icon: ChefHat,
+    title: "Monitor cucina",
+    description: "Comande da preparare, per un tablet in cucina",
+  },
   {
     href: "/tavoli",
     icon: UtensilsCrossed,
