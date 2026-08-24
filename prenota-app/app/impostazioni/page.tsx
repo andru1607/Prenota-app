@@ -20,7 +20,7 @@ import {
   Users,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { getMyRole } from "@/lib/roles";
+import { getMyRole, getMyStaffRow } from "@/lib/roles";
 import { THEMES, applyTheme, type ThemeName, DEFAULT_THEME } from "@/lib/themes";
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -123,27 +123,17 @@ export default function ImpostazioniPage() {
 
   useEffect(() => {
     async function loadRestaurant() {
+      const staffRow = await getMyStaffRow();
+      if (!staffRow) return;
+
+      setRestaurantId(staffRow.restaurantId);
+      setLink(`${window.location.origin}/richiesta/${staffRow.restaurantId}`);
+
       const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: staffRow } = await supabase
-        .from("staff")
-        .select("restaurant_id")
-        .eq("auth_user_id", user.id)
-        .single();
-
-      if (!staffRow?.restaurant_id) return;
-
-      setRestaurantId(staffRow.restaurant_id);
-      setLink(`${window.location.origin}/richiesta/${staffRow.restaurant_id}`);
-
       const { data: restaurant } = await supabase
         .from("restaurants")
         .select("name, logo_url, primary_color, app_theme")
-        .eq("id", staffRow.restaurant_id)
+        .eq("id", staffRow.restaurantId)
         .single();
 
       if (restaurant) {
