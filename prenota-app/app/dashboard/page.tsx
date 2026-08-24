@@ -301,10 +301,10 @@ export default function DashboardPage() {
       <StatusBar totalCoperti={coperti} tavoliLiberi={tavoliLiberi} prossimoArrivo={prossimoArrivo} />
 
       <div className="p-4">
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <h1 className="text-lg font-semibold text-ink">Sala</h1>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={toggleShowTables}
               className="touch-target flex items-center gap-1.5 rounded-xl border border-black/10 px-3 py-2 text-sm font-medium text-ink-muted"
@@ -333,11 +333,10 @@ export default function DashboardPage() {
             <button
               onClick={() => galleryInputRef.current?.click()}
               disabled={isProcessing}
-              className="touch-target grid place-items-center rounded-xl border border-black/10 text-ink-muted disabled:opacity-60"
-              aria-label="Carica foto dalla galleria"
-              title="Carica dalla galleria"
+              className="touch-target flex items-center gap-1.5 rounded-xl border border-black/10 px-3 py-2 text-sm font-medium text-ink-muted disabled:opacity-60"
             >
-              <ImageIcon size={18} />
+              <ImageIcon size={16} />
+              Galleria
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
