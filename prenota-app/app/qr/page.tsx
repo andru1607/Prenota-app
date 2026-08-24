@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Oswald, IBM_Plex_Mono } from "next/font/google";
 import { ArrowLeft, Printer, Ticket } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { getMyStaffRow } from "@/lib/roles";
 
 const display = Oswald({ subsets: ["latin"], weight: ["500", "600", "700"] });
 const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600"] });
@@ -41,25 +42,15 @@ export default function QrPage() {
 
   useEffect(() => {
     async function load() {
+      const staffRow = await getMyStaffRow();
+      if (!staffRow) return;
+      setLink(`${window.location.origin}/richiesta/${staffRow.restaurantId}`);
+
       const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: staffRow } = await supabase
-        .from("staff")
-        .select("restaurant_id")
-        .eq("auth_user_id", user.id)
-        .single();
-
-      if (!staffRow?.restaurant_id) return;
-      setLink(`${window.location.origin}/richiesta/${staffRow.restaurant_id}`);
-
       const { data: restaurant } = await supabase
         .from("restaurants")
         .select("name, logo_url, primary_color")
-        .eq("id", staffRow.restaurant_id)
+        .eq("id", staffRow.restaurantId)
         .single();
 
       if (restaurant) setBranding(restaurant);
