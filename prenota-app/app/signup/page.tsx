@@ -79,7 +79,9 @@ export default function SignupPage() {
             <Store size={22} />
           </div>
           <h1 className="text-lg font-semibold text-ink">Crea il tuo ristorante</h1>
-          <p className="text-sm text-ink-muted">Registrati per iniziare a usare Prenota</p>
+          <p className="text-sm text-ink-muted">
+            Prenotazioni, sala e menu in un unico posto — sempre allineati
+          </p>
         </div>
 
         <div className="space-y-2">
