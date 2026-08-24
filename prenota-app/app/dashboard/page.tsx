@@ -182,6 +182,23 @@ export default function DashboardPage() {
     }
   }
 
+  async function updateReservationStatus(id: string, status: Reservation["status"], toastMessage: string) {
+    setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+    try {
+      const res = await fetch("/api/reservations", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      if (!res.ok) throw new Error("Errore aggiornamento");
+      show(toastMessage);
+    } catch (err) {
+      console.error(err);
+      show("Non sono riuscito ad aggiornare la prenotazione.", "error");
+      loadReservations();
+    }
+  }
+
   const today = new Date();
   const todayReservations = reservations.filter(
     (r) => new Date(r.reservationTime).toDateString() === today.toDateString()
@@ -482,7 +499,15 @@ export default function DashboardPage() {
                           {dayLabel}
                         </p>
                       )}
-                      <ReservationCard reservation={r} />
+                      <ReservationCard
+                        reservation={r}
+                        onCheckIn={() =>
+                          updateReservationStatus(r.id, "completed", "Cliente segnato come presente")
+                        }
+                        onNoShow={() =>
+                          updateReservationStatus(r.id, "no_show", "Segnato come assente")
+                        }
+                      />
                     </div>
                   );
                 })}
