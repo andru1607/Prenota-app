@@ -13,6 +13,7 @@ interface OrderItem {
   status: "pending" | "in_progress" | "ready" | "served";
   course: number;
   sent_at: string | null;
+  destination: "kitchen" | "bar";
 }
 
 interface Order {
@@ -60,7 +61,10 @@ export default function CucinaPage() {
       const { orders: data } = await res.json();
       const activeOrders = (data ?? [])
         .filter((o: Order) => o.status !== "open")
-        .map((o: Order) => ({ ...o, items: o.items.filter((i) => i.sent_at) }))
+        .map((o: Order) => ({
+          ...o,
+          items: o.items.filter((i) => i.sent_at && i.destination === "kitchen"),
+        }))
         .filter((o: Order) => o.items.length > 0);
       setOrders(activeOrders);
       setError(null);
