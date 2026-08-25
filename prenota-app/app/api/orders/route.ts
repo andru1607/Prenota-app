@@ -274,3 +274,24 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Impossibile aggiornare la comanda." }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  const supabase = createClient();
+
+  try {
+    const id = req.nextUrl.searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
+
+    const restaurantId = await getRestaurantId(supabase);
+    const order = await findOrder(supabase, id, restaurantId);
+    if (!order) return NextResponse.json({ error: "Comanda non trovata." }, { status: 404 });
+
+    const { error } = await supabase.from("orders").delete().eq("id", id);
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Errore eliminazione comanda:", err);
+    return NextResponse.json({ error: "Impossibile eliminare la comanda." }, { status: 500 });
+  }
+}
