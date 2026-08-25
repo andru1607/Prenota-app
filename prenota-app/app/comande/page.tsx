@@ -13,9 +13,9 @@ import {
   ArrowLeft,
   Receipt,
   Clock,
+  ShoppingBag,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ListSkeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/ToastProvider";
 import { MENU_GROUPS, groupForCategory } from "@/lib/menuGroups";
 
@@ -29,6 +29,12 @@ interface MenuItem {
 interface TableOption {
   id: string;
   number: string;
+  roomId: string | null;
+}
+
+interface Room {
+  id: string;
+  name: string;
 }
 
 interface OrderItem {
@@ -78,7 +84,7 @@ function colorForGroup(label: string): string {
   return GROUP_COLORS[hash % GROUP_COLORS.length];
 }
 
-function sortTablesByNumber(tables: TableOption[]): TableOption[] {
+function sortTablesByNumber<T extends { number: string }>(tables: T[]): T[] {
   return [...tables].sort((a, b) => {
     const numA = Number(a.number);
     const numB = Number(b.number);
@@ -100,13 +106,12 @@ export default function ComandePage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [tables, setTables] = useState<TableOption[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [showNewOrder, setShowNewOrder] = useState(false);
-  const [newOrderTableId, setNewOrderTableId] = useState("");
-  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [isOpeningTable, setIsOpeningTable] = useState<string | null>(null);
 
   const [subView, setSubView] = useState<"general" | "categories" | "items">("general");
   const [activeGroupLabel, setActiveGroupLabel] = useState<string | null>(null);
@@ -114,6 +119,7 @@ export default function ComandePage() {
   const [search, setSearch] = useState("");
   const [sendingCourse, setSendingCourse] = useState<number | null>(null);
   const [isClosing, setIsClosing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadOrders = useCallback(async () => {
     try {
@@ -138,7 +144,21 @@ export default function ComandePage() {
           .catch(() => {}),
         fetch("/api/tables")
           .then((res) => (res.ok ? res.json() : null))
-          .then((body) => setTables(sortTablesByNumber(body?.tables ?? [])))
+          .then((body) =>
+            setTables(
+              sortTablesByNumber(
+                (body?.tables ?? []).map((t: any) => ({
+                  id: t.id,
+                  number: t.number,
+                  roomId: t.room_id ?? null,
+                }))
+              )
+            )
+          )
+          .catch(() => {}),
+        fetch("/api/rooms")
+          .then((res) => (res.ok ? res.json() : null))
+          .then((body) => setRooms(body?.rooms ?? []))
           .catch(() => {}),
       ]);
       setIsLoading(false);
@@ -146,8 +166,20 @@ export default function ComandePage() {
     loadAll();
   }, [loadOrders]);
 
-  const tablesWithoutOrder = tables.filter((t) => !orders.some((o) => o.table_id === t.id));
   const selectedOrder = orders.find((o) => o.id === selectedOrderId) ?? null;
+
+  const roomGroups = useMemo(() => {
+    const groups = [
+      ...rooms.map((r) => ({ room: r, tables: tables.filter((t) => t.roomId === r.id) })),
+      {
+        room: null as Room | null,
+        tables: tables.filter((t) => !t.roomId || !rooms.some((r) => r.id === t.roomId)),
+      },
+    ];
+    return groups.filter((g) => g.tables.length > 0);
+  }, [rooms, tables]);
+
+  const takeoutOrders = orders.filter((o) => !o.table_id);
 
   const itemsInGroup = useMemo(() => {
     if (!activeGroupLabel) return [];
@@ -168,29 +200,53 @@ export default function ComandePage() {
     }, 0);
   }, [selectedOrder, menuItems]);
 
-  async function handleCreateOrder() {
-    setIsCreatingOrder(true);
+  async function handleOpenTable(tableId: string | null, label: string) {
+    const existing = tableId ? orders.find((o) => o.table_id === tableId) : null;
+    if (existing) {
+      setSelectedOrderId(existing.id);
+      setSubView("general");
+      setActiveCourse(1);
+      return;
+    }
+
+    setIsOpeningTable(tableId ?? "takeout");
     setError(null);
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tableId: newOrderTableId || null }),
+        body: JSON.stringify({ tableId }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Errore");
 
-      setShowNewOrder(false);
-      setNewOrderTableId("");
       await loadOrders();
       setSelectedOrderId(body.order.id);
       setSubView("general");
       setActiveCourse(1);
     } catch (err) {
       console.error(err);
-      show("Non sono riuscito ad aprire la comanda.", "error");
+      show(`Non sono riuscito ad aprire la comanda per ${label}.`, "error");
     } finally {
-      setIsCreatingOrder(false);
+      setIsOpeningTable(null);
+    }
+  }
+
+  async function handleDeleteOrder(orderId: string, label: string) {
+    if (!confirm(`Eliminare la comanda di ${label}? Non si può annullare.`)) return;
+    setIsDeleting(true);
+    setOrders((prev) => prev.filter((o) => o.id !== orderId));
+    if (selectedOrderId === orderId) setSelectedOrderId(null);
+    try {
+      const res = await fetch(`/api/orders?id=${orderId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Errore");
+      show("Comanda eliminata");
+    } catch (err) {
+      console.error(err);
+      show("Non sono riuscito ad eliminare la comanda.", "error");
+      loadOrders();
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -326,9 +382,12 @@ export default function ComandePage() {
   if (selectedOrder) {
     const allServed =
       selectedOrder.items.length > 0 && selectedOrder.items.every((i) => i.status === "served" && i.sent_at);
+    const orderLabel = selectedOrder.tableNumber
+      ? `Tavolo ${selectedOrder.tableNumber}`
+      : "questa comanda";
 
     return (
-      <div className="flex min-h-screen flex-col bg-bg pb-20">
+      <div className="flex min-h-screen flex-col bg-bg pb-24">
         <div className="sticky top-0 z-10 border-b border-black/5 bg-white">
           <div className="flex items-center gap-2 p-3">
             <button
@@ -373,13 +432,23 @@ export default function ComandePage() {
             )}
 
             {subView === "general" && (
-              <button
-                onClick={openCategories}
-                className="touch-target flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-sm font-medium text-white"
-                aria-label="Aggiungi piatti"
-              >
-                <Plus size={16} />
-              </button>
+              <>
+                <button
+                  onClick={() => handleDeleteOrder(selectedOrder.id, orderLabel)}
+                  disabled={isDeleting}
+                  className="touch-target grid place-items-center rounded-lg text-status-danger disabled:opacity-50"
+                  aria-label="Elimina comanda"
+                >
+                  <Trash2 size={18} />
+                </button>
+                <button
+                  onClick={openCategories}
+                  className="touch-target flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-sm font-medium text-white"
+                  aria-label="Aggiungi piatti"
+                >
+                  <Plus size={16} />
+                </button>
+              </>
             )}
             <button
               onClick={() => window.print()}
@@ -560,26 +629,34 @@ export default function ComandePage() {
           </div>
         )}
 
-        <div className="fixed bottom-0 left-0 right-0 flex items-center justify-between bg-primary px-4 py-3 text-white print:hidden">
-          <button
-            onClick={() => setSubView("general")}
-            className="touch-target grid place-items-center rounded-lg"
-            aria-label="Vedi riepilogo"
-          >
-            <Receipt size={20} />
-          </button>
-          <span className="num-tabular text-lg font-bold">€{orderTotal.toFixed(2)}</span>
-          {subView !== "general" ? (
+        <div
+          className="fixed bottom-0 left-0 right-0 bg-primary text-white print:hidden"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <div className="flex items-center justify-between px-4 py-3">
             <button
-              onClick={openCategories}
+              onClick={() => setSubView("general")}
               className="touch-target grid place-items-center rounded-lg"
-              aria-label="Altre categorie"
+              aria-label="Vedi riepilogo"
             >
-              <Plus size={20} />
+              <Receipt size={20} />
             </button>
-          ) : (
-            <span className="w-9" />
-          )}
+            <span className="flex items-baseline gap-1.5">
+              <span className="text-xs font-medium uppercase text-white/70">Totale</span>
+              <span className="num-tabular text-xl font-bold">€{orderTotal.toFixed(2)}</span>
+            </span>
+            {subView !== "general" ? (
+              <button
+                onClick={openCategories}
+                className="touch-target grid place-items-center rounded-lg"
+                aria-label="Altre categorie"
+              >
+                <Plus size={20} />
+              </button>
+            ) : (
+              <span className="w-9" />
+            )}
+          </div>
         </div>
       </div>
     );
@@ -587,98 +664,120 @@ export default function ComandePage() {
 
   return (
     <div className="p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-ink">Comande</h1>
-        <button
-          onClick={() => setShowNewOrder((v) => !v)}
-          className="touch-target flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-medium text-white"
-        >
-          <Plus size={18} />
-          Nuova
-        </button>
-      </div>
+      <h1 className="mb-4 text-lg font-semibold text-ink">Comande</h1>
 
       {error && (
         <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
       )}
 
-      {showNewOrder && (
-        <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
-          <p className="mb-2 text-sm font-medium text-ink">Apri comanda per tavolo</p>
-          <select
-            value={newOrderTableId}
-            onChange={(e) => setNewOrderTableId(e.target.value)}
-            className="mb-3 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
-          >
-            <option value="">Senza tavolo (es. asporto)</option>
-            {tablesWithoutOrder.map((t) => (
-              <option key={t.id} value={t.id}>
-                Tavolo {t.number}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={handleCreateOrder}
-            disabled={isCreatingOrder}
-            className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-50"
-          >
-            {isCreatingOrder && <Loader2 size={16} className="animate-spin" />}
-            Apri comanda
-          </button>
-        </div>
-      )}
-
       {isLoading ? (
-        <ListSkeleton rows={3} />
-      ) : orders.length === 0 ? (
+        <p className="py-8 text-center text-sm text-ink-muted">Carico i tavoli...</p>
+      ) : tables.length === 0 ? (
         <EmptyState
           icon={UtensilsCrossed}
-          title="Nessuna comanda aperta"
-          description='Usa "Nuova" per iniziarne una.'
+          title="Nessun tavolo configurato"
+          description="Aggiungi prima i tavoli nella sezione Tavoli, poi torna qui."
         />
       ) : (
-        <div className="space-y-2">
-          {orders.map((order) => {
-            const pendingCount = order.items.filter((i) => !i.sent_at).length;
-            return (
-              <button
-                key={order.id}
-                onClick={() => {
-                  setSelectedOrderId(order.id);
-                  setSubView("general");
-                  setActiveCourse(1);
-                }}
-                className="animate-fade-in touch-target flex w-full items-center justify-between rounded-xl border border-black/5 bg-white p-3 text-left"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-ink">
-                    {order.tableNumber ? `Tavolo ${order.tableNumber}` : "Senza tavolo"}
-                  </p>
-                  <p className="text-xs text-ink-muted">
-                    {order.items.length} piatt{order.items.length === 1 ? "o" : "i"}
-                    {pendingCount > 0 ? ` · ${pendingCount} da inviare` : ""}
-                  </p>
-                </div>
-                <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                    order.status === "ready" || order.status === "served"
-                      ? "bg-status-freeBg text-status-free"
-                      : order.status === "sent"
-                      ? "bg-status-pendingBg text-status-pending"
-                      : "bg-bg-subtle text-ink-muted"
-                  }`}
+        <div className="space-y-5">
+          {roomGroups.map((group) => (
+            <div key={group.room?.id ?? "senza-sala"}>
+              <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">
+                {group.room?.name ?? "Senza sala"}
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {group.tables.map((table) => {
+                  const activeOrder = orders.find((o) => o.table_id === table.id);
+                  const isOpening = isOpeningTable === table.id;
+                  return (
+                    <div key={table.id} className="relative">
+                      <button
+                        onClick={() => handleOpenTable(table.id, `Tavolo ${table.number}`)}
+                        disabled={isOpening}
+                        className={`touch-target flex aspect-square w-full flex-col items-center justify-center gap-0.5 rounded-2xl text-center shadow-sm transition-transform active:scale-95 disabled:opacity-60 ${
+                          activeOrder
+                            ? "bg-primary text-white"
+                            : "border-2 border-black/10 bg-white text-ink"
+                        }`}
+                      >
+                        {isOpening ? (
+                          <Loader2 size={20} className="animate-spin" />
+                        ) : (
+                          <>
+                            <span className="text-lg font-bold">{table.number}</span>
+                            {activeOrder && (
+                              <span className="text-[10px] font-medium opacity-90">
+                                {activeOrder.items.filter((i) => !i.sent_at).length > 0
+                                  ? "Da inviare"
+                                  : activeOrder.status === "sent"
+                                  ? "In cucina"
+                                  : activeOrder.status === "ready"
+                                  ? "Pronta"
+                                  : "Servita"}
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </button>
+                      {activeOrder && (
+                        <button
+                          onClick={() =>
+                            handleDeleteOrder(activeOrder.id, `Tavolo ${table.number}`)
+                          }
+                          className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full bg-white text-status-danger shadow-sm"
+                          aria-label={`Elimina comanda tavolo ${table.number}`}
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">Senza tavolo</p>
+            <div className="space-y-2">
+              {takeoutOrders.map((order) => (
+                <div
+                  key={order.id}
+                  className="flex items-center justify-between rounded-xl border border-black/5 bg-white p-3"
                 >
-                  {order.status === "open"
-                    ? "Aperta"
-                    : order.status === "sent"
-                    ? "In cucina"
-                    : order.status === "ready"
-                    ? "Pronta"
-                    : "Servita"}
-                </span>
+                  <button
+                    onClick={() => {
+                      setSelectedOrderId(order.id);
+                      setSubView("general");
+                      setActiveCourse(1);
+                    }}
+                    className="touch-target flex-1 text-left text-sm font-medium text-ink"
+                  >
+                    Comanda asporto · {order.items.length} piatt{order.items.length === 1 ? "o" : "i"}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteOrder(order.id, "questa comanda")}
+                    className="touch-target grid place-items-center rounded-lg text-status-danger"
+                    aria-label="Elimina comanda"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => handleOpenTable(null, "asporto")}
+                disabled={isOpeningTable === "takeout"}
+                className="touch-target flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-black/20 py-2.5 text-sm font-medium text-ink-muted disabled:opacity-50"
+              >
+                {isOpeningTable === "takeout" ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <ShoppingBag size={16} />
+                )}
+                Nuova comanda senza tavolo
               </button>
-            );
-          })}
+            </div>
+          </div>
         </div>
       )}
     </div>
