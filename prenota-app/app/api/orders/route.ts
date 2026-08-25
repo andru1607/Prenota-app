@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getRestaurantId } from "@/lib/restaurant";
+import { groupForCategory } from "@/lib/menuGroups";
 
 const ACTIVE_STATUSES = ["open", "sent", "ready", "served"];
 const ITEM_STATUSES = ["pending", "in_progress", "ready", "served"];
@@ -38,7 +39,7 @@ export async function GET() {
 
     const { data: items, error: itemsError } = await supabase
       .from("customer_order_items")
-      .select("id, order_id, menu_item_id, name, quantity, notes, status, course, sent_at, created_at")
+      .select("id, order_id, menu_item_id, name, quantity, notes, status, course, sent_at, destination, created_at")
       .in("order_id", orderIds)
       .order("created_at", { ascending: true });
     if (itemsError) throw itemsError;
@@ -123,11 +124,13 @@ export async function PATCH(req: NextRequest) {
       }
       const { data: menuItem } = await supabase
         .from("menu_items")
-        .select("id, name")
+        .select("id, name, category")
         .eq("id", menuItemId)
         .eq("restaurant_id", restaurantId)
         .maybeSingle();
       if (!menuItem) return NextResponse.json({ error: "Piatto non trovato nel menu." }, { status: 404 });
+
+      const destination = groupForCategory(menuItem.category).destination;
 
       const { data: existingLine } = await supabase
         .from("customer_order_items")
@@ -158,6 +161,7 @@ export async function PATCH(req: NextRequest) {
           quantity,
           notes: notes?.trim() || null,
           course,
+          destination,
           sent_at: course === 1 ? new Date().toISOString() : null,
         })
         .select()
