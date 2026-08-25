@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus, Star, Loader2, ChevronRight, X, Check, Users, Phone } from "lucide-react";
+import { Search, Plus, Loader2, ChevronRight, X, Check, Users, Phone } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListSkeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/ToastProvider";
+import { LOYALTY_TIERS, getLoyaltyTier } from "@/lib/loyalty";
 import type { Customer } from "@/types";
 
 function mapCustomerRow(row: any): Customer {
@@ -26,6 +27,7 @@ export default function ClientiPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [tierFilter, setTierFilter] = useState<string>("all");
 
   const [showForm, setShowForm] = useState(false);
   const [newName, setNewName] = useState("");
@@ -91,6 +93,11 @@ export default function ClientiPage() {
     }
   }
 
+  const visibleCustomers =
+    tierFilter === "all"
+      ? customers
+      : customers.filter((c) => getLoyaltyTier(c.reservationCount).key === tierFilter);
+
   return (
     <div className="p-4">
       <div className="mb-3 flex items-center justify-between">
@@ -115,6 +122,31 @@ export default function ClientiPage() {
           placeholder="Cerca per nome o telefono"
           className="w-full rounded-xl border border-black/10 bg-white py-2.5 pl-9 pr-3 text-sm"
         />
+      </div>
+
+      <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
+        <button
+          onClick={() => setTierFilter("all")}
+          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${
+            tierFilter === "all" ? "bg-primary text-white" : "border border-black/10 text-ink-muted"
+          }`}
+        >
+          Tutti
+        </button>
+        {LOYALTY_TIERS.map((tier) => (
+          <button
+            key={tier.key}
+            onClick={() => setTierFilter(tier.key)}
+            className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium"
+            style={
+              tierFilter === tier.key
+                ? { backgroundColor: tier.color, color: "#fff" }
+                : { backgroundColor: tier.bg, color: tier.color }
+            }
+          >
+            {tier.label}
+          </button>
+        ))}
       </div>
 
       {showForm && (
@@ -168,19 +200,21 @@ export default function ClientiPage() {
 
       {isLoading ? (
         <ListSkeleton rows={5} />
-      ) : customers.length === 0 ? (
+      ) : visibleCustomers.length === 0 ? (
         <EmptyState
           icon={Users}
-          title={search ? "Nessun cliente trovato" : "Nessun cliente ancora"}
+          title={search || tierFilter !== "all" ? "Nessun cliente trovato" : "Nessun cliente ancora"}
           description={
-            search
+            search || tierFilter !== "all"
               ? undefined
               : "I clienti che prenotano dal QR code con il loro telefono vengono aggiunti automaticamente."
           }
         />
       ) : (
         <div className="space-y-2">
-          {customers.map((customer) => (
+          {visibleCustomers.map((customer) => {
+            const tier = getLoyaltyTier(customer.reservationCount);
+            return (
             <div
               key={customer.id}
               className="animate-fade-in flex w-full items-center justify-between rounded-xl border border-black/5 bg-white p-3"
@@ -192,11 +226,12 @@ export default function ClientiPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <p className="truncate font-semibold text-ink">{customer.name}</p>
-                    {customer.isRegular && (
-                      <span title="Cliente abituale">
-                        <Star size={13} className="shrink-0 fill-status-pending text-status-pending" />
-                      </span>
-                    )}
+                    <span
+                      className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+                      style={{ backgroundColor: tier.bg, color: tier.color }}
+                    >
+                      {tier.label}
+                    </span>
                   </div>
                   <p className="text-sm text-ink-muted">
                     {customer.phone || "Nessun telefono"}
@@ -227,7 +262,8 @@ export default function ClientiPage() {
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
