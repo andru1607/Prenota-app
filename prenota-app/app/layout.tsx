@@ -1,8 +1,15 @@
 import type { Metadata, Viewport } from "next";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 import { AppChrome } from "@/components/layout/AppChrome";
 import { ThemeLoader } from "@/components/ThemeLoader";
 import { ToastProvider } from "@/components/ui/ToastProvider";
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-manrope",
+});
 
 export const metadata: Metadata = {
   title: "Prenota — Gestione Prenotazioni",
@@ -30,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="it">
+    <html lang="it" className={manrope.variable}>
       <body>
         <ThemeLoader />
         <ToastProvider>
