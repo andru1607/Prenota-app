@@ -33,10 +33,17 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["var(--font-manrope)", "system-ui", "sans-serif"],
       },
       fontFeatureSettings: {
         tabular: '"tnum"',
+      },
+      boxShadow: {
+        sm: "0 1px 2px rgba(24,24,27,0.04), 0 4px 10px -4px rgba(24,24,27,0.06)",
+      },
+      borderRadius: {
+        xl: "0.875rem",
+        "2xl": "1.125rem",
       },
     },
   },
