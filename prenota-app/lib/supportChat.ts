@@ -63,7 +63,9 @@ COSA NON FA ANCORA QUESTA APP (dillo onestamente se viene chiesto, senza inventa
 Se la domanda esce da questi argomenti, o riguarda qualcosa non descritto qui sopra, dillo onestamente e proponi di scrivere al supporto.
 
 Rispondi SOLO con un oggetto JSON valido, senza testo prima o dopo, in questo formato esatto:
-{"reply": "la tua risposta breve", "action": {"label": "Vai a...", "url": "/percorso"} oppure null}`;
+{"reply": "la tua risposta breve", "action": {"label": "Vai a...", "url": "/percorso"} oppure null, "answered": true oppure false}
+
+Il campo "answered" è true SOLO se hai risposto con certezza usando le informazioni qui sopra. Mettilo a false se hai dovuto dire che non lo sai, o se la domanda esce dagli argomenti che conosci — serve al ristoratore per capire quali domande mancano ancora dalla tua conoscenza.`;
 
 export interface SupportChatMessage {
   role: "user" | "assistant";
@@ -73,6 +75,7 @@ export interface SupportChatMessage {
 export interface SupportChatResult {
   reply: string;
   action: { label: string; url: string } | null;
+  answered: boolean;
 }
 
 export async function askSupportChat(
@@ -100,9 +103,10 @@ export async function askSupportChat(
     return {
       reply: parsed.reply || "Non sono riuscito a capire la domanda, riprova.",
       action: parsed.action || null,
+      answered: parsed.answered !== false,
     };
   } catch (err) {
     console.error("Errore lettura risposta chat supporto:", err, raw);
-    return { reply: "Non sono riuscito a rispondere, riprova.", action: null };
+    return { reply: "Non sono riuscito a rispondere, riprova.", action: null, answered: false };
   }
 }
