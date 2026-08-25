@@ -178,17 +178,35 @@ export async function PATCH(req: NextRequest) {
       if (!itemId) return NextResponse.json({ error: "Piatto obbligatorio." }, { status: 400 });
       const { data: item } = await supabase
         .from("customer_order_items")
-        .select("id, sent_at")
+        .select("id")
         .eq("id", itemId)
         .eq("order_id", orderId)
         .maybeSingle();
       if (!item) return NextResponse.json({ error: "Piatto non trovato." }, { status: 404 });
-      if (item.sent_at) {
-        return NextResponse.json({ error: "Questo piatto è già stato inviato in cucina." }, { status: 400 });
-      }
       const { error } = await supabase.from("customer_order_items").delete().eq("id", itemId);
       if (error) throw error;
       return NextResponse.json({ success: true });
+    }
+
+    if (action === "set_quantity") {
+      if (!itemId || !Number.isInteger(quantity) || quantity < 1) {
+        return NextResponse.json({ error: "Quantità non valida." }, { status: 400 });
+      }
+      const { data: item } = await supabase
+        .from("customer_order_items")
+        .select("id")
+        .eq("id", itemId)
+        .eq("order_id", orderId)
+        .maybeSingle();
+      if (!item) return NextResponse.json({ error: "Piatto non trovato." }, { status: 404 });
+      const { data, error } = await supabase
+        .from("customer_order_items")
+        .update({ quantity })
+        .eq("id", itemId)
+        .select()
+        .single();
+      if (error) throw error;
+      return NextResponse.json({ item: data });
     }
 
     if (action === "send_course") {
