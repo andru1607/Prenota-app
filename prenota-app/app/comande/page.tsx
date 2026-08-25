@@ -112,7 +112,6 @@ export default function ComandePage() {
   const [activeGroupLabel, setActiveGroupLabel] = useState<string | null>(null);
   const [activeCourse, setActiveCourse] = useState<number>(1);
   const [search, setSearch] = useState("");
-  const [addingItemId, setAddingItemId] = useState<string | null>(null);
   const [sendingCourse, setSendingCourse] = useState<number | null>(null);
   const [isClosing, setIsClosing] = useState(false);
 
@@ -195,31 +194,63 @@ export default function ComandePage() {
     }
   }
 
-  async function handleAddItem(menuItem: MenuItem) {
+  function handleAddItem(menuItem: MenuItem) {
     if (!selectedOrderId) return;
-    setAddingItemId(menuItem.id);
-    try {
-      const res = await fetch("/api/orders", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "add_item",
-          orderId: selectedOrderId,
-          menuItemId: menuItem.id,
+    const course = activeCourse;
+    const nowIso = new Date().toISOString();
+
+    setOrders((prev) =>
+      prev.map((o) => {
+        if (o.id !== selectedOrderId) return o;
+        const existing = o.items.find(
+          (i) => i.menu_item_id === menuItem.id && i.course === course && !i.sent_at
+        );
+        if (existing) {
+          return {
+            ...o,
+            items: o.items.map((i) =>
+              i.id === existing.id ? { ...i, quantity: i.quantity + 1 } : i
+            ),
+          };
+        }
+        const optimisticItem: OrderItem = {
+          id: `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          menu_item_id: menuItem.id,
+          name: menuItem.name,
           quantity: 1,
-          course: activeCourse,
-        }),
+          notes: null,
+          status: "pending",
+          course,
+          sent_at: course === 1 ? nowIso : null,
+          destination: groupForCategory(menuItem.category).destination,
+        };
+        return { ...o, items: [...o.items, optimisticItem] };
+      })
+    );
+
+    if (course === 1) show(`${menuItem.name} inviato`);
+
+    fetch("/api/orders", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "add_item",
+        orderId: selectedOrderId,
+        menuItemId: menuItem.id,
+        quantity: 1,
+        course,
+      }),
+    })
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || "Errore");
+        loadOrders();
+      })
+      .catch((err) => {
+        console.error(err);
+        show(err.message || "Non sono riuscito ad aggiungere il piatto.", "error");
+        loadOrders();
       });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Errore");
-      await loadOrders();
-      if (activeCourse === 1) show(`${menuItem.name} inviato`);
-    } catch (err: any) {
-      console.error(err);
-      show(err.message || "Non sono riuscito ad aggiungere il piatto.", "error");
-    } finally {
-      setAddingItemId(null);
-    }
   }
 
   async function handleRemoveItem(itemId: string) {
@@ -400,7 +431,7 @@ export default function ComandePage() {
                 const earliestSent = sent.map((i) => i.sent_at!).sort()[0];
 
                 return (
-                  <div key={course} className="overflow-hidden rounded-xl bg-white shadow-sm">
+                  <div key={course} className="animate-fade-in overflow-hidden rounded-2xl bg-white shadow-sm">
                     <div className="flex items-center justify-between bg-ink px-3 py-2 text-white">
                       <span className="flex items-center gap-2 text-sm font-semibold">
                         <span
@@ -484,12 +515,7 @@ export default function ComandePage() {
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   {searchResults.map((item) => (
-                    <ItemTile
-                      key={item.id}
-                      item={item}
-                      isAdding={addingItemId === item.id}
-                      onTap={() => handleAddItem(item)}
-                    />
+                    <ItemTile key={item.id} item={item} onTap={() => handleAddItem(item)} />
                   ))}
                 </div>
               )
@@ -509,7 +535,7 @@ export default function ComandePage() {
                         setSubView("items");
                       }}
                       disabled={count === 0}
-                      className="touch-target flex aspect-square flex-col items-center justify-center gap-1 rounded-xl p-2 text-center text-xs font-semibold text-white disabled:opacity-30"
+                      className="touch-target flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl p-2 text-center text-xs font-semibold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-30 disabled:shadow-none"
                       style={{ backgroundColor: color }}
                     >
                       {group.label}
@@ -528,12 +554,7 @@ export default function ComandePage() {
           <div className="flex-1 p-3">
             <div className="grid grid-cols-2 gap-2">
               {itemsInGroup.map((item) => (
-                <ItemTile
-                  key={item.id}
-                  item={item}
-                  isAdding={addingItemId === item.id}
-                  onTap={() => handleAddItem(item)}
-                />
+                <ItemTile key={item.id} item={item} onTap={() => handleAddItem(item)} />
               ))}
             </div>
           </div>
@@ -664,33 +685,18 @@ export default function ComandePage() {
   );
 }
 
-function ItemTile({
-  item,
-  isAdding,
-  onTap,
-}: {
-  item: MenuItem;
-  isAdding: boolean;
-  onTap: () => void;
-}) {
+function ItemTile({ item, onTap }: { item: MenuItem; onTap: () => void }) {
   const color = item.category ? colorForGroup(groupForCategory(item.category).label) : "#111827";
   return (
     <button
       onClick={onTap}
-      disabled={isAdding}
-      className="touch-target flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-xl p-2.5 text-center text-white disabled:opacity-60"
+      className="touch-target flex min-h-[76px] flex-col items-center justify-center gap-1 rounded-2xl p-2.5 text-center text-white shadow-sm transition-transform active:scale-95"
       style={{ backgroundColor: color }}
     >
-      {isAdding ? (
-        <Loader2 size={18} className="animate-spin" />
-      ) : (
-        <>
-          <span className="text-sm font-semibold leading-tight">{item.name}</span>
-          <span className="num-tabular text-xs opacity-85">
-            {item.price !== null ? `€${item.price.toFixed(2)}` : "—"}
-          </span>
-        </>
-      )}
+      <span className="text-sm font-semibold leading-tight">{item.name}</span>
+      <span className="num-tabular text-xs opacity-85">
+        {item.price !== null ? `€${item.price.toFixed(2)}` : "—"}
+      </span>
     </button>
   );
 }
