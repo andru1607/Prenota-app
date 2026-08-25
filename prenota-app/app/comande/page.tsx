@@ -15,6 +15,7 @@ import {
   Receipt,
   Clock,
   ShoppingBag,
+  Euro,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/ToastProvider";
@@ -141,7 +142,8 @@ export default function ComandePage() {
   const [roomFilter, setRoomFilter] = useState<string>("all");
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
 
-  const [subView, setSubView] = useState<"general" | "categories" | "items">("general");
+  const [subView, setSubView] = useState<"general" | "categories" | "items" | "bill">("general");
+  const [splitPeople, setSplitPeople] = useState(2);
   const [activeGroupLabel, setActiveGroupLabel] = useState<string | null>(null);
   const [activeCourse, setActiveCourse] = useState<number>(1);
   const [search, setSearch] = useState("");
@@ -479,7 +481,7 @@ export default function ComandePage() {
                 if (subView === "items") {
                   setSubView("categories");
                   setActiveGroupLabel(null);
-                } else if (subView === "categories") {
+                } else if (subView === "categories" || subView === "bill") {
                   setSubView("general");
                   setSearch("");
                 } else {
@@ -509,6 +511,8 @@ export default function ComandePage() {
               <h1 className="flex-1 truncate text-base font-semibold text-ink">
                 {subView === "items"
                   ? activeGroupLabel
+                  : subView === "bill"
+                  ? "Conto"
                   : selectedOrder.tableNumber
                   ? `Tavolo ${selectedOrder.tableNumber}`
                   : "Comanda"}
@@ -525,6 +529,15 @@ export default function ComandePage() {
                 >
                   <Trash2 size={18} />
                 </button>
+                {selectedOrder.items.length > 0 && (
+                  <button
+                    onClick={() => setSubView("bill")}
+                    className="touch-target grid place-items-center rounded-lg text-ink-muted"
+                    aria-label="Vedi conto"
+                  >
+                    <Euro size={18} />
+                  </button>
+                )}
                 <button
                   onClick={openCategories}
                   className="touch-target flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-sm font-medium text-white"
@@ -543,7 +556,7 @@ export default function ComandePage() {
             </button>
           </div>
 
-          {subView !== "general" && (
+          {(subView === "categories" || subView === "items") && (
             <div className="flex border-t border-black/5">
               {[1, 2, 3, 4].map((course) => (
                 <button
@@ -701,35 +714,116 @@ export default function ComandePage() {
           </div>
         )}
 
-        <div
-          className="fixed bottom-0 left-0 right-0 bg-primary text-white print:hidden"
-          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-        >
-          <div className="flex items-center justify-between px-4 py-3">
+        {subView === "bill" && (
+          <div className="flex-1 space-y-3 p-4 print:p-0">
+            <div className="overflow-hidden rounded-2xl bg-white shadow-sm print:shadow-none">
+              <div className="border-b border-dashed border-black/10 p-4 text-center">
+                <p className="text-sm font-semibold text-ink">
+                  {selectedOrder.tableNumber ? `Tavolo ${selectedOrder.tableNumber}` : "Comanda"}
+                </p>
+                <p className="text-xs text-ink-muted">
+                  {new Date(selectedOrder.created_at).toLocaleDateString("it-IT", {
+                    day: "numeric",
+                    month: "long",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </div>
+              <div className="space-y-1.5 p-4">
+                {selectedOrder.items.map((item) => (
+                  <div key={item.id} className="flex items-baseline justify-between gap-3 text-sm">
+                    <span className="text-ink">
+                      {item.quantity}× {item.name}
+                    </span>
+                    <span className="num-tabular shrink-0 text-ink">
+                      €{(priceFor(item) * item.quantity).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center justify-between border-t border-dashed border-black/10 p-4">
+                <span className="text-base font-semibold text-ink">Totale</span>
+                <span className="num-tabular text-xl font-bold text-ink">€{orderTotal.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-white p-4 shadow-sm print:hidden">
+              <p className="mb-3 text-sm font-medium text-ink">Dividi il conto</p>
+              <div className="flex items-center justify-center gap-4">
+                <button
+                  onClick={() => setSplitPeople((n) => Math.max(1, n - 1))}
+                  className="touch-target grid h-10 w-10 place-items-center rounded-xl bg-bg-subtle text-ink"
+                  aria-label="Meno persone"
+                >
+                  <Minus size={16} />
+                </button>
+                <div className="text-center">
+                  <p className="num-tabular text-2xl font-bold text-ink">{splitPeople}</p>
+                  <p className="text-xs text-ink-muted">{splitPeople === 1 ? "persona" : "persone"}</p>
+                </div>
+                <button
+                  onClick={() => setSplitPeople((n) => Math.min(30, n + 1))}
+                  className="touch-target grid h-10 w-10 place-items-center rounded-xl bg-bg-subtle text-ink"
+                  aria-label="Più persone"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+              <div className="mt-4 rounded-xl bg-primary-light p-3 text-center">
+                <p className="text-xs font-medium uppercase text-primary">A testa</p>
+                <p className="num-tabular text-2xl font-bold text-primary">
+                  €{(orderTotal / splitPeople).toFixed(2)}
+                </p>
+              </div>
+              {splitPeople > 1 && (
+                <p className="mt-2 text-center text-[11px] text-ink-muted">
+                  Divisione in parti uguali, arrotondata al centesimo.
+                </p>
+              )}
+            </div>
+
             <button
-              onClick={() => setSubView("general")}
-              className="touch-target grid place-items-center rounded-lg"
-              aria-label="Vedi riepilogo"
+              onClick={() => window.print()}
+              className="touch-target flex w-full items-center justify-center gap-2 rounded-xl border border-black/10 bg-white py-2.5 text-sm font-medium text-ink-muted print:hidden"
             >
-              <Receipt size={20} />
+              <Printer size={16} />
+              Stampa conto
             </button>
-            <span className="flex items-baseline gap-1.5">
-              <span className="text-xs font-medium uppercase text-white/70">Totale</span>
-              <span className="num-tabular text-xl font-bold">€{orderTotal.toFixed(2)}</span>
-            </span>
-            {subView !== "general" ? (
-              <button
-                onClick={openCategories}
-                className="touch-target grid place-items-center rounded-lg"
-                aria-label="Altre categorie"
-              >
-                <Plus size={20} />
-              </button>
-            ) : (
-              <span className="w-9" />
-            )}
           </div>
-        </div>
+        )}
+
+        {subView !== "bill" && (
+          <div
+            className="fixed bottom-0 left-0 right-0 bg-primary text-white print:hidden"
+            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          >
+            <div className="flex items-center justify-between px-4 py-3">
+              <button
+                onClick={() => setSubView("general")}
+                className="touch-target grid place-items-center rounded-lg"
+                aria-label="Vedi riepilogo"
+              >
+                <Receipt size={20} />
+              </button>
+              <span className="flex items-baseline gap-1.5">
+                <span className="text-xs font-medium uppercase text-white/70">Totale</span>
+                <span className="num-tabular text-xl font-bold">€{orderTotal.toFixed(2)}</span>
+              </span>
+              {subView !== "general" ? (
+                <button
+                  onClick={openCategories}
+                  className="touch-target grid place-items-center rounded-lg"
+                  aria-label="Altre categorie"
+                >
+                  <Plus size={20} />
+                </button>
+              ) : (
+                <span className="w-9" />
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
