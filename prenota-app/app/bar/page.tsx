@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { UtensilsCrossed } from "lucide-react";
+import { playAlertSound, unlockAlertSound } from "@/lib/alertSound";
 
 interface OrderItem {
   id: string;
@@ -53,6 +54,7 @@ export default function BarPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const updatingItemIds = useRef<Set<string>>(new Set());
+  const knownItemIds = useRef<Set<string> | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -66,6 +68,16 @@ export default function BarPage() {
           items: o.items.filter((i) => i.sent_at && i.destination === "bar"),
         }))
         .filter((o: Order) => o.items.length > 0);
+
+      const currentIds = new Set<string>(
+        activeOrders.flatMap((o: Order) => o.items.map((i) => i.id))
+      );
+      if (knownItemIds.current) {
+        const hasNewItem = [...currentIds].some((id) => !knownItemIds.current!.has(id));
+        if (hasNewItem) playAlertSound();
+      }
+      knownItemIds.current = currentIds;
+
       setOrders(activeOrders);
       setError(null);
     } catch (err) {
@@ -77,12 +89,38 @@ export default function BarPage() {
   }, []);
 
   useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    function startPolling() {
+      if (interval) return;
+      interval = setInterval(load, POLL_INTERVAL_MS);
+    }
+    function stopPolling() {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+    }
+    function handleVisibility() {
+      if (document.visibilityState === "visible") {
+        load();
+        startPolling();
+      } else {
+        stopPolling();
+      }
+    }
+
     load();
-    const interval = setInterval(load, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    startPolling();
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      stopPolling();
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [load]);
 
   async function handleItemTap(orderId: string, item: OrderItem) {
+    unlockAlertSound();
     if (item.status === "served" || updatingItemIds.current.has(item.id)) return;
     const nextStatus = NEXT_STATUS[item.status];
     updatingItemIds.current.add(item.id);
@@ -124,7 +162,10 @@ export default function BarPage() {
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-bold text-ink">Bar</h1>
         <button
-          onClick={load}
+          onClick={() => {
+            unlockAlertSound();
+            load();
+          }}
           className="touch-target grid place-items-center rounded-xl border border-black/10 text-ink-muted"
           aria-label="Aggiorna ora"
         >
