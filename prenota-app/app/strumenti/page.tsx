@@ -9,6 +9,7 @@ import {
   ChevronRight,
   ClipboardList,
   ChefHat,
+  Wine,
 } from "lucide-react";
 
 const TOOLS = [
@@ -16,13 +17,19 @@ const TOOLS = [
     href: "/comande",
     icon: ClipboardList,
     title: "Comande",
-    description: "Apri comande per tavolo e invia in cucina",
+    description: "Apri i tavoli e invia gli ordini",
   },
   {
     href: "/cucina",
     icon: ChefHat,
     title: "Monitor cucina",
-    description: "Comande da preparare, per un tablet in cucina",
+    description: "Piatti da preparare, per un tablet in cucina",
+  },
+  {
+    href: "/bar",
+    icon: Wine,
+    title: "Monitor bar",
+    description: "Bevande da preparare, per un tablet al bancone",
   },
   {
     href: "/tavoli",
