@@ -10,9 +10,16 @@ import {
   ClipboardList,
   ChefHat,
   Wine,
+  BookOpen,
 } from "lucide-react";
 
 const TOOLS = [
+  {
+    href: "/vetrina",
+    icon: BookOpen,
+    title: "Menu e prodotti",
+    description: "Aggiungi piatti, prezzi e categorie",
+  },
   {
     href: "/comande",
     icon: ClipboardList,
