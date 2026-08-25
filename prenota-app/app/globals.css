@@ -16,8 +16,12 @@
   body {
     @apply bg-bg text-ink antialiased;
   }
+  h1 {
+    @apply tracking-tight;
+  }
   .num-tabular {
     font-variant-numeric: tabular-nums;
+    font-weight: 600;
   }
 }
 
