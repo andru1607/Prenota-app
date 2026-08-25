@@ -232,9 +232,11 @@ export default function ImpostazioniPage() {
     <div className="p-4">
       <h1 className="mb-4 text-lg font-semibold text-ink">Impostazioni</h1>
 
+      <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">Account</p>
+
       <Link
         href="/profilo"
-        className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+        className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
       >
         <div className="flex items-center gap-3">
           <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
@@ -251,7 +253,7 @@ export default function ImpostazioniPage() {
       {isAdmin && (
       <Link
         href="/staff"
-        className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+        className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
       >
         <div className="flex items-center gap-3">
           <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
@@ -269,7 +271,7 @@ export default function ImpostazioniPage() {
       {isAdmin && (
       <Link
         href="/assistente"
-        className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+        className="touch-target mb-5 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
       >
         <div className="flex items-center gap-3">
           <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
@@ -285,7 +287,42 @@ export default function ImpostazioniPage() {
       )}
 
       {isAdmin && (
-      <div className="mb-3 rounded-xl border border-black/5 bg-white p-4">
+      <>
+      <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">Il tuo locale</p>
+
+      <Link
+        href="/vetrina"
+        className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+      >
+        <div className="flex items-center gap-3">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+            <UtensilsCrossed size={18} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-ink">Vetrina pubblica</p>
+            <p className="text-xs text-ink-muted">Descrizione, indirizzo, orari e menu per i clienti</p>
+          </div>
+        </div>
+        <ChevronRight size={18} className="text-ink-muted" />
+      </Link>
+
+      <Link
+        href="/orari"
+        className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+      >
+        <div className="flex items-center gap-3">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+            <CalendarX size={18} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-ink">Orari e chiusure</p>
+            <p className="text-xs text-ink-muted">Giorni di chiusura settimanali ed eccezioni</p>
+          </div>
+        </div>
+        <ChevronRight size={18} className="text-ink-muted" />
+      </Link>
+
+      <div className="mb-2 rounded-xl border border-black/5 bg-white p-4">
         <p className="mb-1 text-sm font-medium text-ink">Aspetto dell'app</p>
         <p className="mb-3 text-xs text-ink-muted">
           Cambia i colori dell'app che usi tu, indipendentemente da quelli della
@@ -323,10 +360,8 @@ export default function ImpostazioniPage() {
           })}
         </div>
       </div>
-      )}
 
-      {isAdmin && (
-      <div className="mb-3 rounded-xl border border-black/5 bg-white p-4">
+      <div className="mb-2 rounded-xl border border-black/5 bg-white p-4">
         <p className="mb-3 text-sm font-medium text-ink">Personalizza la pagina prenotazioni</p>
 
         <div className="mb-3 flex items-center gap-3">
@@ -386,10 +421,9 @@ export default function ImpostazioniPage() {
           {saved ? "Salvato!" : isSaving ? "Salvo..." : "Salva personalizzazione"}
         </button>
       </div>
-      )}
 
       {link && (
-        <div className="mb-3 rounded-xl border border-black/5 bg-white p-4">
+        <div className="mb-5 rounded-xl border border-black/5 bg-white p-4">
           <div className="mb-2 flex items-center gap-3">
             <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
               <QrCode size={18} />
@@ -419,9 +453,13 @@ export default function ImpostazioniPage() {
           </button>
         </div>
       )}
+      </>
+      )}
 
       {pushSupported && (
-        <div className="mb-3 rounded-xl border border-black/5 bg-white p-4">
+        <>
+        <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">Notifiche</p>
+        <div className="mb-5 rounded-xl border border-black/5 bg-white p-4">
           <div className="mb-2 flex items-center gap-3">
             <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
               {pushEnabled ? <Bell size={18} /> : <BellOff size={18} />}
@@ -449,48 +487,15 @@ export default function ImpostazioniPage() {
             {pushEnabled ? "Disattiva notifiche" : "Attiva notifiche"}
           </button>
         </div>
+        </>
       )}
 
       {isAdmin && (
       <>
-      <Link
-        href="/vetrina"
-        className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
-      >
-        <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
-            <UtensilsCrossed size={18} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-ink">Vetrina pubblica</p>
-            <p className="text-xs text-ink-muted">Descrizione, indirizzo, orari e menu per i clienti</p>
-          </div>
-        </div>
-        <ChevronRight size={18} className="text-ink-muted" />
-      </Link>
-
-      <Link
-        href="/orari"
-        className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
-      >
-        <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
-            <CalendarX size={18} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-ink">Orari e chiusure</p>
-            <p className="text-xs text-ink-muted">Giorni di chiusura settimanali ed eccezioni</p>
-          </div>
-        </div>
-        <ChevronRight size={18} className="text-ink-muted" />
-      </Link>
-      </>
-      )}
-
-      {isAdmin && (
+      <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">Dati</p>
       <Link
         href="/statistiche"
-        className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+        className="touch-target mb-5 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
       >
         <div className="flex items-center gap-3">
           <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
@@ -503,6 +508,7 @@ export default function ImpostazioniPage() {
         </div>
         <ChevronRight size={18} className="text-ink-muted" />
       </Link>
+      </>
       )}
 
       <button
