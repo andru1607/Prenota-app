@@ -18,6 +18,7 @@ import {
   CalendarX,
   User,
   Users,
+  MessageCircleQuestion,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getMyRole, getMyStaffRow } from "@/lib/roles";
@@ -259,6 +260,24 @@ export default function ImpostazioniPage() {
           <div>
             <p className="text-sm font-medium text-ink">Team</p>
             <p className="text-xs text-ink-muted">Aggiungi collaboratori con accesso al ristorante</p>
+          </div>
+        </div>
+        <ChevronRight size={18} className="text-ink-muted" />
+      </Link>
+      )}
+
+      {isAdmin && (
+      <Link
+        href="/assistente"
+        className="touch-target mb-3 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+      >
+        <div className="flex items-center gap-3">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+            <MessageCircleQuestion size={18} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-ink">Assistente</p>
+            <p className="text-xs text-ink-muted">Cosa chiede lo staff, per migliorare le risposte</p>
           </div>
         </div>
         <ChevronRight size={18} className="text-ink-muted" />
