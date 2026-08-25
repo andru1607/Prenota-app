@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import {
   Plus,
+  Minus,
   Check,
   Loader2,
   Send,
@@ -65,6 +66,8 @@ const COURSE_LABELS: Record<number, string> = {
   4: "Seg. 4",
 };
 
+const ROOM_FILTER_KEY = "prenota-app:comandeRoomFilter";
+
 const GROUP_COLORS = [
   "#DC2626",
   "#111827",
@@ -101,6 +104,29 @@ function formatElapsed(sentAt: string): string {
   return `${h}h${m > 0 ? ` ${m}m` : ""} fa`;
 }
 
+function useLongPress(onLongPress: () => void, ms = 450) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const start = () => {
+    timerRef.current = setTimeout(onLongPress, ms);
+  };
+  const clear = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+  return {
+    onTouchStart: start,
+    onTouchEnd: clear,
+    onTouchMove: clear,
+    onTouchCancel: clear,
+    onMouseDown: start,
+    onMouseUp: clear,
+    onMouseLeave: clear,
+    onContextMenu: (e: React.SyntheticEvent) => e.preventDefault(),
+  };
+}
+
 export default function ComandePage() {
   const { show } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -112,6 +138,8 @@ export default function ComandePage() {
 
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [isOpeningTable, setIsOpeningTable] = useState<string | null>(null);
+  const [roomFilter, setRoomFilter] = useState<string>("all");
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
 
   const [subView, setSubView] = useState<"general" | "categories" | "items">("general");
   const [activeGroupLabel, setActiveGroupLabel] = useState<string | null>(null);
@@ -158,7 +186,16 @@ export default function ComandePage() {
           .catch(() => {}),
         fetch("/api/rooms")
           .then((res) => (res.ok ? res.json() : null))
-          .then((body) => setRooms(body?.rooms ?? []))
+          .then((body) => {
+            const list = body?.rooms ?? [];
+            setRooms(list);
+            const saved = window.localStorage.getItem(ROOM_FILTER_KEY);
+            if (saved) {
+              setRoomFilter(saved);
+            } else if (list.length > 0) {
+              setRoomFilter(list[0].id);
+            }
+          })
           .catch(() => {}),
       ]);
       setIsLoading(false);
@@ -178,6 +215,21 @@ export default function ComandePage() {
     ];
     return groups.filter((g) => g.tables.length > 0);
   }, [rooms, tables]);
+
+  const visibleRoomGroups = useMemo(() => {
+    if (rooms.length === 0) return roomGroups;
+    if (roomFilter === "none") return roomGroups.filter((g) => g.room === null);
+    return roomGroups.filter((g) => g.room?.id === roomFilter);
+  }, [roomGroups, rooms, roomFilter]);
+
+  function handleRoomFilterChange(value: string) {
+    setRoomFilter(value);
+    window.localStorage.setItem(ROOM_FILTER_KEY, value);
+  }
+
+  const hasTablesWithoutRoom = tables.some(
+    (t) => !t.roomId || !rooms.some((r) => r.id === t.roomId)
+  );
 
   const takeoutOrders = orders.filter((o) => !o.table_id);
 
@@ -309,8 +361,15 @@ export default function ComandePage() {
       });
   }
 
-  async function handleRemoveItem(itemId: string) {
+  async function handleDeleteItem(itemId: string, itemName: string) {
     if (!selectedOrderId) return;
+    if (!confirm(`Togliere "${itemName}" dalla comanda?`)) return;
+    setExpandedItemId(null);
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === selectedOrderId ? { ...o, items: o.items.filter((i) => i.id !== itemId) } : o
+      )
+    );
     try {
       const res = await fetch("/api/orders", {
         method: "PATCH",
@@ -319,11 +378,36 @@ export default function ComandePage() {
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Errore");
-      await loadOrders();
     } catch (err: any) {
       console.error(err);
       show(err.message || "Non sono riuscito a togliere il piatto.", "error");
+      loadOrders();
     }
+  }
+
+  function handleSetQuantity(itemId: string, quantity: number) {
+    if (!selectedOrderId) return;
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === selectedOrderId
+          ? { ...o, items: o.items.map((i) => (i.id === itemId ? { ...i, quantity } : i)) }
+          : o
+      )
+    );
+    fetch("/api/orders", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "set_quantity", orderId: selectedOrderId, itemId, quantity }),
+    })
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || "Errore");
+      })
+      .catch((err) => {
+        console.error(err);
+        show(err.message || "Non sono riuscito ad aggiornare la quantità.", "error");
+        loadOrders();
+      });
   }
 
   async function handleSendCourse(course: number) {
@@ -519,29 +603,17 @@ export default function ComandePage() {
                     </div>
                     <div className="divide-y divide-black/5">
                       {courseItems.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
-                          <div className="min-w-0">
-                            <p className="text-ink">
-                              {item.quantity}× {item.name}
-                              <span className="ml-1.5 text-[10px] uppercase text-ink-muted">
-                                {item.destination === "bar" ? "Bar" : "Cucina"}
-                              </span>
-                            </p>
-                            {item.notes && <p className="text-xs text-ink-muted">{item.notes}</p>}
-                            <p className="text-xs text-ink-muted">
-                              {!item.sent_at ? "Da inviare" : `€${(priceFor(item) * item.quantity).toFixed(2)}`}
-                            </p>
-                          </div>
-                          {!item.sent_at && (
-                            <button
-                              onClick={() => handleRemoveItem(item.id)}
-                              className="touch-target grid shrink-0 place-items-center rounded-lg text-ink-muted print:hidden"
-                              aria-label="Rimuovi piatto"
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          )}
-                        </div>
+                        <OrderItemRow
+                          key={item.id}
+                          item={item}
+                          price={priceFor(item)}
+                          isExpanded={expandedItemId === item.id}
+                          onToggleExpand={() =>
+                            setExpandedItemId((prev) => (prev === item.id ? null : item.id))
+                          }
+                          onSetQuantity={(q) => handleSetQuantity(item.id, q)}
+                          onDelete={() => handleDeleteItem(item.id, item.name)}
+                        />
                       ))}
                     </div>
                     {pending.length > 0 && (
@@ -680,7 +752,37 @@ export default function ComandePage() {
         />
       ) : (
         <div className="space-y-5">
-          {roomGroups.map((group) => (
+          {rooms.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {rooms.map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => handleRoomFilterChange(r.id)}
+                  className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium ${
+                    roomFilter === r.id
+                      ? "bg-primary text-white"
+                      : "border border-black/10 text-ink-muted"
+                  }`}
+                >
+                  {r.name}
+                </button>
+              ))}
+              {hasTablesWithoutRoom && (
+                <button
+                  onClick={() => handleRoomFilterChange("none")}
+                  className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium ${
+                    roomFilter === "none"
+                      ? "bg-primary text-white"
+                      : "border border-black/10 text-ink-muted"
+                  }`}
+                >
+                  Senza sala
+                </button>
+              )}
+            </div>
+          )}
+
+          {visibleRoomGroups.map((group) => (
             <div key={group.room?.id ?? "senza-sala"}>
               <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">
                 {group.room?.name ?? "Senza sala"}
@@ -778,6 +880,79 @@ export default function ComandePage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OrderItemRow({
+  item,
+  price,
+  isExpanded,
+  onToggleExpand,
+  onSetQuantity,
+  onDelete,
+}: {
+  item: OrderItem;
+  price: number;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  onSetQuantity: (quantity: number) => void;
+  onDelete: () => void;
+}) {
+  const longPress = useLongPress(onToggleExpand);
+
+  return (
+    <div
+      {...longPress}
+      className="select-none px-3 py-2 text-sm"
+      style={{ WebkitTouchCallout: "none" } as React.CSSProperties}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-ink">
+            {item.quantity}× {item.name}
+            <span className="ml-1.5 text-[10px] uppercase text-ink-muted">
+              {item.destination === "bar" ? "Bar" : "Cucina"}
+            </span>
+          </p>
+          {item.notes && <p className="text-xs text-ink-muted">{item.notes}</p>}
+          <p className="text-xs text-ink-muted">
+            {!item.sent_at ? "Da inviare" : `€${(price * item.quantity).toFixed(2)}`}
+          </p>
+        </div>
+        {!isExpanded && (
+          <span className="shrink-0 text-[10px] text-ink-muted print:hidden">Tieni premuto</span>
+        )}
+      </div>
+
+      {isExpanded && (
+        <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-bg-subtle p-2 print:hidden">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => (item.quantity <= 1 ? onDelete() : onSetQuantity(item.quantity - 1))}
+              className="touch-target grid h-8 w-8 place-items-center rounded-lg bg-white text-ink shadow-sm"
+              aria-label="Diminuisci quantità"
+            >
+              <Minus size={14} />
+            </button>
+            <span className="num-tabular w-6 text-center text-sm font-semibold">{item.quantity}</span>
+            <button
+              onClick={() => onSetQuantity(item.quantity + 1)}
+              className="touch-target grid h-8 w-8 place-items-center rounded-lg bg-white text-ink shadow-sm"
+              aria-label="Aumenta quantità"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
+          <button
+            onClick={onDelete}
+            className="touch-target flex items-center gap-1 rounded-lg bg-status-dangerBg px-2.5 py-1.5 text-xs font-medium text-status-danger"
+          >
+            <Trash2 size={13} />
+            Elimina
+          </button>
         </div>
       )}
     </div>
