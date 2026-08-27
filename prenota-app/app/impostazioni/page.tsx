@@ -31,6 +31,10 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
 }
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <p className="mb-2 mt-1 text-xs font-semibold uppercase text-ink-muted">{children}</p>;
+}
+
 export default function ImpostazioniPage() {
   const router = useRouter();
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -232,8 +236,7 @@ export default function ImpostazioniPage() {
     <div className="p-4">
       <h1 className="mb-4 text-lg font-semibold text-ink">Impostazioni</h1>
 
-      <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">Account</p>
-
+      <SectionLabel>Account</SectionLabel>
       <Link
         href="/profilo"
         className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
@@ -251,264 +254,262 @@ export default function ImpostazioniPage() {
       </Link>
 
       {isAdmin && (
-      <Link
-        href="/staff"
-        className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
-      >
-        <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
-            <Users size={18} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-ink">Team</p>
-            <p className="text-xs text-ink-muted">Aggiungi collaboratori con accesso al ristorante</p>
-          </div>
-        </div>
-        <ChevronRight size={18} className="text-ink-muted" />
-      </Link>
-      )}
-
-      {isAdmin && (
-      <Link
-        href="/assistente"
-        className="touch-target mb-5 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
-      >
-        <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
-            <MessageCircleQuestion size={18} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-ink">Assistente</p>
-            <p className="text-xs text-ink-muted">Cosa chiede lo staff, per migliorare le risposte</p>
-          </div>
-        </div>
-        <ChevronRight size={18} className="text-ink-muted" />
-      </Link>
-      )}
-
-      {isAdmin && (
-      <>
-      <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">Il tuo locale</p>
-
-      <Link
-        href="/vetrina"
-        className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
-      >
-        <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
-            <UtensilsCrossed size={18} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-ink">Vetrina pubblica</p>
-            <p className="text-xs text-ink-muted">Descrizione, indirizzo, orari e menu per i clienti</p>
-          </div>
-        </div>
-        <ChevronRight size={18} className="text-ink-muted" />
-      </Link>
-
-      <Link
-        href="/orari"
-        className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
-      >
-        <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
-            <CalendarX size={18} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-ink">Orari e chiusure</p>
-            <p className="text-xs text-ink-muted">Giorni di chiusura settimanali ed eccezioni</p>
-          </div>
-        </div>
-        <ChevronRight size={18} className="text-ink-muted" />
-      </Link>
-
-      <div className="mb-2 rounded-xl border border-black/5 bg-white p-4">
-        <p className="mb-1 text-sm font-medium text-ink">Aspetto dell'app</p>
-        <p className="mb-3 text-xs text-ink-muted">
-          Cambia i colori dell'app che usi tu, indipendentemente da quelli della
-          pagina pubblica dei clienti.
-        </p>
-        <div className="space-y-2">
-          {(Object.keys(THEMES) as ThemeName[]).map((key) => {
-            const theme = THEMES[key];
-            const isSelected = appTheme === key;
-            return (
-              <button
-                key={key}
-                onClick={() => handleSelectTheme(key)}
-                disabled={isSavingTheme}
-                className={`touch-target flex w-full items-center gap-3 rounded-xl border p-3 text-left disabled:opacity-60 ${
-                  isSelected ? "border-primary bg-primary-light" : "border-black/10"
-                }`}
-              >
-                <span
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-black/10"
-                  style={{ backgroundColor: theme.bg }}
-                >
-                  <span
-                    className="h-4 w-4 rounded-full"
-                    style={{ backgroundColor: theme.primary }}
-                  />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-ink">{theme.label}</p>
-                  <p className="text-xs text-ink-muted">{theme.description}</p>
-                </div>
-                {isSelected && <Check size={18} className="shrink-0 text-primary" />}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="mb-2 rounded-xl border border-black/5 bg-white p-4">
-        <p className="mb-3 text-sm font-medium text-ink">Personalizza la pagina prenotazioni</p>
-
-        <div className="mb-3 flex items-center gap-3">
-          <button
-            onClick={() => logoInputRef.current?.click()}
-            className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border border-dashed border-black/20 bg-bg-subtle"
-          >
-            {logoPreview || logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoPreview ?? logoUrl ?? ""} alt="Logo" className="h-full w-full object-cover" />
-            ) : (
-              <ImageIcon size={22} className="text-ink-muted" />
-            )}
-          </button>
-          <div className="flex-1">
-            <input
-              ref={logoInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleLogoSelected}
-            />
-            <button
-              onClick={() => logoInputRef.current?.click()}
-              className="touch-target rounded-lg border border-black/10 px-3 py-2 text-xs font-medium text-ink-muted"
-            >
-              Scegli foto del logo
-            </button>
-          </div>
-        </div>
-
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Nome del ristorante"
-          className="mb-2 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
-        />
-
-        <div className="mb-3 flex items-center gap-3">
-          <span className="text-sm text-ink-muted">Colore principale</span>
-          <input
-            type="color"
-            value={primaryColor}
-            onChange={(e) => setPrimaryColor(e.target.value)}
-            className="h-9 w-14 cursor-pointer rounded-lg border border-black/10"
-          />
-        </div>
-
-        {error && <p className="mb-2 text-sm text-status-danger">{error}</p>}
-
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-50"
+        <Link
+          href="/staff"
+          className="touch-target mb-4 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
         >
-          {isSaving && <Loader2 size={16} className="animate-spin" />}
-          {saved ? "Salvato!" : isSaving ? "Salvo..." : "Salva personalizzazione"}
-        </button>
-      </div>
-
-      {link && (
-        <div className="mb-5 rounded-xl border border-black/5 bg-white p-4">
-          <div className="mb-2 flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
-              <QrCode size={18} />
+              <Users size={18} />
             </div>
             <div>
-              <p className="text-sm font-medium text-ink">Link prenotazioni clienti</p>
-              <p className="text-xs text-ink-muted">
-                Genera un QR code da questo link e stampalo per il locale
-              </p>
+              <p className="text-sm font-medium text-ink">Team</p>
+              <p className="text-xs text-ink-muted">Aggiungi collaboratori con accesso al ristorante</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 rounded-lg bg-bg-subtle p-2">
-            <p className="flex-1 truncate text-xs text-ink-muted">{link}</p>
+          <ChevronRight size={18} className="text-ink-muted" />
+        </Link>
+      )}
+
+      {isAdmin && (
+        <>
+          <SectionLabel>Il tuo locale</SectionLabel>
+
+          <div className="mb-2 rounded-xl border border-black/5 bg-white p-4">
+            <p className="mb-1 text-sm font-medium text-ink">Aspetto dell'app</p>
+            <p className="mb-3 text-xs text-ink-muted">
+              Cambia i colori dell'app che usi tu, indipendentemente da quelli della
+              pagina pubblica dei clienti.
+            </p>
+            <div className="space-y-2">
+              {(Object.keys(THEMES) as ThemeName[]).map((key) => {
+                const theme = THEMES[key];
+                const isSelected = appTheme === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => handleSelectTheme(key)}
+                    disabled={isSavingTheme}
+                    className={`touch-target flex w-full items-center gap-3 rounded-xl border p-3 text-left disabled:opacity-60 ${
+                      isSelected ? "border-primary bg-primary-light" : "border-black/10"
+                    }`}
+                  >
+                    <span
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-black/10"
+                      style={{ backgroundColor: theme.bg }}
+                    >
+                      <span
+                        className="h-4 w-4 rounded-full"
+                        style={{ backgroundColor: theme.primary }}
+                      />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-ink">{theme.label}</p>
+                      <p className="text-xs text-ink-muted">{theme.description}</p>
+                    </div>
+                    {isSelected && <Check size={18} className="shrink-0 text-primary" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mb-2 rounded-xl border border-black/5 bg-white p-4">
+            <p className="mb-3 text-sm font-medium text-ink">Personalizza la pagina prenotazioni</p>
+
+            <div className="mb-3 flex items-center gap-3">
+              <button
+                onClick={() => logoInputRef.current?.click()}
+                className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border border-dashed border-black/20 bg-bg-subtle"
+              >
+                {logoPreview || logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoPreview ?? logoUrl ?? ""} alt="Logo" className="h-full w-full object-cover" />
+                ) : (
+                  <ImageIcon size={22} className="text-ink-muted" />
+                )}
+              </button>
+              <div className="flex-1">
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleLogoSelected}
+                />
+                <button
+                  onClick={() => logoInputRef.current?.click()}
+                  className="touch-target rounded-lg border border-black/10 px-3 py-2 text-xs font-medium text-ink-muted"
+                >
+                  Scegli foto del logo
+                </button>
+              </div>
+            </div>
+
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Nome del ristorante"
+              className="mb-2 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+            />
+
+            <div className="mb-3 flex items-center gap-3">
+              <span className="text-sm text-ink-muted">Colore principale</span>
+              <input
+                type="color"
+                value={primaryColor}
+                onChange={(e) => setPrimaryColor(e.target.value)}
+                className="h-9 w-14 cursor-pointer rounded-lg border border-black/10"
+              />
+            </div>
+
+            {error && <p className="mb-2 text-sm text-status-danger">{error}</p>}
+
             <button
-              onClick={handleCopy}
-              className="touch-target grid place-items-center rounded-lg text-primary"
-              aria-label="Copia link"
+              onClick={handleSave}
+              disabled={isSaving}
+              className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-50"
             >
-              {copied ? <Check size={16} /> : <Copy size={16} />}
+              {isSaving && <Loader2 size={16} className="animate-spin" />}
+              {saved ? "Salvato!" : isSaving ? "Salvo..." : "Salva personalizzazione"}
             </button>
           </div>
-          <button
-            onClick={() => router.push("/qr")}
-            className="mt-2 block w-full text-center text-xs font-medium text-primary"
+
+          {link && (
+            <div className="mb-2 rounded-xl border border-black/5 bg-white p-4">
+              <div className="mb-2 flex items-center gap-3">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+                  <QrCode size={18} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-ink">Link prenotazioni clienti</p>
+                  <p className="text-xs text-ink-muted">
+                    Genera un QR code da questo link e stampalo per il locale
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 rounded-lg bg-bg-subtle p-2">
+                <p className="flex-1 truncate text-xs text-ink-muted">{link}</p>
+                <button
+                  onClick={handleCopy}
+                  className="touch-target grid place-items-center rounded-lg text-primary"
+                  aria-label="Copia link"
+                >
+                  {copied ? <Check size={16} /> : <Copy size={16} />}
+                </button>
+              </div>
+              <button
+                onClick={() => router.push("/qr")}
+                className="mt-2 block w-full text-center text-xs font-medium text-primary"
+              >
+                Vedi e stampa il QR code
+              </button>
+            </div>
+          )}
+
+          <Link
+            href="/vetrina"
+            className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
           >
-            Vedi e stampa il QR code
-          </button>
-        </div>
-      )}
-      </>
+            <div className="flex items-center gap-3">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+                <UtensilsCrossed size={18} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-ink">Vetrina pubblica</p>
+                <p className="text-xs text-ink-muted">Descrizione, indirizzo, orari e menu per i clienti</p>
+              </div>
+            </div>
+            <ChevronRight size={18} className="text-ink-muted" />
+          </Link>
+
+          <Link
+            href="/orari"
+            className="touch-target mb-4 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+          >
+            <div className="flex items-center gap-3">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+                <CalendarX size={18} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-ink">Orari e chiusure</p>
+                <p className="text-xs text-ink-muted">Giorni di chiusura settimanali ed eccezioni</p>
+              </div>
+            </div>
+            <ChevronRight size={18} className="text-ink-muted" />
+          </Link>
+        </>
       )}
 
       {pushSupported && (
         <>
-        <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">Notifiche</p>
-        <div className="mb-5 rounded-xl border border-black/5 bg-white p-4">
-          <div className="mb-2 flex items-center gap-3">
-            <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
-              {pushEnabled ? <Bell size={18} /> : <BellOff size={18} />}
+          <SectionLabel>Notifiche</SectionLabel>
+          <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
+            <div className="mb-2 flex items-center gap-3">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+                {pushEnabled ? <Bell size={18} /> : <BellOff size={18} />}
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-ink">Notifiche push</p>
+                <p className="text-xs text-ink-muted">
+                  Ricevi un avviso sul telefono quando arriva una nuova richiesta di prenotazione
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-ink">Notifiche push</p>
-              <p className="text-xs text-ink-muted">
-                Ricevi un avviso sul telefono quando arriva una nuova richiesta di prenotazione
-              </p>
-            </div>
+
+            {pushError && <p className="mb-2 text-sm text-status-danger">{pushError}</p>}
+
+            <button
+              onClick={handleTogglePush}
+              disabled={pushLoading}
+              className={`touch-target flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium disabled:opacity-50 ${
+                pushEnabled
+                  ? "border border-black/10 text-ink-muted"
+                  : "bg-primary text-white"
+              }`}
+            >
+              {pushLoading && <Loader2 size={16} className="animate-spin" />}
+              {pushEnabled ? "Disattiva notifiche" : "Attiva notifiche"}
+            </button>
           </div>
-
-          {pushError && <p className="mb-2 text-sm text-status-danger">{pushError}</p>}
-
-          <button
-            onClick={handleTogglePush}
-            disabled={pushLoading}
-            className={`touch-target flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium disabled:opacity-50 ${
-              pushEnabled
-                ? "border border-black/10 text-ink-muted"
-                : "bg-primary text-white"
-            }`}
-          >
-            {pushLoading && <Loader2 size={16} className="animate-spin" />}
-            {pushEnabled ? "Disattiva notifiche" : "Attiva notifiche"}
-          </button>
-        </div>
         </>
       )}
 
       {isAdmin && (
-      <>
-      <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">Dati</p>
-      <Link
-        href="/statistiche"
-        className="touch-target mb-5 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
-      >
-        <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
-            <BarChart3 size={18} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-ink">Statistiche</p>
-            <p className="text-xs text-ink-muted">Coperti nel tempo, giorni più pieni</p>
-          </div>
-        </div>
-        <ChevronRight size={18} className="text-ink-muted" />
-      </Link>
-      </>
+        <>
+          <SectionLabel>Dati e supporto</SectionLabel>
+          <Link
+            href="/statistiche"
+            className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+          >
+            <div className="flex items-center gap-3">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+                <BarChart3 size={18} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-ink">Statistiche</p>
+                <p className="text-xs text-ink-muted">Coperti nel tempo, giorni più pieni</p>
+              </div>
+            </div>
+            <ChevronRight size={18} className="text-ink-muted" />
+          </Link>
+
+          <Link
+            href="/assistente"
+            className="touch-target mb-4 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+          >
+            <div className="flex items-center gap-3">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+                <MessageCircleQuestion size={18} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-ink">Assistente</p>
+                <p className="text-xs text-ink-muted">Cosa chiede lo staff, per migliorare le risposte</p>
+              </div>
+            </div>
+            <ChevronRight size={18} className="text-ink-muted" />
+          </Link>
+        </>
       )}
 
       <button
