@@ -2,9 +2,32 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Store, Loader2, MailCheck } from "lucide-react";
+import { Store, Martini, Loader2, MailCheck, ArrowLeft } from "lucide-react";
+
+type BusinessType = "ristorante" | "bar";
+
+const BUSINESS_TYPES: {
+  value: BusinessType;
+  label: string;
+  description: string;
+  icon: typeof Store;
+}[] = [
+  {
+    value: "ristorante",
+    label: "Ristorante",
+    description: "Prenotazioni, sala e menu in un unico posto",
+    icon: Store,
+  },
+  {
+    value: "bar",
+    label: "Bar",
+    description: "Ricette cocktail, dosi e magazzino sotto controllo",
+    icon: Martini,
+  },
+];
 
 export default function SignupPage() {
+  const [businessType, setBusinessType] = useState<BusinessType | null>(null);
   const [restaurantName, setRestaurantName] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,7 +46,14 @@ export default function SignupPage() {
       const res = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, fullName, restaurantName, website }),
+        body: JSON.stringify({
+          email,
+          password,
+          fullName,
+          restaurantName,
+          website,
+          businessType,
+        }),
       });
       const body = await res.json();
 
@@ -61,6 +91,51 @@ export default function SignupPage() {
     );
   }
 
+  if (!businessType) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-bg p-4">
+        <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-sm">
+          <div className="mb-5 text-center">
+            <h1 className="text-lg font-semibold text-ink">Che attività gestisci?</h1>
+            <p className="mt-1 text-sm text-ink-muted">
+              Scegli il tipo di locale: l'app si adatta di conseguenza
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            {BUSINESS_TYPES.map((type) => {
+              const Icon = type.icon;
+              return (
+                <button
+                  key={type.value}
+                  onClick={() => setBusinessType(type.value)}
+                  className="touch-target flex w-full items-center gap-3 rounded-xl border border-black/10 p-3 text-left active:bg-bg-subtle"
+                >
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-light text-primary">
+                    <Icon size={20} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-ink">{type.label}</p>
+                    <p className="text-xs text-ink-muted">{type.description}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="mt-5 text-center text-sm text-ink-muted">
+            Hai già un account?{" "}
+            <Link href="/login" className="font-medium text-primary">
+              Accedi
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const isBar = businessType === "bar";
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg p-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-sm">
@@ -74,13 +149,26 @@ export default function SignupPage() {
           style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px" }}
         />
 
+        <button
+          type="button"
+          onClick={() => setBusinessType(null)}
+          className="mb-3 flex items-center gap-1 text-xs font-medium text-ink-muted"
+        >
+          <ArrowLeft size={14} />
+          Cambia tipo di attività
+        </button>
+
         <div className="mb-4 flex flex-col items-center gap-2 text-center">
           <div className="grid h-12 w-12 place-items-center rounded-full bg-primary-light text-primary">
-            <Store size={22} />
+            {isBar ? <Martini size={22} /> : <Store size={22} />}
           </div>
-          <h1 className="text-lg font-semibold text-ink">Crea il tuo ristorante</h1>
+          <h1 className="text-lg font-semibold text-ink">
+            {isBar ? "Crea il tuo bar" : "Crea il tuo ristorante"}
+          </h1>
           <p className="text-sm text-ink-muted">
-            Prenotazioni, sala e menu in un unico posto — sempre allineati
+            {isBar
+              ? "Ricette, dosi e magazzino sempre sotto controllo"
+              : "Prenotazioni, sala e menu in un unico posto — sempre allineati"}
           </p>
         </div>
 
@@ -88,7 +176,7 @@ export default function SignupPage() {
           <input
             value={restaurantName}
             onChange={(e) => setRestaurantName(e.target.value)}
-            placeholder="Nome del ristorante"
+            placeholder={isBar ? "Nome del bar" : "Nome del ristorante"}
             autoFocus
             className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm"
           />
