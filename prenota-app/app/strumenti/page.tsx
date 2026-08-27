@@ -7,40 +7,26 @@ import {
   CalendarClock,
   ClipboardCheck,
   ChevronRight,
-  ClipboardList,
   ChefHat,
-  Wine,
   BookOpen,
+  Users,
 } from "lucide-react";
 
-interface Tool {
-  href: string;
-  icon: typeof BookOpen;
-  title: string;
-  description: string;
-}
-
-const SECTIONS: { label: string; tools: Tool[] }[] = [
+const SECTIONS = [
   {
-    label: "Sala e ordini",
+    title: "Sala e ordini",
     tools: [
       {
-        href: "/comande",
-        icon: ClipboardList,
-        title: "Comande",
-        description: "Apri i tavoli e invia gli ordini",
+        href: "/clienti",
+        icon: Users,
+        title: "Clienti",
+        description: "Rubrica clienti e livelli fedeltà",
       },
       {
         href: "/cucina",
         icon: ChefHat,
-        title: "Monitor cucina",
-        description: "Piatti da preparare, per un tablet in cucina",
-      },
-      {
-        href: "/bar",
-        icon: Wine,
-        title: "Monitor bar",
-        description: "Bevande da preparare, per un tablet al bancone",
+        title: "Monitor cucina e bar",
+        description: "Cosa preparare, con interruttore tra le due viste",
       },
       {
         href: "/tavoli",
@@ -51,7 +37,7 @@ const SECTIONS: { label: string; tools: Tool[] }[] = [
     ],
   },
   {
-    label: "Gestione locale",
+    title: "Gestione locale",
     tools: [
       {
         href: "/vetrina",
@@ -87,8 +73,8 @@ export default function StrumentiPage() {
       <h1 className="mb-4 text-lg font-semibold text-ink">Strumenti</h1>
 
       {SECTIONS.map((section) => (
-        <div key={section.label} className="mb-5">
-          <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">{section.label}</p>
+        <div key={section.title} className="mb-5">
+          <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">{section.title}</p>
           <div className="space-y-2">
             {section.tools.map((tool) => {
               const Icon = tool.icon;
