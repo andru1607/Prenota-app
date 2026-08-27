@@ -4,7 +4,8 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, fullName, restaurantName, website } = await req.json();
+    const { email, password, fullName, restaurantName, website, businessType } =
+      await req.json();
 
     if (website) {
       return NextResponse.json({ success: true });
@@ -19,6 +20,8 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    const type = businessType === "bar" ? "bar" : "ristorante";
 
     const supabase = createAdminClient();
 
@@ -38,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     const { data: restaurant, error: restaurantError } = await supabase
       .from("restaurants")
-      .insert({ name: restaurantName })
+      .insert({ name: restaurantName, business_type: type })
       .select()
       .single();
 
