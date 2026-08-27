@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, CalendarClock, Users, Wrench, Settings } from "lucide-react";
+import { LayoutGrid, CalendarClock, ClipboardList, Wrench, Settings } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Servizio", icon: LayoutGrid },
+  { href: "/comande", label: "Comande", icon: ClipboardList },
   { href: "/prenotazioni", label: "Prenot.", icon: CalendarClock },
-  { href: "/clienti", label: "Clienti", icon: Users },
   { href: "/strumenti", label: "Strumenti", icon: Wrench },
   { href: "/impostazioni", label: "Altro", icon: Settings },
 ];
