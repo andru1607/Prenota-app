@@ -42,6 +42,7 @@ export default function CocktailDetailPage() {
   const [cocktail, setCocktail] = useState<Cocktail | null>(null);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [dosatorePiccolo, setDosatorePiccolo] = useState<number | null>(null);
+  const [dosatoreGrande, setDosatoreGrande] = useState<number | null>(null);
   const [prodotti, setProdotti] = useState<Prodotto[]>([]);
   const [mappings, setMappings] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -107,6 +108,7 @@ export default function CocktailDetailPage() {
       setCocktail(cocktailData ?? null);
       setIngredients(ingredientData ?? []);
       setDosatorePiccolo(restaurantData?.dosatore_lato_piccolo_ml ?? null);
+      setDosatoreGrande(restaurantData?.dosatore_lato_grande_ml ?? null);
       setProdotti(prodottiData ?? []);
       setMappings(existingMappings);
       setIsLoading(false);
@@ -115,12 +117,14 @@ export default function CocktailDetailPage() {
   }, [params.id]);
 
   function formatDose(amountMl: number) {
-    const parts = [`${amountMl} ml`];
+    const ratios: string[] = [];
     if (dosatorePiccolo) {
-      const ratio = amountMl / dosatorePiccolo;
-      parts.push(`≈ ${ratio.toFixed(1)} dosatore piccolo`);
+      ratios.push(`${(amountMl / dosatorePiccolo).toFixed(1)} picc.`);
     }
-    return parts.join(" · ");
+    if (dosatoreGrande) {
+      ratios.push(`${(amountMl / dosatoreGrande).toFixed(1)} gr.`);
+    }
+    return ratios.length > 0 ? `${amountMl} ml (≈ ${ratios.join(" / ")})` : `${amountMl} ml`;
   }
 
   async function handleAddNewProduct(ingredientId: string) {
@@ -280,12 +284,17 @@ export default function CocktailDetailPage() {
         <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">Ingredienti</p>
         <div className="space-y-1.5">
           {ingredients.map((ing) => (
-            <div key={ing.id} className="flex items-center justify-between text-sm">
+            <div key={ing.id} className="flex items-center justify-between gap-3 text-sm">
               <span className="text-ink">{ing.name}</span>
-              <span className="text-ink-muted">{formatDose(ing.amount_ml)}</span>
+              <span className="text-right text-ink-muted">{formatDose(ing.amount_ml)}</span>
             </div>
           ))}
         </div>
+        {!dosatorePiccolo && !dosatoreGrande && (
+          <p className="mt-2 text-xs text-ink-muted">
+            Imposta il tuo dosatore in Impostazioni per vedere le dosi anche in numero di dosatori.
+          </p>
+        )}
       </div>
 
       <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
