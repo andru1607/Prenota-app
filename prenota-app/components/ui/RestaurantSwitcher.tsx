@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Check, Plus, Store, Martini, Loader2, X } from "lucide-react";
 import { getActiveRestaurantId, setActiveRestaurantId } from "@/lib/activeRestaurant";
-import { useToast } from "@/components/ui/ToastProvider";
 
 type BusinessType = "ristorante" | "bar";
 
@@ -16,9 +14,11 @@ interface RestaurantOption {
   businessType: BusinessType;
 }
 
+function landingPathFor(type: BusinessType) {
+  return type === "bar" ? "/cocktail" : "/dashboard";
+}
+
 export function RestaurantSwitcher() {
-  const router = useRouter();
-  const { show } = useToast();
   const [restaurants, setRestaurants] = useState<RestaurantOption[]>([]);
   const [activeId, setActiveIdState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,10 +62,11 @@ export function RestaurantSwitcher() {
     if (id === activeId || isSwitching) return;
     setIsSwitching(true);
     setActiveRestaurantId(id);
-    setActiveIdState(id);
-    show("Ristorante cambiato");
-    router.push("/dashboard");
-    router.refresh();
+    const target = restaurants.find((r) => r.id === id);
+    // Ricarico l'intera pagina (non solo un router.push) così tutti i componenti
+    // che leggono il tipo di locale al mount (nav, dashboard, ecc.) ripartono da zero
+    // con il locale corretto, senza bisogno di un refresh manuale.
+    window.location.href = landingPathFor(target?.businessType ?? "ristorante");
   }
 
   async function handleCreate() {
@@ -82,16 +83,10 @@ export function RestaurantSwitcher() {
       if (!res.ok) throw new Error(body.error || "Errore");
 
       setActiveRestaurantId(body.restaurant.id);
-      show(`"${body.restaurant.name}" creato`);
-      setNewName("");
-      setNewBusinessType("ristorante");
-      setShowNewForm(false);
-      router.push("/dashboard");
-      router.refresh();
+      window.location.href = landingPathFor(newBusinessType);
     } catch (err) {
       console.error(err);
       setError("Non sono riuscito a creare il locale. Riprova.");
-    } finally {
       setIsCreating(false);
     }
   }
