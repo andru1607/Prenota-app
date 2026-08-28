@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   UtensilsCrossed,
@@ -11,8 +12,10 @@ import {
   BookOpen,
   Users,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { getMyStaffRow } from "@/lib/roles";
 
-const SECTIONS = [
+const RISTORANTE_SECTIONS = [
   {
     title: "Sala e ordini",
     tools: [
@@ -67,12 +70,61 @@ const SECTIONS = [
   },
 ];
 
+const BAR_SECTIONS = [
+  {
+    title: "Gestione locale",
+    tools: [
+      {
+        href: "/fornitori",
+        icon: Truck,
+        title: "Fornitori e ordini",
+        description: "Rubrica fornitori e lista prodotti da ordinare",
+      },
+      {
+        href: "/turni",
+        icon: CalendarClock,
+        title: "Turni",
+        description: "Chi lavora e a che ora",
+      },
+      {
+        href: "/haccp",
+        icon: ClipboardCheck,
+        title: "Registro HACCP",
+        description: "Temperature e checklist pulizie",
+      },
+    ],
+  },
+];
+
 export default function StrumentiPage() {
+  const [businessType, setBusinessType] = useState<"ristorante" | "bar">("ristorante");
+
+  useEffect(() => {
+    async function load() {
+      const staffRow = await getMyStaffRow();
+      if (!staffRow) return;
+
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("restaurants")
+        .select("business_type")
+        .eq("id", staffRow.restaurantId)
+        .single();
+
+      if (data?.business_type === "bar") {
+        setBusinessType("bar");
+      }
+    }
+    load();
+  }, []);
+
+  const sections = businessType === "bar" ? BAR_SECTIONS : RISTORANTE_SECTIONS;
+
   return (
     <div className="p-4">
       <h1 className="mb-4 text-lg font-semibold text-ink">Strumenti</h1>
 
-      {SECTIONS.map((section) => (
+      {sections.map((section) => (
         <div key={section.title} className="mb-5">
           <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">{section.title}</p>
           <div className="space-y-2">
