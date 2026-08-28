@@ -11,9 +11,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Parametro 'date' obbligatorio." }, { status: 400 });
   }
 
+  const restaurantId = await getRestaurantId(supabase);
+
   const { data, error } = await supabase
     .from("shifts")
     .select("*")
+    .eq("restaurant_id", restaurantId)
     .eq("date", date)
     .order("start_time", { ascending: true });
 
