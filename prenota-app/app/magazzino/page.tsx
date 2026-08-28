@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Boxes, Plus, Minus, Loader2, AlertTriangle, Trash2, Check, X } from "lucide-react";
+import Link from "next/link";
+import { Boxes, Plus, Minus, Loader2, AlertTriangle, Trash2, Check, X, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getMyStaffRow } from "@/lib/roles";
 
@@ -299,13 +300,22 @@ export default function MagazzinoPage() {
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-ink">Magazzino</h1>
         {editingId === null && (
-          <button
-            onClick={startNew}
-            className="touch-target grid h-9 w-9 place-items-center rounded-lg bg-primary text-white"
-            aria-label="Aggiungi prodotto"
-          >
-            <Plus size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/magazzino/fattura"
+              className="touch-target flex items-center gap-1.5 rounded-lg border border-black/10 px-3 py-2 text-xs font-medium text-ink-muted"
+            >
+              <FileText size={14} />
+              Leggi fattura
+            </Link>
+            <button
+              onClick={startNew}
+              className="touch-target grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary text-white"
+              aria-label="Aggiungi prodotto"
+            >
+              <Plus size={18} />
+            </button>
+          </div>
         )}
       </div>
 
