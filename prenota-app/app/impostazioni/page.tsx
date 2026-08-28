@@ -19,6 +19,7 @@ import {
   User,
   Users,
   MessageCircleQuestion,
+  Martini,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getMyRole, getMyStaffRow } from "@/lib/roles";
@@ -40,6 +41,7 @@ export default function ImpostazioniPage() {
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
+  const [businessType, setBusinessType] = useState<"ristorante" | "bar">("ristorante");
   const [link, setLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -60,6 +62,8 @@ export default function ImpostazioniPage() {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
   const [pushError, setPushError] = useState<string | null>(null);
+
+  const isBar = businessType === "bar";
 
   useEffect(() => {
     async function checkPushStatus() {
@@ -137,7 +141,7 @@ export default function ImpostazioniPage() {
       const supabase = createClient();
       const { data: restaurant } = await supabase
         .from("restaurants")
-        .select("name, logo_url, primary_color, app_theme")
+        .select("name, logo_url, primary_color, app_theme, business_type")
         .eq("id", staffRow.restaurantId)
         .single();
 
@@ -145,6 +149,7 @@ export default function ImpostazioniPage() {
         setName(restaurant.name ?? "");
         setLogoUrl(restaurant.logo_url ?? null);
         setPrimaryColor(restaurant.primary_color ?? "#4F46E5");
+        setBusinessType(restaurant.business_type === "bar" ? "bar" : "ristorante");
         if (restaurant.app_theme && restaurant.app_theme in THEMES) {
           setAppTheme(restaurant.app_theme as ThemeName);
         }
@@ -315,7 +320,9 @@ export default function ImpostazioniPage() {
           </div>
 
           <div className="mb-2 rounded-xl border border-black/5 bg-white p-4">
-            <p className="mb-3 text-sm font-medium text-ink">Personalizza la pagina prenotazioni</p>
+            <p className="mb-3 text-sm font-medium text-ink">
+              {isBar ? "Personalizza il tuo locale" : "Personalizza la pagina prenotazioni"}
+            </p>
 
             <div className="mb-3 flex items-center gap-3">
               <button
@@ -349,7 +356,7 @@ export default function ImpostazioniPage() {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Nome del ristorante"
+              placeholder={isBar ? "Nome del bar" : "Nome del ristorante"}
               className="mb-2 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
             />
 
@@ -375,7 +382,25 @@ export default function ImpostazioniPage() {
             </button>
           </div>
 
-          {link && (
+          {isBar && (
+            <Link
+              href="/impostazioni/dosatore"
+              className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+            >
+              <div className="flex items-center gap-3">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+                  <Martini size={18} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-ink">Dosatore</p>
+                  <p className="text-xs text-ink-muted">Misure del lato piccolo e del lato grande</p>
+                </div>
+              </div>
+              <ChevronRight size={18} className="text-ink-muted" />
+            </Link>
+          )}
+
+          {link && !isBar && (
             <div className="mb-2 rounded-xl border border-black/5 bg-white p-4">
               <div className="mb-2 flex items-center gap-3">
                 <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
@@ -407,21 +432,23 @@ export default function ImpostazioniPage() {
             </div>
           )}
 
-          <Link
-            href="/vetrina"
-            className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
-          >
-            <div className="flex items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
-                <UtensilsCrossed size={18} />
+          {!isBar && (
+            <Link
+              href="/vetrina"
+              className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+            >
+              <div className="flex items-center gap-3">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+                  <UtensilsCrossed size={18} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-ink">Vetrina pubblica</p>
+                  <p className="text-xs text-ink-muted">Descrizione, indirizzo, orari e menu per i clienti</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-ink">Vetrina pubblica</p>
-                <p className="text-xs text-ink-muted">Descrizione, indirizzo, orari e menu per i clienti</p>
-              </div>
-            </div>
-            <ChevronRight size={18} className="text-ink-muted" />
-          </Link>
+              <ChevronRight size={18} className="text-ink-muted" />
+            </Link>
+          )}
 
           <Link
             href="/orari"
@@ -441,7 +468,7 @@ export default function ImpostazioniPage() {
         </>
       )}
 
-      {pushSupported && (
+      {pushSupported && !isBar && (
         <>
           <SectionLabel>Notifiche</SectionLabel>
           <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
@@ -478,21 +505,23 @@ export default function ImpostazioniPage() {
       {isAdmin && (
         <>
           <SectionLabel>Dati e supporto</SectionLabel>
-          <Link
-            href="/statistiche"
-            className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
-          >
-            <div className="flex items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
-                <BarChart3 size={18} />
+          {!isBar && (
+            <Link
+              href="/statistiche"
+              className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+            >
+              <div className="flex items-center gap-3">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+                  <BarChart3 size={18} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-ink">Statistiche</p>
+                  <p className="text-xs text-ink-muted">Coperti nel tempo, giorni più pieni</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-ink">Statistiche</p>
-                <p className="text-xs text-ink-muted">Coperti nel tempo, giorni più pieni</p>
-              </div>
-            </div>
-            <ChevronRight size={18} className="text-ink-muted" />
-          </Link>
+              <ChevronRight size={18} className="text-ink-muted" />
+            </Link>
+          )}
 
           <Link
             href="/assistente"
