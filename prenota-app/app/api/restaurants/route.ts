@@ -29,7 +29,7 @@ export async function GET() {
   const restaurantIds = staffRows.map((r) => r.restaurant_id);
   const { data: restaurantRows, error: restaurantsError } = await supabase
     .from("restaurants")
-    .select("id, name, logo_url")
+    .select("id, name, logo_url, business_type")
     .in("id", restaurantIds);
 
   if (restaurantsError) {
@@ -46,6 +46,7 @@ export async function GET() {
         name: restaurant.name,
         logoUrl: restaurant.logo_url,
         role: staffRow.role,
+        businessType: restaurant.business_type ?? "ristorante",
       };
     })
     .filter((r): r is NonNullable<typeof r> => r !== null);
@@ -64,23 +65,25 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { name } = await req.json();
+    const { name, businessType } = await req.json();
 
     if (!name?.trim()) {
-      return NextResponse.json({ error: "Il nome del ristorante è obbligatorio." }, { status: 400 });
+      return NextResponse.json({ error: "Il nome del locale è obbligatorio." }, { status: 400 });
     }
+
+    const type = businessType === "bar" ? "bar" : "ristorante";
 
     const admin = createAdminClient();
 
     const { data: restaurant, error: restaurantError } = await admin
       .from("restaurants")
-      .insert({ name: name.trim() })
+      .insert({ name: name.trim(), business_type: type })
       .select()
       .single();
 
     if (restaurantError || !restaurant) {
       console.error("Errore creazione ristorante:", restaurantError);
-      return NextResponse.json({ error: "Impossibile creare il ristorante." }, { status: 500 });
+      return NextResponse.json({ error: "Impossibile creare il locale." }, { status: 500 });
     }
 
     const { data: existingStaff } = await admin
