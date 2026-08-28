@@ -11,6 +11,8 @@ import { OnboardingGuide } from "@/components/ui/OnboardingGuide";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableCardSkeleton, ReservationCardSkeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/ToastProvider";
+import { createClient } from "@/lib/supabase/client";
+import { getMyStaffRow } from "@/lib/roles";
 import type { ParsedReservationDraft, Reservation, RestaurantTable, TableStatus } from "@/types";
 
 const DEFAULT_TABLES = [
@@ -95,6 +97,32 @@ export default function DashboardPage() {
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const [roomFilter, setRoomFilter] = useState<string>("all");
   const [showTables, setShowTables] = useState(false);
+  const [checkingLocale, setCheckingLocale] = useState(true);
+
+  useEffect(() => {
+    async function checkBusinessType() {
+      const staffRow = await getMyStaffRow();
+      if (!staffRow) {
+        setCheckingLocale(false);
+        return;
+      }
+
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("restaurants")
+        .select("business_type")
+        .eq("id", staffRow.restaurantId)
+        .single();
+
+      if (data?.business_type === "bar") {
+        router.replace("/cocktail");
+        return;
+      }
+
+      setCheckingLocale(false);
+    }
+    checkBusinessType();
+  }, [router]);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(SHOW_TABLES_KEY);
@@ -299,6 +327,14 @@ export default function DashboardPage() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+  if (checkingLocale) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-ink-muted">
+        <Loader2 size={20} className="animate-spin" />
+      </div>
+    );
   }
 
   if (drafts) {
