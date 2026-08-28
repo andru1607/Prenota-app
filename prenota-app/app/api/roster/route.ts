@@ -5,10 +5,12 @@ import { requireAdmin } from "@/lib/auth";
 
 export async function GET() {
   const supabase = createClient();
+  const restaurantId = await getRestaurantId(supabase);
 
   const { data, error } = await supabase
     .from("roster_members")
     .select("*")
+    .eq("restaurant_id", restaurantId)
     .order("name", { ascending: true });
 
   if (error) {
