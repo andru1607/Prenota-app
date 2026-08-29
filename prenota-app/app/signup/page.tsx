@@ -73,17 +73,17 @@ export default function SignupPage() {
 
   if (registeredEmail) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-bg p-4">
-        <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-sm">
-          <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-primary-light text-primary">
+      <div className="flex min-h-screen items-center justify-center bg-[#1A1310] p-4">
+        <div className="w-full max-w-sm rounded-2xl border border-[#3A2C22] bg-[#251C17] p-6 text-center">
+          <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
             <MailCheck size={24} />
           </div>
-          <h1 className="text-lg font-semibold text-ink">Controlla la tua email</h1>
-          <p className="mt-2 text-sm text-ink-muted">
-            Ti abbiamo inviato un link di conferma a <strong>{registeredEmail}</strong>.
+          <h1 className="text-lg font-semibold text-[#F0E9E0]">Controlla la tua email</h1>
+          <p className="mt-2 text-sm text-[#A69686]">
+            Ti abbiamo inviato un link di conferma a <strong className="text-[#F0E9E0]">{registeredEmail}</strong>.
             Toccalo per attivare l'account e iniziare a usare Prenota.
           </p>
-          <p className="mt-4 text-xs text-ink-muted">
+          <p className="mt-4 text-xs text-[#A69686]">
             Non trovi l'email? Controlla anche nello spam.
           </p>
         </div>
@@ -93,11 +93,11 @@ export default function SignupPage() {
 
   if (!businessType) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-bg p-4">
-        <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-sm">
+      <div className="flex min-h-screen items-center justify-center bg-[#1A1310] p-4">
+        <div className="w-full max-w-sm rounded-2xl border border-[#3A2C22] bg-[#251C17] p-6">
           <div className="mb-5 text-center">
-            <h1 className="text-lg font-semibold text-ink">Che attività gestisci?</h1>
-            <p className="mt-1 text-sm text-ink-muted">
+            <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Che attività gestisci?</h1>
+            <p className="mt-1 text-sm text-[#A69686]">
               Scegli il tipo di locale: l'app si adatta di conseguenza
             </p>
           </div>
@@ -109,23 +109,23 @@ export default function SignupPage() {
                 <button
                   key={type.value}
                   onClick={() => setBusinessType(type.value)}
-                  className="touch-target flex w-full items-center gap-3 rounded-xl border border-black/10 p-3 text-left active:bg-bg-subtle"
+                  className="touch-target flex w-full items-center gap-3 rounded-xl border border-[#3A2C22] p-3 text-left active:bg-[#1A1310]"
                 >
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-light text-primary">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
                     <Icon size={20} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-ink">{type.label}</p>
-                    <p className="text-xs text-ink-muted">{type.description}</p>
+                    <p className="text-sm font-medium text-[#F0E9E0]">{type.label}</p>
+                    <p className="text-xs text-[#A69686]">{type.description}</p>
                   </div>
                 </button>
               );
             })}
           </div>
 
-          <p className="mt-5 text-center text-sm text-ink-muted">
+          <p className="mt-5 text-center text-sm text-[#A69686]">
             Hai già un account?{" "}
-            <Link href="/login" className="font-medium text-primary">
+            <Link href="/login" className="font-medium text-[#C17F45]">
               Accedi
             </Link>
           </p>
@@ -137,8 +137,8 @@ export default function SignupPage() {
   const isBar = businessType === "bar";
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-bg p-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-[#1A1310] p-4">
+      <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-2xl border border-[#3A2C22] bg-[#251C17] p-6">
         <input
           type="text"
           value={website}
@@ -152,20 +152,23 @@ export default function SignupPage() {
         <button
           type="button"
           onClick={() => setBusinessType(null)}
-          className="mb-3 flex items-center gap-1 text-xs font-medium text-ink-muted"
+          className="mb-3 flex items-center gap-1 text-xs font-medium text-[#A69686]"
         >
           <ArrowLeft size={14} />
           Cambia tipo di attività
         </button>
 
         <div className="mb-4 flex flex-col items-center gap-2 text-center">
-          <div className="grid h-12 w-12 place-items-center rounded-full bg-primary-light text-primary">
-            {isBar ? <Martini size={22} /> : <Store size={22} />}
+          <div className="relative grid h-12 w-12 place-items-center">
+            <div className="absolute inset-0 rounded-full bg-[#E3A857] opacity-20 blur-md" />
+            <div className="relative grid h-12 w-12 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
+              {isBar ? <Martini size={22} /> : <Store size={22} />}
+            </div>
           </div>
-          <h1 className="text-lg font-semibold text-ink">
+          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">
             {isBar ? "Crea il tuo bar" : "Crea il tuo ristorante"}
           </h1>
-          <p className="text-sm text-ink-muted">
+          <p className="text-sm text-[#A69686]">
             {isBar
               ? "Ricette, dosi e magazzino sempre sotto controllo"
               : "Prenotazioni, sala e menu in un unico posto — sempre allineati"}
@@ -178,13 +181,13 @@ export default function SignupPage() {
             onChange={(e) => setRestaurantName(e.target.value)}
             placeholder={isBar ? "Nome del bar" : "Nome del ristorante"}
             autoFocus
-            className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm"
+            className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2.5 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           />
           <input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             placeholder="Il tuo nome"
-            className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm"
+            className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2.5 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           />
           <input
             type="email"
@@ -192,31 +195,31 @@ export default function SignupPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
             autoCapitalize="none"
-            className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm"
+            className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2.5 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           />
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password (almeno 6 caratteri)"
-            className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm"
+            className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2.5 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           />
         </div>
 
-        {error && <p className="mt-2 text-sm text-status-danger">{error}</p>}
+        {error && <p className="mt-2 text-sm text-[#D97A63]">{error}</p>}
 
         <button
           type="submit"
           disabled={isLoading || !restaurantName || !email || password.length < 6}
-          className="touch-target mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-40"
+          className="touch-target mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2.5 text-sm font-medium text-[#1A1310] disabled:opacity-40"
         >
           {isLoading && <Loader2 size={18} className="animate-spin" />}
           {isLoading ? "Creo l'account..." : "Registrati"}
         </button>
 
-        <p className="mt-4 text-center text-sm text-ink-muted">
+        <p className="mt-4 text-center text-sm text-[#A69686]">
           Hai già un account?{" "}
-          <Link href="/login" className="font-medium text-primary">
+          <Link href="/login" className="font-medium text-[#C17F45]">
             Accedi
           </Link>
         </p>
