@@ -4,10 +4,14 @@ import { getRestaurantId } from "@/lib/restaurant";
 
 export async function GET(req: NextRequest) {
   const supabase = createClient();
+  const restaurantId = await getRestaurantId(supabase);
   const search = req.nextUrl.searchParams.get("search");
   const frequent = req.nextUrl.searchParams.get("frequent");
 
-  let query = supabase.from("products").select("*, suppliers(id, name)");
+  let query = supabase
+    .from("products")
+    .select("*, suppliers(id, name)")
+    .eq("restaurant_id", restaurantId);
 
   if (frequent === "true") {
     query = query.gt("use_count", 0).order("use_count", { ascending: false }).limit(8);
@@ -69,17 +73,21 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
     }
 
+    const restaurantId = await getRestaurantId(supabase);
+
     if (incrementUse) {
       const { data: current } = await supabase
         .from("products")
         .select("use_count")
         .eq("id", id)
+        .eq("restaurant_id", restaurantId)
         .single();
 
       await supabase
         .from("products")
         .update({ use_count: (current?.use_count ?? 0) + 1 })
-        .eq("id", id);
+        .eq("id", id)
+        .eq("restaurant_id", restaurantId);
     }
 
     const updates: Record<string, unknown> = {};
@@ -88,7 +96,11 @@ export async function PATCH(req: NextRequest) {
     if (supplierId !== undefined) updates.supplier_id = supplierId || null;
 
     if (Object.keys(updates).length > 0) {
-      const { error } = await supabase.from("products").update(updates).eq("id", id);
+      const { error } = await supabase
+        .from("products")
+        .update(updates)
+        .eq("id", id)
+        .eq("restaurant_id", restaurantId);
       if (error) throw error;
     }
 
@@ -107,7 +119,13 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
   }
 
-  const { error } = await supabase.from("products").delete().eq("id", id);
+  const restaurantId = await getRestaurantId(supabase);
+
+  const { error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", id)
+    .eq("restaurant_id", restaurantId);
 
   if (error) {
     console.error("Errore eliminazione prodotto:", error);
