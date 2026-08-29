@@ -4,12 +4,12 @@ import { Users, Check, UserX, StickyNote, X, Trash2, Pencil, Phone, RotateCcw, C
 import type { Reservation, ReservationStatus } from "@/types";
 
 const STATUS_BAR_COLOR: Record<ReservationStatus, string> = {
-  confirmed: "bg-status-free",
-  pending: "bg-status-pending",
-  late: "bg-status-danger",
-  cancelled: "bg-status-closed",
-  completed: "bg-status-free",
-  no_show: "bg-status-danger",
+  confirmed: "bg-[#7C9473]",
+  pending: "bg-[#E3A857]",
+  late: "bg-[#C0503D]",
+  cancelled: "bg-[#5C4E42]",
+  completed: "bg-[#7C9473]",
+  no_show: "bg-[#C0503D]",
 };
 
 const STATUS_LABEL: Record<ReservationStatus, string> = {
@@ -59,39 +59,39 @@ export function ReservationCard({
   const isPending = reservation.status === "pending";
 
   return (
-    <div className="animate-fade-in overflow-hidden rounded-xl bg-white shadow-sm">
+    <div className="animate-fade-in overflow-hidden rounded-xl border border-[#3A2C22] bg-[#251C17]">
       <div className="flex">
         <div className={`w-1.5 ${STATUS_BAR_COLOR[reservation.status]}`} />
 
         <div className="flex flex-1 items-center justify-between p-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <p className="truncate font-semibold text-ink">{reservation.customerName}</p>
+              <p className="truncate font-semibold text-[#F0E9E0]">{reservation.customerName}</p>
               {reservation.source === "public" && (
-                <span className="shrink-0 rounded-full bg-primary-light px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                <span className="shrink-0 rounded-full border border-[#C17F45]/30 bg-[#C17F45]/15 px-1.5 py-0.5 text-[10px] font-medium text-[#C17F45]">
                   Richiesta cliente
                 </span>
               )}
             </div>
-            <div className="mt-0.5 flex items-center gap-3 text-sm text-ink-muted">
-              <span className="num-tabular font-medium text-ink">{time}</span>
+            <div className="mt-0.5 flex items-center gap-3 text-sm text-[#A69686]">
+              <span className="num-tabular font-medium text-[#F0E9E0]">{time}</span>
               <span className="flex items-center gap-1">
                 <Users size={14} /> {reservation.partySize}
               </span>
               {tableNumber && (
-                <span className="rounded bg-bg-subtle px-1.5 py-0.5 text-xs font-medium text-ink-muted">
+                <span className="rounded border border-[#3A2C22] bg-[#1A1310] px-1.5 py-0.5 text-xs font-medium text-[#A69686]">
                   Tavolo {tableNumber}
                 </span>
               )}
               {reservation.source === "public" &&
                 reservation.status === "confirmed" &&
                 (reservation.customerConfirmedAt ? (
-                  <span className="flex items-center gap-1 rounded-full bg-status-freeBg px-1.5 py-0.5 text-[10px] font-medium text-status-free">
+                  <span className="flex items-center gap-1 rounded-full border border-[#7C9473]/30 bg-[#7C9473]/15 px-1.5 py-0.5 text-[10px] font-medium text-[#7C9473]">
                     <CheckCheck size={11} />
                     Confermata dal cliente
                   </span>
                 ) : (
-                  <span className="rounded-full bg-bg-subtle px-1.5 py-0.5 text-[10px] font-medium text-ink-muted">
+                  <span className="rounded-full border border-[#3A2C22] bg-[#1A1310] px-1.5 py-0.5 text-[10px] font-medium text-[#A69686]">
                     Non confermata
                   </span>
                 ))}
@@ -106,7 +106,7 @@ export function ReservationCard({
               <a
                 href={`tel:${reservation.phone}`}
                 onClick={(e) => e.stopPropagation()}
-                className="touch-target grid place-items-center rounded-lg text-primary hover:bg-primary-light"
+                className="touch-target grid place-items-center rounded-lg text-[#C17F45] hover:bg-[#C17F45]/15"
                 aria-label={`Chiama ${reservation.customerName}`}
                 title="Chiama"
               >
@@ -116,7 +116,7 @@ export function ReservationCard({
             {isPending && onAccept && (
               <button
                 onClick={onAccept}
-                className="touch-target grid place-items-center rounded-lg text-status-free hover:bg-status-freeBg"
+                className="touch-target grid place-items-center rounded-lg text-[#7C9473] hover:bg-[#7C9473]/15"
                 aria-label="Accetta richiesta"
                 title="Accetta"
               >
@@ -126,7 +126,7 @@ export function ReservationCard({
             {isPending && onReject && (
               <button
                 onClick={onReject}
-                className="touch-target grid place-items-center rounded-lg text-status-danger hover:bg-status-dangerBg"
+                className="touch-target grid place-items-center rounded-lg text-[#D97A63] hover:bg-[#C0503D]/15"
                 aria-label="Rifiuta richiesta"
                 title="Rifiuta"
               >
@@ -137,7 +137,7 @@ export function ReservationCard({
             {!isFinal && !isPending && onCheckIn && (
               <button
                 onClick={onCheckIn}
-                className="touch-target grid place-items-center rounded-lg text-status-free hover:bg-status-freeBg"
+                className="touch-target grid place-items-center rounded-lg text-[#7C9473] hover:bg-[#7C9473]/15"
                 aria-label="Presente"
                 title="Segna come presente"
               >
@@ -147,7 +147,7 @@ export function ReservationCard({
             {!isFinal && !isPending && onNoShow && (
               <button
                 onClick={onNoShow}
-                className="touch-target grid place-items-center rounded-lg text-status-danger hover:bg-status-dangerBg"
+                className="touch-target grid place-items-center rounded-lg text-[#D97A63] hover:bg-[#C0503D]/15"
                 aria-label="Assente"
                 title="Segna come mancata presenza"
               >
@@ -158,7 +158,7 @@ export function ReservationCard({
             {!isFinal && onEdit && (
               <button
                 onClick={onEdit}
-                className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+                className="touch-target grid place-items-center rounded-lg text-[#A69686] hover:bg-[#1A1310]"
                 aria-label="Modifica prenotazione"
                 title="Modifica"
               >
@@ -169,7 +169,7 @@ export function ReservationCard({
             {!isFinal && !isPending && onCancel && (
               <button
                 onClick={onCancel}
-                className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+                className="touch-target grid place-items-center rounded-lg text-[#A69686] hover:bg-[#1A1310]"
                 aria-label="Cancella"
                 title="Cancella prenotazione"
               >
@@ -181,7 +181,7 @@ export function ReservationCard({
               onRestore && (
                 <button
                   onClick={onRestore}
-                  className="touch-target grid place-items-center rounded-lg text-primary hover:bg-primary-light"
+                  className="touch-target grid place-items-center rounded-lg text-[#C17F45] hover:bg-[#C17F45]/15"
                   aria-label="Ripristina prenotazione"
                   title="Segnato per errore? Riporta a confermata"
                 >
@@ -191,7 +191,7 @@ export function ReservationCard({
             {onDelete && (
               <button
                 onClick={onDelete}
-                className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                className="touch-target grid place-items-center rounded-lg text-[#A69686] hover:bg-[#C0503D]/15 hover:text-[#D97A63]"
                 aria-label="Elimina definitivamente"
                 title="Elimina definitivamente"
               >
@@ -203,7 +203,7 @@ export function ReservationCard({
       </div>
 
       {reservation.notes && (
-        <div className="flex items-start gap-1.5 border-t border-black/5 bg-bg-subtle px-3 py-2 text-xs text-ink-muted">
+        <div className="flex items-start gap-1.5 border-t border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-xs text-[#A69686]">
           <StickyNote size={13} className="mt-0.5 shrink-0" />
           <span>{reservation.notes}</span>
         </div>
