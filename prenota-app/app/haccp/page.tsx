@@ -45,6 +45,12 @@ function timeAgo(iso: string): string {
   return `${days} ${days === 1 ? "giorno" : "giorni"} fa`;
 }
 
+function SignatureLine({ className = "" }: { className?: string }) {
+  return (
+    <div className={`h-px w-14 bg-gradient-to-r from-[#C17F45] via-[#C17F45] to-transparent ${className}`} />
+  );
+}
+
 export default function HaccpPage() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -215,32 +221,37 @@ export default function HaccpPage() {
   }
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen bg-[#1A1310] p-4">
       <div className="mb-4 flex items-center gap-2">
         <button
           onClick={() => router.push("/impostazioni")}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Indietro"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-lg font-semibold text-ink">Registro HACCP</h1>
+        <div>
+          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Registro HACCP</h1>
+          <SignatureLine className="mt-1" />
+        </div>
       </div>
 
       {error && (
-        <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
+        <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">
+          {error}
+        </p>
       )}
 
-      <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
+      <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
         <div className="mb-2 flex items-center justify-between">
-          <p className="flex items-center gap-1.5 text-sm font-medium text-ink">
-            <Thermometer size={16} />
+          <p className="flex items-center gap-1.5 text-sm font-medium text-[#F0E9E0]">
+            <Thermometer size={16} className="text-[#C17F45]" />
             Temperature
           </p>
           {isAdmin && (
             <button
               onClick={() => setShowPointForm((v) => !v)}
-              className="touch-target flex items-center gap-1 text-xs font-medium text-primary"
+              className="touch-target flex items-center gap-1 text-xs font-medium text-[#C17F45]"
             >
               <Plus size={14} />
               Aggiungi
@@ -249,14 +260,14 @@ export default function HaccpPage() {
         </div>
 
         {showPointForm && (
-          <div className="mb-3 rounded-lg bg-bg-subtle p-3">
+          <div className="mb-3 rounded-lg border border-[#3A2C22] bg-[#1A1310] p-3">
             <div className="space-y-2">
               <input
                 value={pointName}
                 onChange={(e) => setPointName(e.target.value)}
                 placeholder="Es. Frigo cucina"
                 autoFocus
-                className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-[#3A2C22] bg-[#251C17] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
               />
               <div className="grid grid-cols-2 gap-2">
                 <input
@@ -264,20 +275,20 @@ export default function HaccpPage() {
                   onChange={(e) => setPointMin(e.target.value)}
                   placeholder="Min °C"
                   type="number"
-                  className="num-tabular rounded-lg border border-black/10 px-3 py-2 text-sm"
+                  className="num-tabular rounded-lg border border-[#3A2C22] bg-[#251C17] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                 />
                 <input
                   value={pointMax}
                   onChange={(e) => setPointMax(e.target.value)}
                   placeholder="Max °C"
                   type="number"
-                  className="num-tabular rounded-lg border border-black/10 px-3 py-2 text-sm"
+                  className="num-tabular rounded-lg border border-[#3A2C22] bg-[#251C17] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                 />
               </div>
             </div>
             <button
               onClick={handleAddPoint}
-              className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2 text-sm font-medium text-white"
+              className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2 text-sm font-medium text-[#1A1310]"
             >
               <Check size={16} />
               Salva
@@ -286,7 +297,7 @@ export default function HaccpPage() {
         )}
 
         {points.length === 0 ? (
-          <p className="py-4 text-center text-sm text-ink-muted">
+          <p className="py-4 text-center text-sm text-[#A69686]">
             Nessun punto di controllo ancora.
           </p>
         ) : (
@@ -295,27 +306,27 @@ export default function HaccpPage() {
               const reading = latestReadings.get(point.id);
               const outOfRange = reading ? isOutOfRange(point, reading.value) : false;
               return (
-                <div key={point.id} className="rounded-lg bg-bg-subtle p-3">
+                <div key={point.id} className="rounded-lg border border-[#3A2C22] bg-[#1A1310] p-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-ink">{point.name}</p>
+                      <p className="text-sm font-medium text-[#F0E9E0]">{point.name}</p>
                       {reading ? (
                         <p
                           className={`num-tabular flex items-center gap-1 text-xs ${
-                            outOfRange ? "font-medium text-status-danger" : "text-ink-muted"
+                            outOfRange ? "font-medium text-[#D97A63]" : "text-[#A69686]"
                           }`}
                         >
                           {outOfRange && <AlertTriangle size={11} />}
                           {reading.value}°C · {timeAgo(reading.recorded_at)}
                         </p>
                       ) : (
-                        <p className="text-xs text-ink-muted">Nessuna lettura ancora</p>
+                        <p className="text-xs text-[#A69686]">Nessuna lettura ancora</p>
                       )}
                     </div>
                     {isAdmin && (
                       <button
                         onClick={() => handleDeletePoint(point.id)}
-                        className="touch-target grid shrink-0 place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                        className="touch-target grid shrink-0 place-items-center rounded-lg text-[#A69686]"
                         aria-label="Elimina"
                       >
                         <Trash2 size={15} />
@@ -332,17 +343,17 @@ export default function HaccpPage() {
                         type="number"
                         step="0.1"
                         autoFocus
-                        className="num-tabular flex-1 rounded-lg border border-black/10 px-2 py-1.5 text-sm"
+                        className="num-tabular flex-1 rounded-lg border border-[#3A2C22] bg-[#251C17] px-2 py-1.5 text-sm text-[#F0E9E0] focus:border-[#C17F45]/60 focus:outline-none"
                       />
                       <button
                         onClick={() => handleRecordReading(point.id)}
-                        className="touch-target rounded-lg bg-primary px-3 text-white"
+                        className="touch-target rounded-lg bg-gradient-to-b from-[#C17F45] to-[#A6683A] px-3 text-[#1A1310]"
                       >
                         <Check size={16} />
                       </button>
                       <button
                         onClick={() => setRecordingPointId(null)}
-                        className="touch-target rounded-lg border border-black/10 px-3 text-ink-muted"
+                        className="touch-target rounded-lg border border-[#3A2C22] px-3 text-[#A69686]"
                       >
                         <X size={16} />
                       </button>
@@ -353,7 +364,7 @@ export default function HaccpPage() {
                         setRecordingPointId(point.id);
                         setRecordingValue("");
                       }}
-                      className="touch-target mt-2 w-full rounded-lg border border-black/10 py-1.5 text-xs font-medium text-primary"
+                      className="touch-target mt-2 w-full rounded-lg border border-[#3A2C22] py-1.5 text-xs font-medium text-[#C17F45]"
                     >
                       Registra lettura
                     </button>
@@ -365,16 +376,16 @@ export default function HaccpPage() {
         )}
       </div>
 
-      <div className="rounded-xl border border-black/5 bg-white p-4">
+      <div className="rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
         <div className="mb-2 flex items-center justify-between">
-          <p className="flex items-center gap-1.5 text-sm font-medium text-ink">
-            <SprayCan size={16} />
+          <p className="flex items-center gap-1.5 text-sm font-medium text-[#F0E9E0]">
+            <SprayCan size={16} className="text-[#C17F45]" />
             Pulizie
           </p>
           {isAdmin && (
             <button
               onClick={() => setShowTaskForm((v) => !v)}
-              className="touch-target flex items-center gap-1 text-xs font-medium text-primary"
+              className="touch-target flex items-center gap-1 text-xs font-medium text-[#C17F45]"
             >
               <Plus size={14} />
               Aggiungi
@@ -383,31 +394,31 @@ export default function HaccpPage() {
         </div>
 
         {showTaskForm && (
-          <div className="mb-3 rounded-lg bg-bg-subtle p-3">
+          <div className="mb-3 rounded-lg border border-[#3A2C22] bg-[#1A1310] p-3">
             <input
               value={taskName}
               onChange={(e) => setTaskName(e.target.value)}
               placeholder="Es. Sanificazione banco"
               autoFocus
-              className="mb-2 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="mb-2 w-full rounded-lg border border-[#3A2C22] bg-[#251C17] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
             <div className="flex gap-2">
               <button
                 onClick={() => setTaskFrequency("daily")}
-                className={`touch-target flex-1 rounded-lg text-xs font-medium ${
+                className={`touch-target flex-1 rounded-lg py-2 text-xs font-medium ${
                   taskFrequency === "daily"
-                    ? "bg-primary text-white"
-                    : "border border-black/10 text-ink-muted"
+                    ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                    : "border border-[#3A2C22] text-[#A69686]"
                 }`}
               >
                 Giornaliera
               </button>
               <button
                 onClick={() => setTaskFrequency("weekly")}
-                className={`touch-target flex-1 rounded-lg text-xs font-medium ${
+                className={`touch-target flex-1 rounded-lg py-2 text-xs font-medium ${
                   taskFrequency === "weekly"
-                    ? "bg-primary text-white"
-                    : "border border-black/10 text-ink-muted"
+                    ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                    : "border border-[#3A2C22] text-[#A69686]"
                 }`}
               >
                 Settimanale
@@ -415,7 +426,7 @@ export default function HaccpPage() {
             </div>
             <button
               onClick={handleAddTask}
-              className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2 text-sm font-medium text-white"
+              className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2 text-sm font-medium text-[#1A1310]"
             >
               <Check size={16} />
               Salva
@@ -424,7 +435,7 @@ export default function HaccpPage() {
         )}
 
         {tasks.length === 0 ? (
-          <p className="py-4 text-center text-sm text-ink-muted">Nessuna attività ancora.</p>
+          <p className="py-4 text-center text-sm text-[#A69686]">Nessuna attività ancora.</p>
         ) : (
           <div className="space-y-1.5">
             {tasks.map((task) => {
@@ -433,18 +444,18 @@ export default function HaccpPage() {
               return (
                 <div
                   key={task.id}
-                  className="flex items-center justify-between gap-2 rounded-lg bg-bg-subtle p-3"
+                  className="flex items-center justify-between gap-2 rounded-lg border border-[#3A2C22] bg-[#1A1310] p-3"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <p className="text-sm font-medium text-ink">{task.name}</p>
-                      <span className="rounded-full bg-white px-1.5 py-0.5 text-[10px] text-ink-muted">
+                      <p className="text-sm font-medium text-[#F0E9E0]">{task.name}</p>
+                      <span className="rounded-full border border-[#3A2C22] bg-[#251C17] px-1.5 py-0.5 text-[10px] text-[#A69686]">
                         {task.frequency === "daily" ? "Giornaliera" : "Settimanale"}
                       </span>
                     </div>
                     <p
                       className={`text-xs ${
-                        overdue ? "font-medium text-status-danger" : "text-ink-muted"
+                        overdue ? "font-medium text-[#D97A63]" : "text-[#A69686]"
                       }`}
                     >
                       {lastDone ? `Ultima volta: ${timeAgo(lastDone)}` : "Mai fatta"}
@@ -453,14 +464,14 @@ export default function HaccpPage() {
                   <div className="flex shrink-0 items-center gap-1">
                     <button
                       onClick={() => handleMarkDone(task.id)}
-                      className="touch-target rounded-lg bg-status-free px-3 py-1.5 text-xs font-medium text-white"
+                      className="touch-target rounded-lg bg-[#7C9473] px-3 py-1.5 text-xs font-medium text-[#1A1310]"
                     >
                       Fatto
                     </button>
                     {isAdmin && (
                       <button
                         onClick={() => handleDeleteTask(task.id)}
-                        className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                        className="touch-target grid place-items-center rounded-lg text-[#A69686]"
                         aria-label="Elimina"
                       >
                         <Trash2 size={15} />
