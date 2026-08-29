@@ -46,34 +46,34 @@ export default function ConfirmPage() {
   }, [router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-bg p-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-[#1A1310] p-4">
+      <div className="w-full max-w-sm rounded-2xl border border-[#3A2C22] bg-[#251C17] p-6 text-center">
         {status === "checking" && (
           <>
-            <Loader2 size={28} className="mx-auto mb-3 animate-spin text-primary" />
-            <p className="text-sm text-ink-muted">Confermo il tuo account...</p>
+            <Loader2 size={28} className="mx-auto mb-3 animate-spin text-[#C17F45]" />
+            <p className="text-sm text-[#A69686]">Confermo il tuo account...</p>
           </>
         )}
         {status === "success" && (
           <>
-            <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-status-freeBg text-status-free">
+            <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full border border-[#7C9473]/40 bg-[#7C9473]/15 text-[#7C9473]">
               <Check size={24} />
             </div>
-            <h1 className="text-lg font-semibold text-ink">Account confermato!</h1>
-            <p className="mt-2 text-sm text-ink-muted">Ti porto alla tua Dashboard...</p>
+            <h1 className="text-lg font-semibold text-[#F0E9E0]">Account confermato!</h1>
+            <p className="mt-2 text-sm text-[#A69686]">Ti porto alla tua Dashboard...</p>
           </>
         )}
         {status === "error" && (
           <>
-            <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-status-dangerBg text-status-danger">
+            <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full border border-[#C0503D]/40 bg-[#C0503D]/15 text-[#D97A63]">
               <X size={24} />
             </div>
-            <h1 className="text-lg font-semibold text-ink">Link non valido</h1>
-            <p className="mt-2 text-sm text-ink-muted">
+            <h1 className="text-lg font-semibold text-[#F0E9E0]">Link non valido</h1>
+            <p className="mt-2 text-sm text-[#A69686]">
               Il link potrebbe essere scaduto o già usato. Prova ad accedere: se l'account
               non è ancora confermato te lo diremo lì.
             </p>
-            <Link href="/login" className="mt-4 inline-block text-sm font-medium text-primary">
+            <Link href="/login" className="mt-4 inline-block text-sm font-medium text-[#C17F45]">
               Vai al login
             </Link>
           </>
