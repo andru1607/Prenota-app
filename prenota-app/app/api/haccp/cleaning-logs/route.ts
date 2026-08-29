@@ -4,10 +4,12 @@ import { getRestaurantId } from "@/lib/restaurant";
 
 export async function GET() {
   const supabase = createClient();
+  const restaurantId = await getRestaurantId(supabase);
 
   const { data, error } = await supabase
     .from("cleaning_logs")
     .select("*")
+    .eq("restaurant_id", restaurantId)
     .order("done_at", { ascending: false })
     .limit(200);
 
