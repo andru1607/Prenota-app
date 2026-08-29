@@ -30,10 +30,6 @@ interface InvoiceImportReviewProps {
   isSaving: boolean;
 }
 
-// Schermata di verifica dopo aver letto una fattura: permette di correggere
-// i dati del fornitore, scegliere se abbinarlo a uno già esistente o crearne
-// uno nuovo, e togliere dai prodotti quelli che non si vogliono salvare —
-// prima di scrivere davvero qualcosa nel database.
 export function InvoiceImportReview({
   result,
   suppliers,
@@ -41,8 +37,6 @@ export function InvoiceImportReview({
   onCancel,
   isSaving,
 }: InvoiceImportReviewProps) {
-  // Se il nome letto corrisponde (anche solo in parte) a un fornitore già
-  // esistente, partiamo proponendo quello invece di crearne uno duplicato
   const guessedMatch = result.supplier.name
     ? suppliers.find((s) =>
         s.name.toLowerCase().includes(result.supplier.name!.toLowerCase()) ||
@@ -92,23 +86,22 @@ export function InvoiceImportReview({
   }
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen bg-[#1A1310] p-4">
       <div className="mb-4 flex items-center gap-2">
         <button
           onClick={onCancel}
           disabled={isSaving}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Annulla"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-lg font-semibold text-ink">Rivedi la fattura</h1>
+        <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Rivedi la fattura</h1>
       </div>
 
-      {/* Fornitore */}
-      <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
-        <p className="mb-3 flex items-center gap-1.5 text-sm font-medium text-ink">
-          <Truck size={16} />
+      <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
+        <p className="mb-3 flex items-center gap-1.5 text-sm font-medium text-[#F0E9E0]">
+          <Truck size={16} className="text-[#C17F45]" />
           Fornitore
         </p>
 
@@ -117,8 +110,8 @@ export function InvoiceImportReview({
             onClick={() => setSupplierMode("existing")}
             className={`flex-1 rounded-lg py-2 text-xs font-medium ${
               supplierMode === "existing"
-                ? "bg-primary text-white"
-                : "border border-black/10 text-ink-muted"
+                ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                : "border border-[#3A2C22] text-[#A69686]"
             }`}
           >
             Fornitore esistente
@@ -127,8 +120,8 @@ export function InvoiceImportReview({
             onClick={() => setSupplierMode("new")}
             className={`flex-1 rounded-lg py-2 text-xs font-medium ${
               supplierMode === "new"
-                ? "bg-primary text-white"
-                : "border border-black/10 text-ink-muted"
+                ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                : "border border-[#3A2C22] text-[#A69686]"
             }`}
           >
             Nuovo fornitore
@@ -137,8 +130,8 @@ export function InvoiceImportReview({
             onClick={() => setSupplierMode("none")}
             className={`flex-1 rounded-lg py-2 text-xs font-medium ${
               supplierMode === "none"
-                ? "bg-primary text-white"
-                : "border border-black/10 text-ink-muted"
+                ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                : "border border-[#3A2C22] text-[#A69686]"
             }`}
           >
             Nessuno
@@ -149,7 +142,7 @@ export function InvoiceImportReview({
           <select
             value={existingSupplierId}
             onChange={(e) => setExistingSupplierId(e.target.value)}
-            className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm text-ink"
+            className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0]"
           >
             <option value="">Scegli un fornitore...</option>
             {suppliers.map((s) => (
@@ -166,52 +159,51 @@ export function InvoiceImportReview({
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Nome fornitore"
-              className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
             <input
               value={newPhone}
               onChange={(e) => setNewPhone(e.target.value)}
               placeholder="Telefono (facoltativo)"
               type="tel"
-              className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
             <input
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
               placeholder="Email (facoltativa)"
               type="email"
-              className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
           </div>
         )}
 
         {supplierMode === "none" && (
-          <p className="text-xs text-ink-muted">
+          <p className="text-xs text-[#A69686]">
             I prodotti verranno salvati nel catalogo senza collegarli a nessun fornitore.
           </p>
         )}
       </div>
 
-      {/* Prodotti */}
-      <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
-        <p className="mb-3 text-sm font-medium text-ink">
+      <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
+        <p className="mb-3 text-sm font-medium text-[#F0E9E0]">
           Prodotti trovati ({includedCount} selezionati)
         </p>
 
         {products.length === 0 ? (
-          <p className="py-4 text-center text-sm text-ink-muted">
+          <p className="py-4 text-center text-sm text-[#A69686]">
             Non ho trovato prodotti leggibili in questa foto.
           </p>
         ) : (
           <div className="space-y-2">
             {products.map((product, index) => (
-              <div key={index} className="flex items-center gap-2 rounded-lg bg-bg-subtle p-2.5">
+              <div key={index} className="flex items-center gap-2 rounded-lg border border-[#3A2C22] bg-[#1A1310] p-2.5">
                 <button
                   onClick={() => updateProduct(index, { include: !product.include })}
                   className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 ${
                     product.include
-                      ? "border-status-free bg-status-free text-white"
-                      : "border-black/20"
+                      ? "border-[#7C9473] bg-[#7C9473] text-[#1A1310]"
+                      : "border-[#3A2C22]"
                   }`}
                   aria-label="Includi prodotto"
                 >
@@ -220,18 +212,18 @@ export function InvoiceImportReview({
                 <input
                   value={product.name}
                   onChange={(e) => updateProduct(index, { name: e.target.value })}
-                  className="min-w-0 flex-1 rounded-lg border border-black/10 bg-white px-2 py-1.5 text-sm"
+                  className="min-w-0 flex-1 rounded-lg border border-[#3A2C22] bg-[#251C17] px-2 py-1.5 text-sm text-[#F0E9E0] focus:border-[#C17F45]/60 focus:outline-none"
                   placeholder="Nome prodotto"
                 />
                 <input
                   value={product.quantity}
                   onChange={(e) => updateProduct(index, { quantity: e.target.value })}
-                  className="w-24 shrink-0 rounded-lg border border-black/10 bg-white px-2 py-1.5 text-xs"
+                  className="num-tabular w-24 shrink-0 rounded-lg border border-[#3A2C22] bg-[#251C17] px-2 py-1.5 text-xs text-[#F0E9E0] focus:border-[#C17F45]/60 focus:outline-none"
                   placeholder="Quantità"
                 />
                 <button
                   onClick={() => removeProduct(index)}
-                  className="touch-target grid shrink-0 place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                  className="touch-target grid shrink-0 place-items-center rounded-lg text-[#A69686]"
                   aria-label="Rimuovi riga"
                 >
                   <Trash2 size={15} />
@@ -245,7 +237,7 @@ export function InvoiceImportReview({
       <button
         onClick={handleConfirm}
         disabled={!canConfirm || isSaving}
-        className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-medium text-white disabled:opacity-40"
+        className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-3 text-sm font-medium text-[#1A1310] shadow-[0_0_18px_rgba(227,168,87,0.25)] disabled:opacity-40"
       >
         {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
         {isSaving ? "Salvo..." : `Salva ${includedCount} prodott${includedCount === 1 ? "o" : "i"} nel catalogo`}
