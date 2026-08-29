@@ -24,6 +24,14 @@ const CATEGORY_ICONS: Record<string, typeof Martini> = {
 
 const CUSTOM_LABEL = "I tuoi cocktail";
 
+function SignatureLine({ className = "" }: { className?: string }) {
+  return (
+    <div
+      className={`h-px w-14 bg-gradient-to-r from-[#C17F45] via-[#C17F45] to-transparent ${className}`}
+    />
+  );
+}
+
 export default function CocktailListPage() {
   const [cocktails, setCocktails] = useState<Cocktail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,9 +96,9 @@ export default function CocktailListPage() {
       <Link
         key={cocktail.id}
         href={`/cocktail/${cocktail.id}`}
-        className="touch-target flex items-center gap-3 rounded-xl border border-black/5 bg-white p-3"
+        className="touch-target flex items-center gap-3 rounded-xl border border-[#3A2C22] bg-[#251C17] p-3"
       >
-        <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-lg bg-primary-light text-primary">
+        <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-[#C17F45]/40 bg-[#1A1310] text-[#E3A857]">
           {cocktail.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -99,17 +107,17 @@ export default function CocktailListPage() {
               className="h-full w-full object-cover"
             />
           ) : (
-            <Martini size={20} />
+            <Martini size={18} />
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-ink">{cocktail.name}</p>
-          <p className="truncate text-xs text-ink-muted">
+          <p className="truncate text-sm font-medium text-[#F0E9E0]">{cocktail.name}</p>
+          <p className="truncate text-xs text-[#A69686]">
             {[cocktail.category, cocktail.glass].filter(Boolean).join(" · ") || "—"}
           </p>
         </div>
         {cocktail.restaurant_id && (
-          <span className="shrink-0 rounded-full bg-bg-subtle px-2 py-0.5 text-[10px] font-medium text-ink-muted">
+          <span className="shrink-0 rounded-full border border-[#E3A857]/30 bg-[#E3A857]/15 px-2 py-0.5 text-[10px] font-medium text-[#E3A857]">
             Tuo
           </span>
         )}
@@ -118,35 +126,38 @@ export default function CocktailListPage() {
   }
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen bg-[#1A1310] p-4">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-ink">Cocktail</h1>
+        <div>
+          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Cocktail</h1>
+          <SignatureLine className="mt-1.5" />
+        </div>
         <Link
           href="/cocktail/nuovo"
-          className="touch-target grid h-9 w-9 place-items-center rounded-lg bg-primary text-white"
+          className="touch-target grid h-10 w-10 place-items-center rounded-full bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310] shadow-[0_0_18px_rgba(227,168,87,0.35)]"
           aria-label="Aggiungi cocktail"
         >
-          <Plus size={18} />
+          <Plus size={19} />
         </Link>
       </div>
 
-      <div className="mb-4 flex items-center gap-2 rounded-xl border border-black/10 bg-white px-3 py-2.5">
-        <Search size={16} className="text-ink-muted" />
+      <div className="mb-4 flex items-center gap-2 rounded-xl border border-[#3A2C22] bg-[#251C17] px-3 py-2.5 focus-within:border-[#C17F45]/60">
+        <Search size={16} className="text-[#A69686]" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Cerca un cocktail"
-          className="w-full text-sm outline-none"
+          className="w-full bg-transparent text-sm text-[#F0E9E0] outline-none placeholder:text-[#7A6E63]"
         />
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-10 text-ink-muted">
+        <div className="flex justify-center py-10 text-[#C17F45]">
           <Loader2 size={20} className="animate-spin" />
         </div>
       ) : searching ? (
         searchResults.length === 0 ? (
-          <p className="py-10 text-center text-sm text-ink-muted">Nessun cocktail trovato.</p>
+          <p className="py-10 text-center text-sm text-[#A69686]">Nessun cocktail trovato.</p>
         ) : (
           <div className="space-y-2">{searchResults.map(renderCocktailRow)}</div>
         )
@@ -154,14 +165,17 @@ export default function CocktailListPage() {
         <div>
           <button
             onClick={() => setSelectedCategory(null)}
-            className="mb-3 flex items-center gap-1 text-xs font-medium text-ink-muted"
+            className="mb-3 flex items-center gap-1 text-xs font-medium text-[#A69686]"
           >
             <ArrowLeft size={14} />
             Tutte le categorie
           </button>
-          <p className="mb-3 text-xs font-semibold uppercase text-ink-muted">{selectedCategory}</p>
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#F0E9E0]">
+            {selectedCategory}
+          </p>
+          <SignatureLine className="mb-3" />
           {categoryResults.length === 0 ? (
-            <p className="py-10 text-center text-sm text-ink-muted">
+            <p className="py-10 text-center text-sm text-[#A69686]">
               Non hai ancora cocktail qui. Tocca &quot;+&quot; per aggiungerne uno.
             </p>
           ) : (
@@ -169,19 +183,22 @@ export default function CocktailListPage() {
           )}
         </div>
       ) : cocktails.length === 0 ? (
-        <p className="py-10 text-center text-sm text-ink-muted">Non ci sono ancora cocktail.</p>
+        <p className="py-10 text-center text-sm text-[#A69686]">Non ci sono ancora cocktail.</p>
       ) : (
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setSelectedCategory(CUSTOM_LABEL)}
-            className="touch-target flex flex-col items-start gap-2 rounded-xl border border-black/5 bg-white p-4 text-left"
+            className="touch-target flex flex-col items-start gap-2.5 rounded-2xl border border-[#3A2C22] bg-gradient-to-b from-[#2A211C] to-[#1F1712] p-4 text-left"
           >
-            <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary-light text-primary">
-              <User size={18} />
+            <div className="relative grid h-11 w-11 place-items-center">
+              <div className="absolute inset-0 rounded-full bg-[#E3A857] opacity-20 blur-md" />
+              <div className="relative grid h-11 w-11 place-items-center rounded-full border border-[#E3A857]/50 bg-[#1A1310] text-[#E3A857]">
+                <User size={18} />
+              </div>
             </div>
             <div>
-              <p className="text-sm font-medium text-ink">{CUSTOM_LABEL}</p>
-              <p className="text-xs text-ink-muted">{customCocktails.length} cocktail</p>
+              <p className="text-sm font-bold uppercase tracking-wide text-[#F0E9E0]">{CUSTOM_LABEL}</p>
+              <p className="num-tabular text-xs text-[#A69686]">{customCocktails.length} cocktail</p>
             </div>
           </button>
 
@@ -192,14 +209,17 @@ export default function CocktailListPage() {
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className="touch-target flex flex-col items-start gap-2 rounded-xl border border-black/5 bg-white p-4 text-left"
+                className="touch-target flex flex-col items-start gap-2.5 rounded-2xl border border-[#3A2C22] bg-gradient-to-b from-[#2A211C] to-[#1F1712] p-4 text-left"
               >
-                <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary-light text-primary">
-                  <Icon size={18} />
+                <div className="relative grid h-11 w-11 place-items-center">
+                  <div className="absolute inset-0 rounded-full bg-[#C17F45] opacity-20 blur-md" />
+                  <div className="relative grid h-11 w-11 place-items-center rounded-full border border-[#C17F45]/50 bg-[#1A1310] text-[#C17F45]">
+                    <Icon size={18} />
+                  </div>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-ink">{category}</p>
-                  <p className="text-xs text-ink-muted">{count} cocktail</p>
+                  <p className="text-sm font-bold uppercase tracking-wide text-[#F0E9E0]">{category}</p>
+                  <p className="num-tabular text-xs text-[#A69686]">{count} cocktail</p>
                 </div>
               </button>
             );
