@@ -33,7 +33,7 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="mb-2 mt-1 text-xs font-semibold uppercase text-ink-muted">{children}</p>;
+  return <p className="mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-[#A69686]">{children}</p>;
 }
 
 export default function ImpostazioniPage() {
@@ -238,41 +238,41 @@ export default function ImpostazioniPage() {
   }
 
   return (
-    <div className="p-4">
-      <h1 className="mb-4 text-lg font-semibold text-ink">Impostazioni</h1>
+    <div className="min-h-screen bg-[#1A1310] p-4">
+      <h1 className="mb-4 text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Impostazioni</h1>
 
       <SectionLabel>Account</SectionLabel>
       <Link
         href="/profilo"
-        className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+        className="touch-target mb-2 flex items-center justify-between rounded-xl border border-[#3A2C22] bg-[#251C17] p-4"
       >
         <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+          <div className="grid h-9 w-9 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
             <User size={18} />
           </div>
           <div>
-            <p className="text-sm font-medium text-ink">Profilo</p>
-            <p className="text-xs text-ink-muted">Nome, ristorante, email e password</p>
+            <p className="text-sm font-medium text-[#F0E9E0]">Profilo</p>
+            <p className="text-xs text-[#A69686]">Nome, ristorante, email e password</p>
           </div>
         </div>
-        <ChevronRight size={18} className="text-ink-muted" />
+        <ChevronRight size={18} className="text-[#A69686]" />
       </Link>
 
       {isAdmin && (
         <Link
           href="/staff"
-          className="touch-target mb-4 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+          className="touch-target mb-4 flex items-center justify-between rounded-xl border border-[#3A2C22] bg-[#251C17] p-4"
         >
           <div className="flex items-center gap-3">
-            <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+            <div className="grid h-9 w-9 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
               <Users size={18} />
             </div>
             <div>
-              <p className="text-sm font-medium text-ink">Team</p>
-              <p className="text-xs text-ink-muted">Aggiungi collaboratori con accesso al ristorante</p>
+              <p className="text-sm font-medium text-[#F0E9E0]">Team</p>
+              <p className="text-xs text-[#A69686]">Aggiungi collaboratori con accesso al ristorante</p>
             </div>
           </div>
-          <ChevronRight size={18} className="text-ink-muted" />
+          <ChevronRight size={18} className="text-[#A69686]" />
         </Link>
       )}
 
@@ -280,9 +280,9 @@ export default function ImpostazioniPage() {
         <>
           <SectionLabel>Il tuo locale</SectionLabel>
 
-          <div className="mb-2 rounded-xl border border-black/5 bg-white p-4">
-            <p className="mb-1 text-sm font-medium text-ink">Aspetto dell'app</p>
-            <p className="mb-3 text-xs text-ink-muted">
+          <div className="mb-2 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
+            <p className="mb-1 text-sm font-medium text-[#F0E9E0]">Aspetto dell'app</p>
+            <p className="mb-3 text-xs text-[#A69686]">
               Cambia i colori dell'app che usi tu, indipendentemente da quelli della
               pagina pubblica dei clienti.
             </p>
@@ -296,11 +296,11 @@ export default function ImpostazioniPage() {
                     onClick={() => handleSelectTheme(key)}
                     disabled={isSavingTheme}
                     className={`touch-target flex w-full items-center gap-3 rounded-xl border p-3 text-left disabled:opacity-60 ${
-                      isSelected ? "border-primary bg-primary-light" : "border-black/10"
+                      isSelected ? "border-[#C17F45] bg-[#C17F45]/15" : "border-[#3A2C22]"
                     }`}
                   >
                     <span
-                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-black/10"
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#3A2C22]"
                       style={{ backgroundColor: theme.bg }}
                     >
                       <span
@@ -309,31 +309,31 @@ export default function ImpostazioniPage() {
                       />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-ink">{theme.label}</p>
-                      <p className="text-xs text-ink-muted">{theme.description}</p>
+                      <p className="text-sm font-medium text-[#F0E9E0]">{theme.label}</p>
+                      <p className="text-xs text-[#A69686]">{theme.description}</p>
                     </div>
-                    {isSelected && <Check size={18} className="shrink-0 text-primary" />}
+                    {isSelected && <Check size={18} className="shrink-0 text-[#C17F45]" />}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          <div className="mb-2 rounded-xl border border-black/5 bg-white p-4">
-            <p className="mb-3 text-sm font-medium text-ink">
+          <div className="mb-2 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
+            <p className="mb-3 text-sm font-medium text-[#F0E9E0]">
               {isBar ? "Personalizza il tuo locale" : "Personalizza la pagina prenotazioni"}
             </p>
 
             <div className="mb-3 flex items-center gap-3">
               <button
                 onClick={() => logoInputRef.current?.click()}
-                className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border border-dashed border-black/20 bg-bg-subtle"
+                className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border border-dashed border-[#3A2C22] bg-[#1A1310]"
               >
                 {logoPreview || logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={logoPreview ?? logoUrl ?? ""} alt="Logo" className="h-full w-full object-cover" />
                 ) : (
-                  <ImageIcon size={22} className="text-ink-muted" />
+                  <ImageIcon size={22} className="text-[#A69686]" />
                 )}
               </button>
               <div className="flex-1">
@@ -346,7 +346,7 @@ export default function ImpostazioniPage() {
                 />
                 <button
                   onClick={() => logoInputRef.current?.click()}
-                  className="touch-target rounded-lg border border-black/10 px-3 py-2 text-xs font-medium text-ink-muted"
+                  className="touch-target rounded-lg border border-[#3A2C22] px-3 py-2 text-xs font-medium text-[#A69686]"
                 >
                   Scegli foto del logo
                 </button>
@@ -357,25 +357,25 @@ export default function ImpostazioniPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={isBar ? "Nome del bar" : "Nome del ristorante"}
-              className="mb-2 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="mb-2 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
 
             <div className="mb-3 flex items-center gap-3">
-              <span className="text-sm text-ink-muted">Colore principale</span>
+              <span className="text-sm text-[#A69686]">Colore principale</span>
               <input
                 type="color"
                 value={primaryColor}
                 onChange={(e) => setPrimaryColor(e.target.value)}
-                className="h-9 w-14 cursor-pointer rounded-lg border border-black/10"
+                className="h-9 w-14 cursor-pointer rounded-lg border border-[#3A2C22]"
               />
             </div>
 
-            {error && <p className="mb-2 text-sm text-status-danger">{error}</p>}
+            {error && <p className="mb-2 text-sm text-[#D97A63]">{error}</p>}
 
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-50"
+              className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2.5 text-sm font-medium text-[#1A1310] disabled:opacity-50"
             >
               {isSaving && <Loader2 size={16} className="animate-spin" />}
               {saved ? "Salvato!" : isSaving ? "Salvo..." : "Salva personalizzazione"}
@@ -385,39 +385,39 @@ export default function ImpostazioniPage() {
           {isBar && (
             <Link
               href="/impostazioni/dosatore"
-              className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+              className="touch-target mb-2 flex items-center justify-between rounded-xl border border-[#3A2C22] bg-[#251C17] p-4"
             >
               <div className="flex items-center gap-3">
-                <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+                <div className="grid h-9 w-9 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
                   <Martini size={18} />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-ink">Dosatore</p>
-                  <p className="text-xs text-ink-muted">Misure del lato piccolo e del lato grande</p>
+                  <p className="text-sm font-medium text-[#F0E9E0]">Dosatore</p>
+                  <p className="text-xs text-[#A69686]">Misure del lato piccolo e del lato grande</p>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-ink-muted" />
+              <ChevronRight size={18} className="text-[#A69686]" />
             </Link>
           )}
 
           {link && !isBar && (
-            <div className="mb-2 rounded-xl border border-black/5 bg-white p-4">
+            <div className="mb-2 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
               <div className="mb-2 flex items-center gap-3">
-                <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+                <div className="grid h-9 w-9 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
                   <QrCode size={18} />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-ink">Link prenotazioni clienti</p>
-                  <p className="text-xs text-ink-muted">
+                  <p className="text-sm font-medium text-[#F0E9E0]">Link prenotazioni clienti</p>
+                  <p className="text-xs text-[#A69686]">
                     Genera un QR code da questo link e stampalo per il locale
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 rounded-lg bg-bg-subtle p-2">
-                <p className="flex-1 truncate text-xs text-ink-muted">{link}</p>
+              <div className="flex items-center gap-2 rounded-lg border border-[#3A2C22] bg-[#1A1310] p-2">
+                <p className="flex-1 truncate text-xs text-[#A69686]">{link}</p>
                 <button
                   onClick={handleCopy}
-                  className="touch-target grid place-items-center rounded-lg text-primary"
+                  className="touch-target grid place-items-center rounded-lg text-[#C17F45]"
                   aria-label="Copia link"
                 >
                   {copied ? <Check size={16} /> : <Copy size={16} />}
@@ -425,7 +425,7 @@ export default function ImpostazioniPage() {
               </div>
               <button
                 onClick={() => router.push("/qr")}
-                className="mt-2 block w-full text-center text-xs font-medium text-primary"
+                className="mt-2 block w-full text-center text-xs font-medium text-[#C17F45]"
               >
                 Vedi e stampa il QR code
               </button>
@@ -435,35 +435,35 @@ export default function ImpostazioniPage() {
           {!isBar && (
             <Link
               href="/vetrina"
-              className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+              className="touch-target mb-2 flex items-center justify-between rounded-xl border border-[#3A2C22] bg-[#251C17] p-4"
             >
               <div className="flex items-center gap-3">
-                <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+                <div className="grid h-9 w-9 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
                   <UtensilsCrossed size={18} />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-ink">Vetrina pubblica</p>
-                  <p className="text-xs text-ink-muted">Descrizione, indirizzo, orari e menu per i clienti</p>
+                  <p className="text-sm font-medium text-[#F0E9E0]">Vetrina pubblica</p>
+                  <p className="text-xs text-[#A69686]">Descrizione, indirizzo, orari e menu per i clienti</p>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-ink-muted" />
+              <ChevronRight size={18} className="text-[#A69686]" />
             </Link>
           )}
 
           <Link
             href="/orari"
-            className="touch-target mb-4 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+            className="touch-target mb-4 flex items-center justify-between rounded-xl border border-[#3A2C22] bg-[#251C17] p-4"
           >
             <div className="flex items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+              <div className="grid h-9 w-9 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
                 <CalendarX size={18} />
               </div>
               <div>
-                <p className="text-sm font-medium text-ink">Orari e chiusure</p>
-                <p className="text-xs text-ink-muted">Giorni di chiusura settimanali ed eccezioni</p>
+                <p className="text-sm font-medium text-[#F0E9E0]">Orari e chiusure</p>
+                <p className="text-xs text-[#A69686]">Giorni di chiusura settimanali ed eccezioni</p>
               </div>
             </div>
-            <ChevronRight size={18} className="text-ink-muted" />
+            <ChevronRight size={18} className="text-[#A69686]" />
           </Link>
         </>
       )}
@@ -471,28 +471,28 @@ export default function ImpostazioniPage() {
       {pushSupported && !isBar && (
         <>
           <SectionLabel>Notifiche</SectionLabel>
-          <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
+          <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
             <div className="mb-2 flex items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+              <div className="grid h-9 w-9 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
                 {pushEnabled ? <Bell size={18} /> : <BellOff size={18} />}
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-ink">Notifiche push</p>
-                <p className="text-xs text-ink-muted">
+                <p className="text-sm font-medium text-[#F0E9E0]">Notifiche push</p>
+                <p className="text-xs text-[#A69686]">
                   Ricevi un avviso sul telefono quando arriva una nuova richiesta di prenotazione
                 </p>
               </div>
             </div>
 
-            {pushError && <p className="mb-2 text-sm text-status-danger">{pushError}</p>}
+            {pushError && <p className="mb-2 text-sm text-[#D97A63]">{pushError}</p>}
 
             <button
               onClick={handleTogglePush}
               disabled={pushLoading}
               className={`touch-target flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium disabled:opacity-50 ${
                 pushEnabled
-                  ? "border border-black/10 text-ink-muted"
-                  : "bg-primary text-white"
+                  ? "border border-[#3A2C22] text-[#A69686]"
+                  : "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
               }`}
             >
               {pushLoading && <Loader2 size={16} className="animate-spin" />}
@@ -508,47 +508,47 @@ export default function ImpostazioniPage() {
           {!isBar && (
             <Link
               href="/statistiche"
-              className="touch-target mb-2 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+              className="touch-target mb-2 flex items-center justify-between rounded-xl border border-[#3A2C22] bg-[#251C17] p-4"
             >
               <div className="flex items-center gap-3">
-                <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+                <div className="grid h-9 w-9 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
                   <BarChart3 size={18} />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-ink">Statistiche</p>
-                  <p className="text-xs text-ink-muted">Coperti nel tempo, giorni più pieni</p>
+                  <p className="text-sm font-medium text-[#F0E9E0]">Statistiche</p>
+                  <p className="text-xs text-[#A69686]">Coperti nel tempo, giorni più pieni</p>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-ink-muted" />
+              <ChevronRight size={18} className="text-[#A69686]" />
             </Link>
           )}
 
           <Link
             href="/assistente"
-            className="touch-target mb-4 flex items-center justify-between rounded-xl border border-black/5 bg-white p-4"
+            className="touch-target mb-4 flex items-center justify-between rounded-xl border border-[#3A2C22] bg-[#251C17] p-4"
           >
             <div className="flex items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
+              <div className="grid h-9 w-9 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
                 <MessageCircleQuestion size={18} />
               </div>
               <div>
-                <p className="text-sm font-medium text-ink">Assistente</p>
-                <p className="text-xs text-ink-muted">Cosa chiede lo staff, per migliorare le risposte</p>
+                <p className="text-sm font-medium text-[#F0E9E0]">Assistente</p>
+                <p className="text-xs text-[#A69686]">Cosa chiede lo staff, per migliorare le risposte</p>
               </div>
             </div>
-            <ChevronRight size={18} className="text-ink-muted" />
+            <ChevronRight size={18} className="text-[#A69686]" />
           </Link>
         </>
       )}
 
       <button
         onClick={handleLogout}
-        className="touch-target flex w-full items-center gap-3 rounded-xl border border-black/5 bg-white p-4"
+        className="touch-target flex w-full items-center gap-3 rounded-xl border border-[#3A2C22] bg-[#251C17] p-4"
       >
-        <div className="grid h-9 w-9 place-items-center rounded-lg bg-status-dangerBg text-status-danger">
+        <div className="grid h-9 w-9 place-items-center rounded-full border border-[#C0503D]/40 bg-[#C0503D]/15 text-[#D97A63]">
           <LogOut size={18} />
         </div>
-        <p className="text-sm font-medium text-status-danger">Esci</p>
+        <p className="text-sm font-medium text-[#D97A63]">Esci</p>
       </button>
     </div>
   );
