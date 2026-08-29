@@ -272,13 +272,13 @@ export default function PrenotazioniPage() {
   const showInitialSkeleton = isLoading && reservations.length === 0;
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen bg-[#1A1310] p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-ink">Prenotazioni</h1>
+        <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Prenotazioni</h1>
         <div className="flex items-center gap-1">
           <button
             onClick={loadReservations}
-            className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+            className="touch-target grid place-items-center rounded-lg text-[#A69686]"
             aria-label="Aggiorna"
           >
             <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
@@ -287,7 +287,7 @@ export default function PrenotazioniPage() {
             <button
               onClick={deleteAll}
               disabled={isDeletingAll}
-              className="touch-target grid place-items-center rounded-lg text-status-danger hover:bg-status-dangerBg disabled:opacity-40"
+              className="touch-target grid place-items-center rounded-lg text-[#D97A63] hover:bg-[#C0503D]/15 disabled:opacity-40"
               aria-label="Elimina tutte"
               title="Elimina tutte le prenotazioni di questo giorno"
             >
@@ -296,7 +296,7 @@ export default function PrenotazioniPage() {
           )}
           <button
             onClick={openNewForm}
-            className="touch-target flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-medium text-white"
+            className="touch-target flex items-center gap-1.5 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] px-3 py-2 text-sm font-medium text-[#1A1310]"
           >
             <Plus size={18} />
             Nuova
@@ -304,17 +304,17 @@ export default function PrenotazioniPage() {
         </div>
       </div>
 
-      <div className="mb-4 flex items-center gap-2 rounded-xl border border-black/5 bg-white p-2">
+      <div className="mb-4 flex items-center gap-2 rounded-xl border border-[#3A2C22] bg-[#251C17] p-2">
         <button
           onClick={() => setSelectedDate((d) => shiftDate(d, -1))}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Giorno precedente"
         >
           <ChevronLeft size={20} />
         </button>
 
         <div className="relative flex-1">
-          <p className="pointer-events-none text-center text-sm font-medium text-ink">
+          <p className="num-tabular pointer-events-none text-center text-sm font-medium text-[#F0E9E0]">
             {formatDateLabel(selectedDate)}
           </p>
           <input
@@ -328,7 +328,7 @@ export default function PrenotazioniPage() {
 
         <button
           onClick={() => setSelectedDate((d) => shiftDate(d, 1))}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Giorno successivo"
         >
           <ChevronRight size={20} />
@@ -338,7 +338,7 @@ export default function PrenotazioniPage() {
       {!isToday && (
         <button
           onClick={() => setSelectedDate(todayDateString())}
-          className="mb-4 text-sm font-medium text-primary"
+          className="mb-4 text-sm font-medium text-[#C17F45]"
         >
           Torna a oggi
         </button>
@@ -367,7 +367,9 @@ export default function PrenotazioniPage() {
       )}
 
       {error && (
-        <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
+        <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">
+          {error}
+        </p>
       )}
 
       {showInitialSkeleton && (
@@ -388,7 +390,7 @@ export default function PrenotazioniPage() {
 
       {upcomingPranzo.length > 0 && (
         <div className="mb-4">
-          <p className="mb-2 text-xs font-medium uppercase text-ink-muted">Pranzo</p>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#A69686]">Pranzo</p>
           <div className="space-y-2">
             {upcomingPranzo.map((r) => (
               <ReservationCard
@@ -410,7 +412,7 @@ export default function PrenotazioniPage() {
 
       {upcomingCena.length > 0 && (
         <div>
-          <p className="mb-2 text-xs font-medium uppercase text-ink-muted">Cena</p>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#A69686]">Cena</p>
           <div className="space-y-2">
             {upcomingCena.map((r) => (
               <ReservationCard
@@ -432,7 +434,7 @@ export default function PrenotazioniPage() {
 
       {done.length > 0 && (
         <div className="mt-6">
-          <p className="mb-2 text-xs font-medium uppercase text-ink-muted">Concluse</p>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#A69686]">Concluse</p>
           <div className="space-y-2 opacity-70">
             {done.map((r) => (
               <ReservationCard
