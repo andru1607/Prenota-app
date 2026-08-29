@@ -8,9 +8,9 @@ interface StatusBarProps {
 // Sempre visibile in cima alla Dashboard/Servizio.
 export function StatusBar({ totalCoperti, tavoliLiberi, prossimoArrivo }: StatusBarProps) {
   return (
-    <div className="grid grid-cols-3 gap-3 border-b border-black/5 bg-white p-4">
+    <div className="grid grid-cols-3 gap-3 border-b border-[#3A2C22] bg-[#251C17] p-4">
       <Stat label="Coperti oggi" value={totalCoperti} />
-      <Stat label="Tavoli liberi" value={tavoliLiberi} valueClass="text-status-free" />
+      <Stat label="Tavoli liberi" value={tavoliLiberi} valueClass="text-[#7C9473]" />
       <Stat label="Prossimo arrivo" value={prossimoArrivo ?? "—"} />
     </div>
   );
@@ -19,7 +19,7 @@ export function StatusBar({ totalCoperti, tavoliLiberi, prossimoArrivo }: Status
 function Stat({
   label,
   value,
-  valueClass = "text-ink",
+  valueClass = "text-[#F0E9E0]",
 }: {
   label: string;
   value: string | number;
@@ -28,7 +28,7 @@ function Stat({
   return (
     <div className="text-center">
       <p className={`num-tabular text-2xl font-bold ${valueClass}`}>{value}</p>
-      <p className="text-xs text-ink-muted">{label}</p>
+      <p className="text-xs text-[#A69686]">{label}</p>
     </div>
   );
 }
