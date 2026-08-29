@@ -48,8 +48,11 @@ export function Sidebar() {
   const items = businessType === "bar" ? BAR_NAV_ITEMS : RISTORANTE_NAV_ITEMS;
 
   return (
-    <aside className="hidden w-56 shrink-0 border-r border-black/5 bg-white p-3 md:block">
-      <p className="mb-4 px-2 text-lg font-bold text-ink">Prenota</p>
+    <aside className="hidden w-56 shrink-0 border-r border-[#3A2C22] bg-[#251C17] p-3 md:block">
+      <div className="mb-4 px-2">
+        <p className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Prenota</p>
+        <div className="mt-1.5 h-px w-10 bg-gradient-to-r from-[#C17F45] via-[#C17F45] to-transparent" />
+      </div>
       <nav className="space-y-1">
         {items.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);
@@ -58,7 +61,9 @@ export function Sidebar() {
               key={href}
               href={href}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-                active ? "bg-primary-light text-primary" : "text-ink-muted hover:bg-bg-subtle"
+                active
+                  ? "bg-[#C17F45]/15 text-[#C17F45]"
+                  : "text-[#A69686] hover:bg-[#1A1310] hover:text-[#F0E9E0]"
               }`}
             >
               <Icon size={18} />
