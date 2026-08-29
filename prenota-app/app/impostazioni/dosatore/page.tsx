@@ -66,37 +66,40 @@ export default function DosatoreSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-16 text-ink-muted">
+      <div className="flex min-h-screen items-center justify-center bg-[#1A1310] text-[#C17F45]">
         <Loader2 size={20} className="animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="p-4">
-      <Link href="/impostazioni" className="mb-3 flex items-center gap-1 text-xs font-medium text-ink-muted">
+    <div className="min-h-screen bg-[#1A1310] p-4">
+      <Link href="/impostazioni" className="mb-3 flex items-center gap-1 text-xs font-medium text-[#A69686]">
         <ArrowLeft size={14} />
         Impostazioni
       </Link>
 
       <div className="mb-4 flex items-center gap-3">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-primary-light text-primary">
-          <Martini size={22} />
+        <div className="relative grid h-12 w-12 shrink-0 place-items-center">
+          <div className="absolute inset-0 rounded-full bg-[#E3A857] opacity-20 blur-md" />
+          <div className="relative grid h-12 w-12 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
+            <Martini size={22} />
+          </div>
         </div>
         <div>
-          <h1 className="text-lg font-semibold text-ink">Dosatore</h1>
-          <p className="text-xs text-ink-muted">Il dosatore fisico a doppia misura del tuo bar</p>
+          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Dosatore</h1>
+          <p className="text-xs text-[#A69686]">Il dosatore fisico a doppia misura del tuo bar</p>
         </div>
       </div>
 
-      <div className="rounded-xl border border-black/5 bg-white p-4">
-        <p className="mb-3 text-sm text-ink-muted">
+      <div className="rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
+        <p className="mb-3 text-sm text-[#A69686]">
           Inserisci quanti ml versa ciascun lato del tuo dosatore. Le dosi delle ricette verranno
           mostrate anche come numero di dosatori, oltre che in ml.
         </p>
 
         <div className="space-y-3">
-          <label className="block text-xs text-ink-muted">
+          <label className="block text-xs text-[#A69686]">
             Lato piccolo (ml)
             <input
               type="number"
@@ -104,10 +107,10 @@ export default function DosatoreSettingsPage() {
               value={latoPiccolo}
               onChange={(e) => setLatoPiccolo(e.target.value)}
               placeholder="es. 20"
-              className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm text-ink"
+              className="num-tabular mt-1 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2.5 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
           </label>
-          <label className="block text-xs text-ink-muted">
+          <label className="block text-xs text-[#A69686]">
             Lato grande (ml)
             <input
               type="number"
@@ -115,18 +118,18 @@ export default function DosatoreSettingsPage() {
               value={latoGrande}
               onChange={(e) => setLatoGrande(e.target.value)}
               placeholder="es. 40"
-              className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm text-ink"
+              className="num-tabular mt-1 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2.5 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
           </label>
         </div>
 
-        {error && <p className="mt-3 text-sm text-status-danger">{error}</p>}
-        {saved && !error && <p className="mt-3 text-sm text-primary">Salvato.</p>}
+        {error && <p className="mt-3 text-sm text-[#D97A63]">{error}</p>}
+        {saved && !error && <p className="mt-3 text-sm text-[#E3A857]">Salvato.</p>}
 
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="touch-target mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-50"
+          className="touch-target mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2.5 text-sm font-medium text-[#1A1310] shadow-[0_0_18px_rgba(227,168,87,0.25)] disabled:opacity-50"
         >
           {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
           Salva
