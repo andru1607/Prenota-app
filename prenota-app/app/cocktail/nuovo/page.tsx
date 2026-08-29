@@ -113,69 +113,72 @@ export default function NuovoCocktailPage() {
   }
 
   return (
-    <div className="p-4">
-      <Link href="/cocktail" className="mb-3 flex items-center gap-1 text-xs font-medium text-ink-muted">
+    <div className="min-h-screen bg-[#1A1310] p-4">
+      <Link href="/cocktail" className="mb-3 flex items-center gap-1 text-xs font-medium text-[#A69686]">
         <ArrowLeft size={14} />
         Tutti i cocktail
       </Link>
 
       <div className="mb-4 flex items-center gap-3">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-primary-light text-primary">
-          <Martini size={22} />
+        <div className="relative grid h-12 w-12 shrink-0 place-items-center">
+          <div className="absolute inset-0 rounded-full bg-[#E3A857] opacity-20 blur-md" />
+          <div className="relative grid h-12 w-12 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
+            <Martini size={22} />
+          </div>
         </div>
         <div>
-          <h1 className="text-lg font-semibold text-ink">Nuovo cocktail</h1>
-          <p className="text-xs text-ink-muted">Visibile e modificabile solo dal tuo bar</p>
+          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Nuovo cocktail</h1>
+          <p className="text-xs text-[#A69686]">Visibile e modificabile solo dal tuo bar</p>
         </div>
       </div>
 
-      <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
+      <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
         <div className="space-y-2">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Nome del cocktail"
             autoFocus
-            className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           />
           <div className="grid grid-cols-2 gap-2">
             <input
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               placeholder="Categoria (es. Long drink)"
-              className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
             <input
               value={glass}
               onChange={(e) => setGlass(e.target.value)}
               placeholder="Bicchiere (es. Tumbler basso)"
-              className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
           </div>
           <input
             value={technique}
             onChange={(e) => setTechnique(e.target.value)}
             placeholder="Tecnica (es. Shakerato, Mescolato, Build)"
-            className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           />
           <input
             value={garnish}
             onChange={(e) => setGarnish(e.target.value)}
             placeholder="Guarnizione (es. scorza di limone)"
-            className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           />
           <textarea
             value={instructions}
             onChange={(e) => setInstructions(e.target.value)}
             placeholder="Procedimento"
             rows={3}
-            className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           />
         </div>
       </div>
 
-      <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
-        <p className="mb-3 text-xs font-semibold uppercase text-ink-muted">Ingredienti</p>
+      <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#A69686]">Ingredienti</p>
         <div className="space-y-2">
           {ingredients.map((ing) => (
             <div key={ing.id} className="flex items-center gap-2">
@@ -183,7 +186,7 @@ export default function NuovoCocktailPage() {
                 value={ing.name}
                 onChange={(e) => updateIngredient(ing.id, "name", e.target.value)}
                 placeholder="Ingrediente (es. Gin)"
-                className="min-w-0 flex-1 rounded-lg border border-black/10 px-3 py-2 text-sm"
+                className="min-w-0 flex-1 rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
               />
               <input
                 type="number"
@@ -191,12 +194,12 @@ export default function NuovoCocktailPage() {
                 value={ing.amount_ml}
                 onChange={(e) => updateIngredient(ing.id, "amount_ml", e.target.value)}
                 placeholder="ml"
-                className="w-20 shrink-0 rounded-lg border border-black/10 px-3 py-2 text-sm"
+                className="num-tabular w-20 shrink-0 rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
               />
               <button
                 onClick={() => removeIngredient(ing.id)}
                 disabled={ingredients.length <= 1}
-                className="touch-target grid h-9 w-9 shrink-0 place-items-center rounded-lg text-ink-muted disabled:opacity-30"
+                className="touch-target grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[#A69686] disabled:opacity-30"
                 aria-label="Rimuovi ingrediente"
               >
                 <Trash2 size={16} />
@@ -206,19 +209,19 @@ export default function NuovoCocktailPage() {
         </div>
         <button
           onClick={addIngredient}
-          className="touch-target mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-black/20 py-2 text-xs font-medium text-ink-muted"
+          className="touch-target mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#3A2C22] py-2 text-xs font-medium text-[#A69686]"
         >
           <Plus size={14} />
           Aggiungi ingrediente
         </button>
       </div>
 
-      {error && <p className="mb-3 text-sm text-status-danger">{error}</p>}
+      {error && <p className="mb-3 text-sm text-[#D97A63]">{error}</p>}
 
       <button
         onClick={handleSave}
         disabled={isSaving}
-        className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-50"
+        className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2.5 text-sm font-medium text-[#1A1310] shadow-[0_0_18px_rgba(227,168,87,0.25)] disabled:opacity-50"
       >
         {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
         {isSaving ? "Salvo..." : "Salva cocktail"}
