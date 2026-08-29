@@ -116,20 +116,20 @@ export default function StaffPage() {
   }
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen bg-[#1A1310] p-4">
       <div className="mb-4 flex items-center gap-2">
         <button
           onClick={() => router.push("/impostazioni")}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Indietro"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="flex-1 text-lg font-semibold text-ink">Team</h1>
+        <h1 className="flex-1 text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Team</h1>
         {isAdmin && (
           <button
             onClick={() => setShowForm((v) => !v)}
-            className="touch-target flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-medium text-white"
+            className="touch-target flex items-center gap-1.5 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] px-3 py-2 text-sm font-medium text-[#1A1310]"
           >
             <Plus size={18} />
             Nuovo
@@ -138,22 +138,24 @@ export default function StaffPage() {
       </div>
 
       {!isAdmin && !isLoading && (
-        <p className="mb-3 rounded-lg bg-status-pendingBg p-3 text-sm text-status-pending">
+        <p className="mb-3 rounded-lg border border-[#E3A857]/40 bg-[#2A2115] p-3 text-sm text-[#E3A857]">
           Solo un amministratore può aggiungere o rimuovere collaboratori.
         </p>
       )}
 
       {error && (
-        <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
+        <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">
+          {error}
+        </p>
       )}
 
       {showForm && (
-        <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
+        <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-sm font-medium text-ink">Nuovo collaboratore</p>
+            <p className="text-sm font-medium text-[#F0E9E0]">Nuovo collaboratore</p>
             <button
               onClick={() => setShowForm(false)}
-              className="touch-target grid place-items-center rounded-lg text-ink-muted"
+              className="touch-target grid place-items-center rounded-lg text-[#A69686]"
               aria-label="Chiudi"
             >
               <X size={18} />
@@ -165,7 +167,7 @@ export default function StaffPage() {
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Nome e cognome"
               autoFocus
-              className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
             <input
               value={email}
@@ -173,22 +175,22 @@ export default function StaffPage() {
               placeholder="Email di accesso"
               type="email"
               autoCapitalize="none"
-              className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
             <input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password (almeno 6 caratteri)"
               type="password"
-              className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
             <div className="flex gap-2">
               <button
                 onClick={() => setRole("staff")}
                 className={`touch-target flex flex-1 items-center justify-center gap-1.5 rounded-lg text-xs font-medium ${
                   role === "staff"
-                    ? "bg-primary text-white"
-                    : "border border-black/10 text-ink-muted"
+                    ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                    : "border border-[#3A2C22] text-[#A69686]"
                 }`}
               >
                 <UserIcon size={14} />
@@ -198,8 +200,8 @@ export default function StaffPage() {
                 onClick={() => setRole("admin")}
                 className={`touch-target flex flex-1 items-center justify-center gap-1.5 rounded-lg text-xs font-medium ${
                   role === "admin"
-                    ? "bg-primary text-white"
-                    : "border border-black/10 text-ink-muted"
+                    ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                    : "border border-[#3A2C22] text-[#A69686]"
                 }`}
               >
                 <Shield size={14} />
@@ -211,12 +213,12 @@ export default function StaffPage() {
           <button
             onClick={handleAddMember}
             disabled={isSaving || !fullName.trim() || !email.trim() || password.length < 6}
-            className="touch-target mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-40"
+            className="touch-target mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2.5 text-sm font-medium text-[#1A1310] disabled:opacity-40"
           >
             {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
             Crea account
           </button>
-          <p className="mt-2 text-xs text-ink-muted">
+          <p className="mt-2 text-xs text-[#A69686]">
             L'account viene creato subito, pronto all'uso. Comunica tu email e password al
             collaboratore.
           </p>
@@ -232,25 +234,25 @@ export default function StaffPage() {
           {members.map((member) => (
             <div
               key={member.id}
-              className="animate-fade-in flex items-center justify-between rounded-xl border border-black/5 bg-white p-3"
+              className="animate-fade-in flex items-center justify-between rounded-xl border border-[#3A2C22] bg-[#251C17] p-3"
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <p className="truncate text-sm font-semibold text-ink">{member.full_name}</p>
+                  <p className="truncate text-sm font-semibold text-[#F0E9E0]">{member.full_name}</p>
                   {member.id === myStaffId && (
-                    <span className="rounded-full bg-bg-subtle px-1.5 py-0.5 text-[10px] text-ink-muted">
+                    <span className="rounded-full border border-[#3A2C22] bg-[#1A1310] px-1.5 py-0.5 text-[10px] text-[#A69686]">
                       Tu
                     </span>
                   )}
                 </div>
-                <p className="truncate text-xs text-ink-muted">{member.email}</p>
+                <p className="truncate text-xs text-[#A69686]">{member.email}</p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <span
                   className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
                     member.role === "admin"
-                      ? "bg-primary-light text-primary"
-                      : "bg-bg-subtle text-ink-muted"
+                      ? "border border-[#C17F45]/30 bg-[#C17F45]/15 text-[#C17F45]"
+                      : "border border-[#3A2C22] bg-[#1A1310] text-[#A69686]"
                   }`}
                 >
                   {member.role === "admin" ? <Shield size={11} /> : <UserIcon size={11} />}
@@ -259,7 +261,7 @@ export default function StaffPage() {
                 {isAdmin && member.id !== myStaffId && (
                   <button
                     onClick={() => handleRemove(member.id, member.full_name)}
-                    className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                    className="touch-target grid place-items-center rounded-lg text-[#A69686] hover:bg-[#C0503D]/15 hover:text-[#D97A63]"
                     aria-label="Rimuovi collaboratore"
                   >
                     <Trash2 size={16} />
