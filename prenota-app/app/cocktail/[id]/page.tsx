@@ -35,6 +35,12 @@ type Prodotto = {
   soglia_minima: number;
 };
 
+function SignatureLine({ className = "" }: { className?: string }) {
+  return (
+    <div className={`h-px w-14 bg-gradient-to-r from-[#C17F45] via-[#C17F45] to-transparent ${className}`} />
+  );
+}
+
 export default function CocktailDetailPage() {
   const params = useParams<{ id: string }>();
 
@@ -240,7 +246,7 @@ export default function CocktailDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-16 text-ink-muted">
+      <div className="flex min-h-screen items-center justify-center bg-[#1A1310] text-[#C17F45]">
         <Loader2 size={20} className="animate-spin" />
       </div>
     );
@@ -248,8 +254,8 @@ export default function CocktailDetailPage() {
 
   if (!cocktail) {
     return (
-      <div className="p-4">
-        <p className="text-sm text-ink-muted">Cocktail non trovato.</p>
+      <div className="min-h-screen bg-[#1A1310] p-4">
+        <p className="text-sm text-[#A69686]">Cocktail non trovato.</p>
       </div>
     );
   }
@@ -257,75 +263,82 @@ export default function CocktailDetailPage() {
   const allMapped = ingredients.every((ing) => mappings[ing.id]);
 
   return (
-    <div className="p-4">
-      <Link href="/cocktail" className="mb-3 flex items-center gap-1 text-xs font-medium text-ink-muted">
+    <div className="min-h-screen bg-[#1A1310] p-4">
+      <Link href="/cocktail" className="mb-3 flex items-center gap-1 text-xs font-medium text-[#A69686]">
         <ArrowLeft size={14} />
         Tutti i cocktail
       </Link>
 
       <div className="mb-4 flex items-center gap-3">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-primary-light text-primary">
-          <Martini size={22} />
+        <div className="relative grid h-12 w-12 shrink-0 place-items-center">
+          <div className="absolute inset-0 rounded-full bg-[#E3A857] opacity-20 blur-md" />
+          <div className="relative grid h-12 w-12 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
+            <Martini size={22} />
+          </div>
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="text-lg font-semibold text-ink">{cocktail.name}</h1>
-          <p className="text-xs text-ink-muted">
+          <h1 className="truncate text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">{cocktail.name}</h1>
+          <p className="text-xs text-[#A69686]">
             {[cocktail.category, cocktail.glass].filter(Boolean).join(" · ")}
           </p>
         </div>
         {cocktail.restaurant_id && (
-          <span className="shrink-0 rounded-full bg-bg-subtle px-2 py-0.5 text-[10px] font-medium text-ink-muted">
+          <span className="shrink-0 rounded-full border border-[#E3A857]/30 bg-[#E3A857]/15 px-2 py-0.5 text-[10px] font-medium text-[#E3A857]">
             Tuo
           </span>
         )}
       </div>
 
-      <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
-        <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">Ingredienti</p>
+      <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#A69686]">Ingredienti</p>
         <div className="space-y-1.5">
           {ingredients.map((ing) => (
             <div key={ing.id} className="flex items-center justify-between gap-3 text-sm">
-              <span className="text-ink">{ing.name}</span>
-              <span className="text-right text-ink-muted">{formatDose(ing.amount_ml)}</span>
+              <span className="text-[#F0E9E0]">{ing.name}</span>
+              <span className="num-tabular text-right text-[#A69686]">{formatDose(ing.amount_ml)}</span>
             </div>
           ))}
         </div>
         {!dosatorePiccolo && !dosatoreGrande && (
-          <p className="mt-2 text-xs text-ink-muted">
+          <p className="mt-2 text-xs text-[#A69686]">
             Imposta il tuo dosatore in Impostazioni per vedere le dosi anche in numero di dosatori.
           </p>
         )}
       </div>
 
-      <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
-        <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">Preparazione</p>
-        {cocktail.technique && <p className="mb-1 text-sm text-ink">{cocktail.technique}</p>}
-        {cocktail.instructions && <p className="text-sm text-ink-muted">{cocktail.instructions}</p>}
+      <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#A69686]">Preparazione</p>
+        {cocktail.technique && <p className="mb-1 text-sm text-[#F0E9E0]">{cocktail.technique}</p>}
+        {cocktail.instructions && <p className="text-sm text-[#A69686]">{cocktail.instructions}</p>}
         {cocktail.garnish && cocktail.garnish !== "nessuna" && (
-          <p className="mt-2 text-sm text-ink-muted">Guarnizione: {cocktail.garnish}</p>
+          <p className="mt-2 text-sm text-[#A69686]">Guarnizione: {cocktail.garnish}</p>
         )}
       </div>
 
-      {prepResult && <p className="mb-3 rounded-lg bg-bg-subtle p-3 text-sm text-ink">{prepResult}</p>}
+      {prepResult && (
+        <p className="mb-3 rounded-lg border border-[#C17F45]/30 bg-[#251C17] p-3 text-sm text-[#F0E9E0]">
+          {prepResult}
+        </p>
+      )}
 
       {!showPrepPanel && (
         <button
           onClick={() => setShowPrepPanel(true)}
-          className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white"
+          className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2.5 text-sm font-medium text-[#1A1310] shadow-[0_0_18px_rgba(227,168,87,0.25)]"
         >
           Segna come preparato
         </button>
       )}
 
       {showPrepPanel && (
-        <div className="rounded-xl border border-black/5 bg-white p-4">
-          <p className="mb-3 text-sm font-medium text-ink">
+        <div className="rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
+          <p className="mb-3 text-sm font-medium text-[#F0E9E0]">
             Abbina ogni ingrediente al prodotto giusto del tuo magazzino
           </p>
           <div className="space-y-3">
             {ingredients.map((ing) => (
               <div key={ing.id}>
-                <p className="mb-1 text-xs text-ink-muted">{ing.name}</p>
+                <p className="mb-1 text-xs text-[#A69686]">{ing.name}</p>
                 {newProductFor === ing.id ? (
                   <div className="flex items-center gap-2">
                     <input
@@ -333,12 +346,12 @@ export default function CocktailDetailPage() {
                       onChange={(e) => setNewProductName(e.target.value)}
                       placeholder="Nome del prodotto"
                       autoFocus
-                      className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                     />
                     <button
                       onClick={() => handleAddNewProduct(ing.id)}
                       disabled={isSavingProduct || !newProductName.trim()}
-                      className="touch-target shrink-0 rounded-lg bg-primary px-3 py-2 text-white disabled:opacity-40"
+                      className="touch-target shrink-0 rounded-lg bg-gradient-to-b from-[#C17F45] to-[#A6683A] px-3 py-2 text-[#1A1310] disabled:opacity-40"
                     >
                       {isSavingProduct ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
                     </button>
@@ -354,7 +367,7 @@ export default function CocktailDetailPage() {
                         setMappings((prev) => ({ ...prev, [ing.id]: e.target.value }));
                       }
                     }}
-                    className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0]"
                   >
                     <option value="" disabled>
                       Scegli un prodotto...
@@ -374,14 +387,14 @@ export default function CocktailDetailPage() {
           <div className="mt-4 flex gap-2">
             <button
               onClick={() => setShowPrepPanel(false)}
-              className="touch-target flex-1 rounded-xl border border-black/10 py-2.5 text-sm font-medium text-ink-muted"
+              className="touch-target flex-1 rounded-xl border border-[#3A2C22] py-2.5 text-sm font-medium text-[#A69686]"
             >
               Annulla
             </button>
             <button
               onClick={handleConfirmPreparation}
               disabled={!allMapped || isConfirming}
-              className="touch-target flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-40"
+              className="touch-target flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2.5 text-sm font-medium text-[#1A1310] disabled:opacity-40"
             >
               {isConfirming && <Loader2 size={16} className="animate-spin" />}
               Conferma preparazione
