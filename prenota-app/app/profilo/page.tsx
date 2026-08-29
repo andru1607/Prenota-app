@@ -165,7 +165,7 @@ export default function ProfiloPage() {
 
   if (isLoading) {
     return (
-      <div className="p-4">
+      <div className="min-h-screen bg-[#1A1310] p-4">
         <div className="mb-4 flex items-center gap-3">
           <Skeleton className="h-9 w-9 rounded-lg" />
           <Skeleton className="h-6 w-24" />
@@ -178,30 +178,32 @@ export default function ProfiloPage() {
   }
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen bg-[#1A1310] p-4">
       <div className="mb-4 flex items-center gap-2">
         <button
           onClick={() => router.push("/impostazioni")}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Indietro"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-lg font-semibold text-ink">Profilo</h1>
+        <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Profilo</h1>
       </div>
 
       {error && (
-        <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
+        <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">
+          {error}
+        </p>
       )}
 
       <RestaurantSwitcher />
 
-      <div className="animate-fade-in mb-3 rounded-xl border border-black/5 bg-white p-4">
+      <div className="animate-fade-in mb-3 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
         <div className="mb-3 flex items-center gap-2">
-          <User size={16} className="text-ink-muted" />
-          <p className="text-sm font-medium text-ink">Il tuo nome</p>
+          <User size={16} className="text-[#A69686]" />
+          <p className="text-sm font-medium text-[#F0E9E0]">Il tuo nome</p>
           {role && (
-            <span className="ml-auto rounded-full bg-primary-light px-2 py-0.5 text-[11px] font-medium text-primary">
+            <span className="ml-auto rounded-full border border-[#C17F45]/30 bg-[#C17F45]/15 px-2 py-0.5 text-[11px] font-medium text-[#C17F45]">
               {role === "admin" ? "Titolare" : role}
             </span>
           )}
@@ -210,22 +212,22 @@ export default function ProfiloPage() {
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           placeholder="Nome e cognome"
-          className="mb-4 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+          className="mb-4 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
         />
 
         <div className="mb-3 flex items-center gap-2">
-          <Store size={16} className="text-ink-muted" />
-          <p className="text-sm font-medium text-ink">Nome del ristorante</p>
+          <Store size={16} className="text-[#A69686]" />
+          <p className="text-sm font-medium text-[#F0E9E0]">Nome del ristorante</p>
         </div>
         {role === "admin" ? (
           <input
             value={restaurantName}
             onChange={(e) => setRestaurantName(e.target.value)}
             placeholder="Nome del ristorante"
-            className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           />
         ) : (
-          <p className="rounded-lg bg-bg-subtle px-3 py-2 text-sm text-ink-muted">
+          <p className="rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#A69686]">
             {restaurantName}
           </p>
         )}
@@ -233,24 +235,24 @@ export default function ProfiloPage() {
         <button
           onClick={handleSaveProfile}
           disabled={isSavingProfile}
-          className="touch-target mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-50"
+          className="touch-target mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2.5 text-sm font-medium text-[#1A1310] disabled:opacity-50"
         >
           {isSavingProfile && <Loader2 size={16} className="animate-spin" />}
           Salva
         </button>
       </div>
 
-      <div className="animate-fade-in mb-3 rounded-xl border border-black/5 bg-white p-4">
+      <div className="animate-fade-in mb-3 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
         <div className="mb-2 flex items-center gap-2">
-          <Mail size={16} className="text-ink-muted" />
-          <p className="text-sm font-medium text-ink">Email di accesso</p>
+          <Mail size={16} className="text-[#A69686]" />
+          <p className="text-sm font-medium text-[#F0E9E0]">Email di accesso</p>
         </div>
-        <p className="mb-2 text-sm text-ink-muted">{currentEmail}</p>
+        <p className="mb-2 text-sm text-[#A69686]">{currentEmail}</p>
 
         {!showEmailForm ? (
           <button
             onClick={() => setShowEmailForm(true)}
-            className="touch-target rounded-lg border border-black/10 px-3 py-2 text-xs font-medium text-ink-muted"
+            className="touch-target rounded-lg border border-[#3A2C22] px-3 py-2 text-xs font-medium text-[#A69686]"
           >
             Cambia email
           </button>
@@ -262,10 +264,10 @@ export default function ProfiloPage() {
               placeholder="Nuova email"
               type="email"
               autoCapitalize="none"
-              className="mb-2 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="mb-2 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
             {emailMessage && (
-              <p className="mb-2 text-xs text-ink-muted">{emailMessage}</p>
+              <p className="mb-2 text-xs text-[#A69686]">{emailMessage}</p>
             )}
             <div className="flex gap-2">
               <button
@@ -274,14 +276,14 @@ export default function ProfiloPage() {
                   setNewEmail("");
                   setEmailMessage(null);
                 }}
-                className="touch-target flex-1 rounded-xl border border-black/10 py-2 text-sm font-medium text-ink-muted"
+                className="touch-target flex-1 rounded-xl border border-[#3A2C22] py-2 text-sm font-medium text-[#A69686]"
               >
                 Annulla
               </button>
               <button
                 onClick={handleChangeEmail}
                 disabled={isSavingEmail || !newEmail.trim()}
-                className="touch-target flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-2 text-sm font-medium text-white disabled:opacity-40"
+                className="touch-target flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2 text-sm font-medium text-[#1A1310] disabled:opacity-40"
               >
                 {isSavingEmail && <Loader2 size={16} className="animate-spin" />}
                 Conferma
@@ -291,16 +293,16 @@ export default function ProfiloPage() {
         )}
       </div>
 
-      <div className="animate-fade-in rounded-xl border border-black/5 bg-white p-4">
+      <div className="animate-fade-in rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
         <div className="mb-2 flex items-center gap-2">
-          <Lock size={16} className="text-ink-muted" />
-          <p className="text-sm font-medium text-ink">Password</p>
+          <Lock size={16} className="text-[#A69686]" />
+          <p className="text-sm font-medium text-[#F0E9E0]">Password</p>
         </div>
 
         {!showPasswordForm ? (
           <button
             onClick={() => setShowPasswordForm(true)}
-            className="touch-target rounded-lg border border-black/10 px-3 py-2 text-xs font-medium text-ink-muted"
+            className="touch-target rounded-lg border border-[#3A2C22] px-3 py-2 text-xs font-medium text-[#A69686]"
           >
             Cambia password
           </button>
@@ -311,17 +313,17 @@ export default function ProfiloPage() {
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Nuova password"
               type="password"
-              className="mb-2 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="mb-2 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
             <input
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Conferma password"
               type="password"
-              className="mb-2 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="mb-2 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
             {passwordMessage && (
-              <p className="mb-2 text-xs text-status-danger">{passwordMessage}</p>
+              <p className="mb-2 text-xs text-[#D97A63]">{passwordMessage}</p>
             )}
             <div className="flex gap-2">
               <button
@@ -331,14 +333,14 @@ export default function ProfiloPage() {
                   setConfirmPassword("");
                   setPasswordMessage(null);
                 }}
-                className="touch-target flex-1 rounded-xl border border-black/10 py-2 text-sm font-medium text-ink-muted"
+                className="touch-target flex-1 rounded-xl border border-[#3A2C22] py-2 text-sm font-medium text-[#A69686]"
               >
                 Annulla
               </button>
               <button
                 onClick={handleChangePassword}
                 disabled={isSavingPassword || !newPassword || !confirmPassword}
-                className="touch-target flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-2 text-sm font-medium text-white disabled:opacity-40"
+                className="touch-target flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2 text-sm font-medium text-[#1A1310] disabled:opacity-40"
               >
                 {isSavingPassword && <Loader2 size={16} className="animate-spin" />}
                 <Check size={16} />
