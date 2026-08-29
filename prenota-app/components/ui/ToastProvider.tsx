@@ -43,17 +43,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`animate-toast-in pointer-events-auto flex max-w-[90vw] items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-white shadow-lg ${
+            className={`animate-toast-in pointer-events-auto flex max-w-[90vw] items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium shadow-lg ${
               t.type === "success"
-                ? "bg-status-free"
+                ? "bg-[#7C9473] text-[#1A1310]"
                 : t.type === "error"
-                ? "bg-status-danger"
-                : "bg-ink"
+                ? "bg-[#C0503D] text-white"
+                : "border border-[#C17F45]/30 bg-[#251C17] text-[#F0E9E0]"
             }`}
           >
             {t.type === "success" && <Check size={15} className="shrink-0" />}
             {t.type === "error" && <X size={15} className="shrink-0" />}
-            {t.type === "info" && <Info size={15} className="shrink-0" />}
+            {t.type === "info" && <Info size={15} className="shrink-0 text-[#C17F45]" />}
             <span className="truncate">{t.message}</span>
           </div>
         ))}
