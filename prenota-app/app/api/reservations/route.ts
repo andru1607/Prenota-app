@@ -9,22 +9,26 @@ export async function GET(req: NextRequest) {
   const from = req.nextUrl.searchParams.get("from");
   const to = req.nextUrl.searchParams.get("to");
   const phone = req.nextUrl.searchParams.get("phone");
+  const trash = req.nextUrl.searchParams.get("trash");
 
-  let query = supabase
-    .from("reservations")
-    .select("*")
-    .order("reservation_time", { ascending: true });
+  let query = supabase.from("reservations").select("*");
 
-  if (phone) {
-    query = query.eq("phone", phone);
-  } else if (date) {
-    const start = `${date}T00:00:00`;
-    const end = `${date}T23:59:59`;
-    query = query.gte("reservation_time", start).lte("reservation_time", end);
-  } else if (from && to) {
-    const start = `${from}T00:00:00`;
-    const end = `${to}T23:59:59`;
-    query = query.gte("reservation_time", start).lte("reservation_time", end);
+  if (trash === "true") {
+    query = query.not("deleted_at", "is", null).order("deleted_at", { ascending: false });
+  } else {
+    query = query.is("deleted_at", null).order("reservation_time", { ascending: true });
+
+    if (phone) {
+      query = query.eq("phone", phone);
+    } else if (date) {
+      const start = `${date}T00:00:00`;
+      const end = `${date}T23:59:59`;
+      query = query.gte("reservation_time", start).lte("reservation_time", end);
+    } else if (from && to) {
+      const start = `${from}T00:00:00`;
+      const end = `${to}T23:59:59`;
+      query = query.gte("reservation_time", start).lte("reservation_time", end);
+    }
   }
 
   const { data, error } = await query;
@@ -83,7 +87,7 @@ export async function PATCH(req: NextRequest) {
   const supabase = createClient();
 
   try {
-    const { id, status, customerName, reservationTime, partySize, notes, date, tableId } =
+    const { id, status, customerName, reservationTime, partySize, notes, date, tableId, restore } =
       await req.json();
 
     if (!id) {
@@ -91,6 +95,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const updates: Record<string, unknown> = {};
+    if (restore === true) updates.deleted_at = null;
     if (status !== undefined) updates.status = status;
     if (customerName !== undefined) updates.customer_name = customerName;
     if (partySize !== undefined) updates.party_size = partySize;
@@ -123,13 +128,14 @@ export async function DELETE(req: NextRequest) {
   const supabase = createClient();
   const id = req.nextUrl.searchParams.get("id");
   const all = req.nextUrl.searchParams.get("all");
+  const permanent = req.nextUrl.searchParams.get("permanent");
 
   try {
     if (all === "true") {
       const { error } = await supabase
         .from("reservations")
-        .delete()
-        .neq("id", "00000000-0000-0000-0000-000000000000");
+        .update({ deleted_at: new Date().toISOString() })
+        .is("deleted_at", null);
 
       if (error) throw error;
       return NextResponse.json({ success: true });
@@ -139,9 +145,18 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
     }
 
-    const { error } = await supabase.from("reservations").delete().eq("id", id);
-    if (error) throw error;
+    if (permanent === "true") {
+      const { error } = await supabase.from("reservations").delete().eq("id", id);
+      if (error) throw error;
+      return NextResponse.json({ success: true });
+    }
 
+    const { error } = await supabase
+      .from("reservations")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id);
+
+    if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Errore eliminazione prenotazione:", err);
