@@ -7,10 +7,10 @@ export interface LoyaltyTier {
 }
 
 export const LOYALTY_TIERS: LoyaltyTier[] = [
-  { key: "new", label: "Nuovo", minVisits: 0, color: "#57534E", bg: "#F5F5F4" },
-  { key: "bronze", label: "Bronzo", minVisits: 3, color: "#92400E", bg: "#FEF3C7" },
-  { key: "silver", label: "Argento", minVisits: 7, color: "#475569", bg: "#E2E8F0" },
-  { key: "gold", label: "Oro", minVisits: 15, color: "#A16207", bg: "#FEF9C3" },
+  { key: "new", label: "Nuovo", minVisits: 0, color: "#A69686", bg: "#3A2C22" },
+  { key: "bronze", label: "Bronzo", minVisits: 3, color: "#C17F45", bg: "rgba(193,127,69,0.18)" },
+  { key: "silver", label: "Argento", minVisits: 7, color: "#C7CDD1", bg: "rgba(199,205,209,0.16)" },
+  { key: "gold", label: "Oro", minVisits: 15, color: "#E3A857", bg: "rgba(227,168,87,0.20)" },
 ];
 
 export function getLoyaltyTier(reservationCount: number): LoyaltyTier {
