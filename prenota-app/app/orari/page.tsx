@@ -137,25 +137,27 @@ export default function OrariPage() {
   }
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen bg-[#1A1310] p-4">
       <div className="mb-4 flex items-center gap-2">
         <button
           onClick={() => router.push("/impostazioni")}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Indietro"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-lg font-semibold text-ink">Orari e chiusure</h1>
+        <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Orari e chiusure</h1>
       </div>
 
       {error && (
-        <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
+        <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">
+          {error}
+        </p>
       )}
 
-      <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
-        <p className="mb-1 text-sm font-medium text-ink">Giorni di chiusura settimanali</p>
-        <p className="mb-3 text-xs text-ink-muted">
+      <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
+        <p className="mb-1 text-sm font-medium text-[#F0E9E0]">Giorni di chiusura settimanali</p>
+        <p className="mb-3 text-xs text-[#A69686]">
           Nei giorni selezionati, i clienti non potranno prenotare dal QR code.
         </p>
 
@@ -176,8 +178,8 @@ export default function OrariPage() {
                   disabled={isSavingWeekdays}
                   className={`touch-target rounded-xl border text-sm font-medium disabled:opacity-60 ${
                     isClosed
-                      ? "border-status-danger bg-status-dangerBg text-status-danger"
-                      : "border-black/10 text-ink-muted"
+                      ? "border-[#C0503D]/50 bg-[#C0503D]/15 text-[#D97A63]"
+                      : "border-[#3A2C22] text-[#A69686]"
                   }`}
                 >
                   {day.label}
@@ -188,31 +190,31 @@ export default function OrariPage() {
         )}
       </div>
 
-      <div className="rounded-xl border border-black/5 bg-white p-4">
+      <div className="rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
         <div className="mb-1 flex items-center justify-between">
-          <p className="text-sm font-medium text-ink">Eccezioni</p>
+          <p className="text-sm font-medium text-[#F0E9E0]">Eccezioni</p>
           <button
             onClick={() => setShowExceptionForm((v) => !v)}
-            className="touch-target flex items-center gap-1 text-xs font-medium text-primary"
+            className="touch-target flex items-center gap-1 text-xs font-medium text-[#C17F45]"
           >
             <Plus size={14} />
             Aggiungi
           </button>
         </div>
-        <p className="mb-3 text-xs text-ink-muted">
+        <p className="mb-3 text-xs text-[#A69686]">
           Chiudi per ferie un periodo normalmente aperto, oppure apri eccezionalmente un
           giorno di solito chiuso (es. un evento speciale di lunedì).
         </p>
 
         {showExceptionForm && (
-          <div className="mb-3 rounded-lg bg-bg-subtle p-3">
+          <div className="mb-3 rounded-lg border border-[#3A2C22] bg-[#1A1310] p-3">
             <div className="mb-2 flex gap-2">
               <button
                 onClick={() => setExceptionType("close")}
                 className={`touch-target flex flex-1 items-center justify-center gap-1.5 rounded-lg text-xs font-medium ${
                   exceptionType === "close"
-                    ? "bg-status-danger text-white"
-                    : "border border-black/10 text-ink-muted"
+                    ? "bg-[#C0503D] text-white"
+                    : "border border-[#3A2C22] text-[#A69686]"
                 }`}
               >
                 <CalendarX size={14} />
@@ -222,8 +224,8 @@ export default function OrariPage() {
                 onClick={() => setExceptionType("open")}
                 className={`touch-target flex flex-1 items-center justify-center gap-1.5 rounded-lg text-xs font-medium ${
                   exceptionType === "open"
-                    ? "bg-status-free text-white"
-                    : "border border-black/10 text-ink-muted"
+                    ? "bg-[#7C9473] text-[#1A1310]"
+                    : "border border-[#3A2C22] text-[#A69686]"
                 }`}
               >
                 <CalendarCheck size={14} />
@@ -236,25 +238,25 @@ export default function OrariPage() {
                 type="date"
                 value={exceptionFrom}
                 onChange={(e) => setExceptionFrom(e.target.value)}
-                className="flex-1 rounded-lg border border-black/10 px-2 py-2 text-sm"
+                className="flex-1 rounded-lg border border-[#3A2C22] bg-[#251C17] px-2 py-2 text-sm text-[#F0E9E0]"
               />
-              <span className="text-xs text-ink-muted">a</span>
+              <span className="text-xs text-[#A69686]">a</span>
               <input
                 type="date"
                 value={exceptionTo}
                 onChange={(e) => setExceptionTo(e.target.value)}
                 placeholder="Facoltativo"
-                className="flex-1 rounded-lg border border-black/10 px-2 py-2 text-sm"
+                className="flex-1 rounded-lg border border-[#3A2C22] bg-[#251C17] px-2 py-2 text-sm text-[#F0E9E0]"
               />
             </div>
-            <p className="mt-1 text-[11px] text-ink-muted">
+            <p className="mt-1 text-[11px] text-[#A69686]">
               Lascia vuoto il secondo campo per un solo giorno.
             </p>
 
             <button
               onClick={handleAddException}
               disabled={isSavingException}
-              className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2 text-sm font-medium text-white disabled:opacity-50"
+              className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2 text-sm font-medium text-[#1A1310] disabled:opacity-50"
             >
               {isSavingException && <Loader2 size={16} className="animate-spin" />}
               Salva eccezione
@@ -274,24 +276,24 @@ export default function OrariPage() {
             {exceptions.map((ex) => (
               <div
                 key={ex.id}
-                className="animate-fade-in flex items-center justify-between rounded-lg bg-bg-subtle px-3 py-2"
+                className="animate-fade-in flex items-center justify-between rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2"
               >
                 <div className="flex items-center gap-2">
                   {ex.is_open ? (
-                    <CalendarCheck size={15} className="text-status-free" />
+                    <CalendarCheck size={15} className="text-[#7C9473]" />
                   ) : (
-                    <CalendarX size={15} className="text-status-danger" />
+                    <CalendarX size={15} className="text-[#D97A63]" />
                   )}
                   <div>
-                    <p className="text-sm text-ink">{formatDate(ex.date)}</p>
-                    <p className="text-[11px] text-ink-muted">
+                    <p className="text-sm text-[#F0E9E0]">{formatDate(ex.date)}</p>
+                    <p className="text-[11px] text-[#A69686]">
                       {ex.is_open ? "Eccezionalmente aperto" : "Eccezionalmente chiuso"}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => handleDeleteException(ex.id)}
-                  className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                  className="touch-target grid place-items-center rounded-lg text-[#A69686] hover:bg-[#C0503D]/15 hover:text-[#D97A63]"
                   aria-label="Rimuovi eccezione"
                 >
                   <Trash2 size={15} />
