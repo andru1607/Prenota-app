@@ -61,6 +61,12 @@ function formatTimeInput(raw: string) {
   return digits.slice(0, 2) + ":" + digits.slice(2);
 }
 
+function SignatureLine({ className = "" }: { className?: string }) {
+  return (
+    <div className={`h-px w-14 bg-gradient-to-r from-[#C17F45] via-[#C17F45] to-transparent ${className}`} />
+  );
+}
+
 export default function TurniPage() {
   const router = useRouter();
   const { show } = useToast();
@@ -195,20 +201,23 @@ export default function TurniPage() {
   const isToday = selectedDate === todayDateString();
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen bg-[#1A1310] p-4">
       <div className="mb-4 flex items-center gap-2">
         <button
           onClick={() => router.push("/strumenti")}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Indietro"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="flex-1 text-lg font-semibold text-ink">Turni</h1>
+        <div className="flex-1">
+          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Turni</h1>
+          <SignatureLine className="mt-1" />
+        </div>
         {isAdmin && (
           <button
             onClick={() => setShowAddMember((v) => !v)}
-            className="touch-target flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-medium text-white"
+            className="touch-target flex items-center gap-1.5 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] px-3 py-2 text-sm font-medium text-[#1A1310]"
           >
             <UserPlus size={16} />
             Persona
@@ -217,12 +226,12 @@ export default function TurniPage() {
       </div>
 
       {showAddMember && (
-        <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
+        <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-sm font-medium text-ink">Nuova persona</p>
+            <p className="text-sm font-medium text-[#F0E9E0]">Nuova persona</p>
             <button
               onClick={() => setShowAddMember(false)}
-              className="touch-target grid place-items-center rounded-lg text-ink-muted"
+              className="touch-target grid place-items-center rounded-lg text-[#A69686]"
               aria-label="Chiudi"
             >
               <X size={16} />
@@ -234,33 +243,33 @@ export default function TurniPage() {
               onChange={(e) => setNewMemberName(e.target.value)}
               placeholder="Nome e cognome"
               autoFocus
-              className="flex-1 rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="flex-1 rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
             <button
               onClick={handleAddMember}
               disabled={!newMemberName.trim()}
-              className="touch-target rounded-lg bg-primary px-4 text-sm font-medium text-white disabled:opacity-40"
+              className="touch-target rounded-lg bg-gradient-to-b from-[#C17F45] to-[#A6683A] px-4 text-[#1A1310] disabled:opacity-40"
             >
               <Check size={16} />
             </button>
           </div>
-          <p className="mt-1.5 text-xs text-ink-muted">
+          <p className="mt-1.5 text-xs text-[#A69686]">
             Va bene anche chi non ha un account nell'app.
           </p>
         </div>
       )}
 
-      <div className="mb-4 flex items-center gap-2 rounded-xl border border-black/5 bg-white p-2">
+      <div className="mb-4 flex items-center gap-2 rounded-xl border border-[#3A2C22] bg-[#251C17] p-2">
         <button
           onClick={() => setSelectedDate((d) => shiftDate(d, -1))}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Giorno precedente"
         >
           <ChevronLeft size={20} />
         </button>
 
         <div className="relative flex-1">
-          <p className="pointer-events-none text-center text-sm font-medium text-ink">
+          <p className="num-tabular pointer-events-none text-center text-sm font-medium text-[#F0E9E0]">
             {formatDateLabel(selectedDate)}
           </p>
           <input
@@ -274,7 +283,7 @@ export default function TurniPage() {
 
         <button
           onClick={() => setSelectedDate((d) => shiftDate(d, 1))}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Giorno successivo"
         >
           <ChevronRight size={20} />
@@ -284,20 +293,22 @@ export default function TurniPage() {
       {!isToday && (
         <button
           onClick={() => setSelectedDate(todayDateString())}
-          className="mb-4 text-sm font-medium text-primary"
+          className="mb-4 text-sm font-medium text-[#C17F45]"
         >
           Torna a oggi
         </button>
       )}
 
       {!isAdmin && (
-        <p className="mb-3 rounded-lg bg-status-pendingBg p-3 text-sm text-status-pending">
+        <p className="mb-3 rounded-lg border border-[#E3A857]/40 bg-[#2A2115] p-3 text-sm text-[#E3A857]">
           Solo un amministratore può modificare i turni.
         </p>
       )}
 
       {error && (
-        <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
+        <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">
+          {error}
+        </p>
       )}
 
       {isLoading ? (
@@ -313,13 +324,13 @@ export default function TurniPage() {
           {members.map((member) => {
             const memberShifts = shiftsFor(member.id);
             return (
-              <div key={member.id} className="animate-fade-in rounded-xl border border-black/5 bg-white p-3">
+              <div key={member.id} className="animate-fade-in rounded-xl border border-[#3A2C22] bg-[#251C17] p-3">
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-ink">{member.name}</p>
+                  <p className="text-sm font-semibold text-[#F0E9E0]">{member.name}</p>
                   {isAdmin && (
                     <button
                       onClick={() => handleRemoveMember(member.id, member.name)}
-                      className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                      className="touch-target grid place-items-center rounded-lg text-[#A69686]"
                       aria-label="Rimuovi persona"
                     >
                       <Trash2 size={14} />
@@ -329,12 +340,12 @@ export default function TurniPage() {
 
                 <div className="flex flex-wrap items-center gap-1.5">
                   {memberShifts.length === 0 && (
-                    <span className="text-xs text-ink-muted">Nessun turno</span>
+                    <span className="text-xs text-[#A69686]">Nessun turno</span>
                   )}
                   {memberShifts.map((shift) => (
                     <span
                       key={shift.id}
-                      className="num-tabular flex items-center gap-1.5 rounded-full bg-primary-light px-3 py-1.5 text-xs font-medium text-primary"
+                      className="num-tabular flex items-center gap-1.5 rounded-full border border-[#C17F45]/30 bg-[#C17F45]/15 px-3 py-1.5 text-xs font-medium text-[#C17F45]"
                     >
                       {shift.start_time}–{shift.end_time}
                       {isAdmin && (
@@ -351,7 +362,7 @@ export default function TurniPage() {
                   {isAdmin && addingShiftFor !== member.id && (
                     <button
                       onClick={() => startAddShift(member.id)}
-                      className="touch-target flex items-center gap-1 rounded-full border border-dashed border-black/20 px-3 py-1.5 text-xs font-medium text-ink-muted"
+                      className="touch-target flex items-center gap-1 rounded-full border border-dashed border-[#3A2C22] px-3 py-1.5 text-xs font-medium text-[#A69686]"
                     >
                       <Plus size={13} />
                       Turno
@@ -368,26 +379,26 @@ export default function TurniPage() {
                       inputMode="numeric"
                       maxLength={5}
                       autoFocus
-                      className="num-tabular w-24 rounded-lg border border-black/10 px-2 py-1.5 text-sm"
+                      className="num-tabular w-24 rounded-lg border border-[#3A2C22] bg-[#1A1310] px-2 py-1.5 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                     />
-                    <span className="text-ink-muted">–</span>
+                    <span className="text-[#A69686]">–</span>
                     <input
                       value={newEnd}
                       onChange={(e) => setNewEnd(formatTimeInput(e.target.value))}
                       placeholder="A (15:00)"
                       inputMode="numeric"
                       maxLength={5}
-                      className="num-tabular w-24 rounded-lg border border-black/10 px-2 py-1.5 text-sm"
+                      className="num-tabular w-24 rounded-lg border border-[#3A2C22] bg-[#1A1310] px-2 py-1.5 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                     />
                     <button
                       onClick={() => handleAddShift(member.id)}
-                      className="touch-target rounded-lg bg-primary px-3 text-white"
+                      className="touch-target rounded-lg bg-gradient-to-b from-[#C17F45] to-[#A6683A] px-3 text-[#1A1310]"
                     >
                       <Check size={16} />
                     </button>
                     <button
                       onClick={() => setAddingShiftFor(null)}
-                      className="touch-target rounded-lg border border-black/10 px-3 text-ink-muted"
+                      className="touch-target rounded-lg border border-[#3A2C22] px-3 text-[#A69686]"
                     >
                       <X size={16} />
                     </button>
