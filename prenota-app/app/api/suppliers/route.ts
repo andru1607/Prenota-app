@@ -5,10 +5,12 @@ import { requireAdmin } from "@/lib/auth";
 
 export async function GET() {
   const supabase = createClient();
+  const restaurantId = await getRestaurantId(supabase);
 
   const { data, error } = await supabase
     .from("suppliers")
     .select("*")
+    .eq("restaurant_id", restaurantId)
     .order("name", { ascending: true });
 
   if (error) {
@@ -77,6 +79,8 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
     }
 
+    const restaurantId = await getRestaurantId(supabase);
+
     const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
     if (phone !== undefined) updates.phone = phone || null;
@@ -88,6 +92,7 @@ export async function PATCH(req: NextRequest) {
       .from("suppliers")
       .update(updates)
       .eq("id", id)
+      .eq("restaurant_id", restaurantId)
       .select()
       .single();
 
@@ -115,7 +120,13 @@ export async function DELETE(req: NextRequest) {
     );
   }
 
-  const { error } = await supabase.from("suppliers").delete().eq("id", id);
+  const restaurantId = await getRestaurantId(supabase);
+
+  const { error } = await supabase
+    .from("suppliers")
+    .delete()
+    .eq("id", id)
+    .eq("restaurant_id", restaurantId);
 
   if (error) {
     console.error("Errore eliminazione fornitore:", error);
