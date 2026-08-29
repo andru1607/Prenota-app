@@ -120,19 +120,19 @@ export default function StatistichePage() {
   }
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen bg-[#1A1310] p-4">
       <div className="mb-4 flex items-center gap-2">
         <button
           onClick={() => router.push("/impostazioni")}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Indietro"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="flex-1 text-lg font-semibold text-ink">Statistiche</h1>
+        <h1 className="flex-1 text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Statistiche</h1>
         <button
           onClick={load}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Aggiorna"
         >
           <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
@@ -143,7 +143,9 @@ export default function StatistichePage() {
         <button
           onClick={() => setRange("7")}
           className={`flex-1 rounded-xl py-2.5 text-sm font-medium ${
-            range === "7" ? "bg-primary text-white" : "border border-black/10 text-ink-muted"
+            range === "7"
+              ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+              : "border border-[#3A2C22] text-[#A69686]"
           }`}
         >
           Ultimi 7 giorni
@@ -151,7 +153,9 @@ export default function StatistichePage() {
         <button
           onClick={() => setRange("30")}
           className={`flex-1 rounded-xl py-2.5 text-sm font-medium ${
-            range === "30" ? "bg-primary text-white" : "border border-black/10 text-ink-muted"
+            range === "30"
+              ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+              : "border border-[#3A2C22] text-[#A69686]"
           }`}
         >
           Ultimi 30 giorni
@@ -159,59 +163,61 @@ export default function StatistichePage() {
       </div>
 
       {error && (
-        <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
+        <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">
+          {error}
+        </p>
       )}
 
-      <div className="mb-3 grid grid-cols-3 gap-3 rounded-xl border border-black/5 bg-white p-4">
+      <div className="mb-3 grid grid-cols-3 gap-3 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
         <div className="text-center">
-          <p className="num-tabular text-2xl font-bold text-ink">{totalCoperti}</p>
-          <p className="text-xs text-ink-muted">Coperti totali</p>
+          <p className="num-tabular text-2xl font-bold text-[#F0E9E0]">{totalCoperti}</p>
+          <p className="text-xs text-[#A69686]">Coperti totali</p>
         </div>
         <div className="text-center">
-          <p className="num-tabular text-2xl font-bold text-ink">
+          <p className="num-tabular text-2xl font-bold text-[#F0E9E0]">
             {Math.round(totalCoperti / days)}
           </p>
-          <p className="text-xs text-ink-muted">Media al giorno</p>
+          <p className="text-xs text-[#A69686]">Media al giorno</p>
         </div>
         <div className="text-center">
-          <p className="num-tabular text-2xl font-bold text-ink">{totalPrenotazioni}</p>
-          <p className="text-xs text-ink-muted">Prenotazioni</p>
+          <p className="num-tabular text-2xl font-bold text-[#F0E9E0]">{totalPrenotazioni}</p>
+          <p className="text-xs text-[#A69686]">Prenotazioni</p>
         </div>
       </div>
 
       <div className="mb-4 grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-black/5 bg-white p-4 text-center">
-          <p className="mb-1 flex items-center justify-center gap-1.5 text-xs font-medium uppercase text-ink-muted">
-            <span className="h-2 w-2 rounded-full bg-primary/40" />
+        <div className="rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4 text-center">
+          <p className="mb-1 flex items-center justify-center gap-1.5 text-xs font-medium uppercase tracking-wide text-[#A69686]">
+            <span className="h-2 w-2 rounded-full bg-[#E3A857]" />
             Pranzo
           </p>
-          <p className="num-tabular text-xl font-bold text-ink">{totalPranzo}</p>
-          <p className="text-xs text-ink-muted">coperti · media {mediaPranzo}/giorno</p>
+          <p className="num-tabular text-xl font-bold text-[#F0E9E0]">{totalPranzo}</p>
+          <p className="text-xs text-[#A69686]">coperti · media {mediaPranzo}/giorno</p>
         </div>
-        <div className="rounded-xl border border-black/5 bg-white p-4 text-center">
-          <p className="mb-1 flex items-center justify-center gap-1.5 text-xs font-medium uppercase text-ink-muted">
-            <span className="h-2 w-2 rounded-full bg-primary" />
+        <div className="rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4 text-center">
+          <p className="mb-1 flex items-center justify-center gap-1.5 text-xs font-medium uppercase tracking-wide text-[#A69686]">
+            <span className="h-2 w-2 rounded-full bg-[#C17F45]" />
             Cena
           </p>
-          <p className="num-tabular text-xl font-bold text-ink">{totalCena}</p>
-          <p className="text-xs text-ink-muted">coperti · media {mediaCena}/giorno</p>
+          <p className="num-tabular text-xl font-bold text-[#F0E9E0]">{totalCena}</p>
+          <p className="text-xs text-[#A69686]">coperti · media {mediaCena}/giorno</p>
         </div>
       </div>
 
       {bestDay && bestDay.copertiPranzo + bestDay.copertiCena > 0 && (
-        <p className="mb-4 text-sm text-ink-muted">
-          Giorno più pieno: <span className="font-medium text-ink">{formatDayLabel(bestDay.date)}</span>{" "}
-          con <span className="font-medium text-ink">{bestDay.copertiPranzo + bestDay.copertiCena}</span> coperti.
+        <p className="mb-4 text-sm text-[#A69686]">
+          Giorno più pieno: <span className="font-medium text-[#F0E9E0]">{formatDayLabel(bestDay.date)}</span>{" "}
+          con <span className="font-medium text-[#F0E9E0]">{bestDay.copertiPranzo + bestDay.copertiCena}</span> coperti.
         </p>
       )}
 
-      <div className="mb-2 flex items-center gap-4 text-xs text-ink-muted">
+      <div className="mb-2 flex items-center gap-4 text-xs text-[#A69686]">
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-primary/40" />
+          <span className="h-2 w-2 rounded-full bg-[#E3A857]" />
           Pranzo
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-primary" />
+          <span className="h-2 w-2 rounded-full bg-[#C17F45]" />
           Cena
         </span>
       </div>
@@ -221,22 +227,22 @@ export default function StatistichePage() {
           const total = d.copertiPranzo + d.copertiCena;
           return (
             <div key={d.date} className="flex items-center gap-3">
-              <span className="w-16 shrink-0 text-xs text-ink-muted">{formatDayLabel(d.date)}</span>
-              <div className="flex h-6 flex-1 overflow-hidden rounded-md bg-bg-subtle">
+              <span className="w-16 shrink-0 text-xs text-[#A69686]">{formatDayLabel(d.date)}</span>
+              <div className="flex h-6 flex-1 overflow-hidden rounded-md bg-[#251C17]">
                 {d.copertiPranzo > 0 && (
                   <div
-                    className="h-full bg-primary/40 transition-all"
+                    className="h-full bg-[#E3A857] transition-all"
                     style={{ width: `${(d.copertiPranzo / maxCoperti) * 100}%` }}
                   />
                 )}
                 {d.copertiCena > 0 && (
                   <div
-                    className="h-full bg-primary transition-all"
+                    className="h-full bg-[#C17F45] transition-all"
                     style={{ width: `${(d.copertiCena / maxCoperti) * 100}%` }}
                   />
                 )}
               </div>
-              <span className="num-tabular w-8 shrink-0 text-right text-xs font-medium text-ink">
+              <span className="num-tabular w-8 shrink-0 text-right text-xs font-medium text-[#F0E9E0]">
                 {total}
               </span>
             </div>
@@ -245,7 +251,7 @@ export default function StatistichePage() {
       </div>
 
       {totalCoperti === 0 && !isLoading && (
-        <p className="mt-6 text-center text-sm text-ink-muted">
+        <p className="mt-6 text-center text-sm text-[#A69686]">
           Nessuna prenotazione trovata in questo periodo.
         </p>
       )}
