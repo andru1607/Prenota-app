@@ -30,7 +30,7 @@ type ReviewRow = {
   productName: string;
   quantity: string;
   confidence: "high" | "medium" | "low";
-  mappedId: string; // id prodotto esistente, oppure "__new__"
+  mappedId: string;
 };
 
 function findMatch(name: string, prodotti: Prodotto[]): Prodotto | null {
@@ -193,25 +193,28 @@ export default function FatturaImportPage() {
   }
 
   return (
-    <div className="p-4">
-      <Link href="/magazzino" className="mb-3 flex items-center gap-1 text-xs font-medium text-ink-muted">
+    <div className="min-h-screen bg-[#1A1310] p-4">
+      <Link href="/magazzino" className="mb-3 flex items-center gap-1 text-xs font-medium text-[#A69686]">
         <ArrowLeft size={14} />
         Magazzino
       </Link>
 
       <div className="mb-4 flex items-center gap-3">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-primary-light text-primary">
-          <FileText size={22} />
+        <div className="relative grid h-12 w-12 shrink-0 place-items-center">
+          <div className="absolute inset-0 rounded-full bg-[#E3A857] opacity-20 blur-md" />
+          <div className="relative grid h-12 w-12 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
+            <FileText size={20} />
+          </div>
         </div>
         <div>
-          <h1 className="text-lg font-semibold text-ink">Leggi fattura</h1>
-          <p className="text-xs text-ink-muted">Nulla si salva finché non confermi tu</p>
+          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Leggi fattura</h1>
+          <p className="text-xs text-[#A69686]">Nulla si salva finché non confermi tu</p>
         </div>
       </div>
 
       {!rows && (
-        <div className="rounded-xl border border-black/5 bg-white p-4">
-          <p className="mb-3 text-sm text-ink-muted">
+        <div className="rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
+          <p className="mb-3 text-sm text-[#A69686]">
             Fai una foto o carica un'immagine della fattura o della bolla di consegna. Puoi selezionare
             più foto insieme se copre più pagine.
           </p>
@@ -237,7 +240,7 @@ export default function FatturaImportPage() {
             <button
               onClick={() => galleryInputRef.current?.click()}
               disabled={isProcessing}
-              className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-black/10 py-2.5 text-sm font-medium text-ink-muted disabled:opacity-60"
+              className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#3A2C22] py-2.5 text-sm font-medium text-[#A69686] disabled:opacity-60"
             >
               <ImageIcon size={16} />
               Galleria
@@ -245,7 +248,7 @@ export default function FatturaImportPage() {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isProcessing}
-              className="touch-target flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-60"
+              className="touch-target flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2.5 text-sm font-medium text-[#1A1310] disabled:opacity-60"
             >
               {isProcessing ? (
                 <>
@@ -261,25 +264,25 @@ export default function FatturaImportPage() {
             </button>
           </div>
 
-          {error && <p className="mt-3 text-sm text-status-danger">{error}</p>}
+          {error && <p className="mt-3 text-sm text-[#D97A63]">{error}</p>}
         </div>
       )}
 
       {rows && (
         <>
-          <p className="mb-3 text-sm text-ink-muted">
+          <p className="mb-3 text-sm text-[#A69686]">
             Controlla ogni riga: nome, quantità e a quale prodotto del tuo magazzino corrisponde.
           </p>
 
           <div className="space-y-3">
             {rows.map((row) => (
-              <div key={row.id} className="rounded-xl border border-black/5 bg-white p-3">
+              <div key={row.id} className="rounded-xl border border-[#3A2C22] bg-[#251C17] p-3">
                 <div className="mb-2 flex items-center gap-2">
                   <input
                     value={row.productName}
                     onChange={(e) => updateRow(row.id, "productName", e.target.value)}
                     placeholder="Nome prodotto"
-                    className="min-w-0 flex-1 rounded-lg border border-black/10 px-3 py-2 text-sm"
+                    className="min-w-0 flex-1 rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                   />
                   <input
                     type="number"
@@ -287,11 +290,11 @@ export default function FatturaImportPage() {
                     value={row.quantity}
                     onChange={(e) => updateRow(row.id, "quantity", e.target.value)}
                     placeholder="Qtà"
-                    className="w-16 shrink-0 rounded-lg border border-black/10 px-2 py-2 text-center text-sm"
+                    className="num-tabular w-16 shrink-0 rounded-lg border border-[#3A2C22] bg-[#1A1310] px-2 py-2 text-center text-sm text-[#F0E9E0] focus:border-[#C17F45]/60 focus:outline-none"
                   />
                   <button
                     onClick={() => removeRow(row.id)}
-                    className="touch-target grid h-9 w-9 shrink-0 place-items-center rounded-lg text-ink-muted"
+                    className="touch-target grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[#A69686]"
                     aria-label="Rimuovi riga"
                   >
                     <Trash2 size={16} />
@@ -301,7 +304,7 @@ export default function FatturaImportPage() {
                 <select
                   value={row.mappedId}
                   onChange={(e) => updateRow(row.id, "mappedId", e.target.value)}
-                  className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0]"
                 >
                   <option value="__new__">+ Nuovo prodotto</option>
                   {prodotti.map((p) => (
@@ -312,7 +315,7 @@ export default function FatturaImportPage() {
                 </select>
 
                 {row.confidence === "low" && (
-                  <p className="mt-2 flex items-center gap-1 text-xs text-amber-700">
+                  <p className="mt-2 flex items-center gap-1 text-xs text-[#E3A857]">
                     <AlertTriangle size={12} />
                     Lettura incerta, ricontrolla questa riga
                   </p>
@@ -321,12 +324,12 @@ export default function FatturaImportPage() {
             ))}
           </div>
 
-          {error && <p className="mt-3 text-sm text-status-danger">{error}</p>}
+          {error && <p className="mt-3 text-sm text-[#D97A63]">{error}</p>}
 
           <button
             onClick={handleConfirmAll}
             disabled={isSaving}
-            className="touch-target mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-50"
+            className="touch-target mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2.5 text-sm font-medium text-[#1A1310] shadow-[0_0_18px_rgba(227,168,87,0.25)] disabled:opacity-50"
           >
             {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
             {isSaving ? "Salvo..." : `Conferma e aggiorna magazzino (${rows.length})`}
