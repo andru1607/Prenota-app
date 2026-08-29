@@ -5,10 +5,12 @@ import { requireAdmin } from "@/lib/auth";
 
 export async function GET() {
   const supabase = createClient();
+  const restaurantId = await getRestaurantId(supabase);
 
   const { data, error } = await supabase
     .from("haccp_points")
     .select("*")
+    .eq("restaurant_id", restaurantId)
     .order("name", { ascending: true });
 
   if (error) {
@@ -73,7 +75,13 @@ export async function DELETE(req: NextRequest) {
     );
   }
 
-  const { error } = await supabase.from("haccp_points").delete().eq("id", id);
+  const restaurantId = await getRestaurantId(supabase);
+
+  const { error } = await supabase
+    .from("haccp_points")
+    .delete()
+    .eq("id", id)
+    .eq("restaurant_id", restaurantId);
 
   if (error) {
     console.error("Errore eliminazione punto di controllo:", error);
