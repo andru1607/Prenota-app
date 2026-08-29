@@ -48,7 +48,7 @@ export function BottomNav() {
   const items = businessType === "bar" ? BAR_NAV_ITEMS : RISTORANTE_NAV_ITEMS;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-10 flex border-t border-black/5 bg-white md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-10 flex border-t border-[#3A2C22] bg-[#251C17] md:hidden">
       {items.map(({ href, label, icon: Icon }) => {
         const active = pathname.startsWith(href);
         return (
@@ -56,7 +56,7 @@ export function BottomNav() {
             key={href}
             href={href}
             className={`touch-target flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-xs font-medium ${
-              active ? "text-primary" : "text-ink-muted"
+              active ? "text-[#C17F45]" : "text-[#A69686]"
             }`}
           >
             <Icon size={20} />
