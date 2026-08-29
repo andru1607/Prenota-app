@@ -71,15 +71,15 @@ export function OnboardingGuide() {
   if (!visible) return null;
 
   return (
-    <div className="mx-4 mt-4 rounded-xl border border-primary/20 bg-primary-light p-4">
+    <div className="mx-4 mt-4 rounded-2xl border border-[#E3A857]/30 bg-[#E3A857]/10 p-4">
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Sparkles size={18} className="text-primary" />
-          <p className="text-sm font-semibold text-ink">Benvenuto! Completa la configurazione</p>
+          <Sparkles size={18} className="text-[#E3A857]" />
+          <p className="text-sm font-semibold text-[#F0E9E0]">Benvenuto! Completa la configurazione</p>
         </div>
         <button
           onClick={handleDismiss}
-          className="touch-target grid shrink-0 place-items-center rounded-lg text-ink-muted"
+          className="touch-target grid shrink-0 place-items-center rounded-lg text-[#A69686]"
           aria-label="Chiudi"
         >
           <X size={18} />
@@ -94,14 +94,14 @@ export function OnboardingGuide() {
               key={step.title}
               href={step.href}
               onClick={handleDismiss}
-              className="touch-target flex items-center gap-3 rounded-lg bg-white p-3"
+              className="touch-target flex items-center gap-3 rounded-lg border border-[#3A2C22] bg-[#251C17] p-3"
             >
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary-light text-primary">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
                 <Icon size={17} />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-ink">{step.title}</p>
-                <p className="text-xs text-ink-muted">{step.description}</p>
+                <p className="text-sm font-medium text-[#F0E9E0]">{step.title}</p>
+                <p className="text-xs text-[#A69686]">{step.description}</p>
               </div>
             </Link>
           );
@@ -110,7 +110,7 @@ export function OnboardingGuide() {
 
       <button
         onClick={handleDismiss}
-        className="mt-3 w-full text-center text-xs font-medium text-ink-muted"
+        className="mt-3 w-full text-center text-xs font-medium text-[#A69686]"
       >
         Salta per ora
       </button>
