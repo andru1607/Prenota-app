@@ -271,31 +271,31 @@ export default function TavoliPage() {
   ].filter((group) => group.tables.length > 0 || group.room !== null);
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen bg-[#1A1310] p-4">
       <div className="mb-4 flex items-center gap-2">
         <button
           onClick={() => router.push("/strumenti")}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Indietro"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="flex-1 text-lg font-semibold text-ink">Tavoli</h1>
-        <span className="text-sm text-ink-muted">{tables.length} totali</span>
+        <h1 className="flex-1 text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Tavoli</h1>
+        <span className="num-tabular text-sm text-[#A69686]">{tables.length} totali</span>
       </div>
 
-      <div className="mb-3 rounded-xl border border-black/5 bg-white p-4">
+      <div className="mb-3 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
         <button
           onClick={() => setShowRooms((v) => !v)}
           className="touch-target flex w-full items-center justify-between"
         >
-          <span className="text-sm font-medium text-ink">
+          <span className="text-sm font-medium text-[#F0E9E0]">
             Sale {rooms.length > 0 && `(${rooms.length})`}
           </span>
           {showRooms ? (
-            <ChevronDown size={18} className="text-ink-muted" />
+            <ChevronDown size={18} className="text-[#A69686]" />
           ) : (
-            <ChevronRightIcon size={18} className="text-ink-muted" />
+            <ChevronRightIcon size={18} className="text-[#A69686]" />
           )}
         </button>
 
@@ -307,12 +307,12 @@ export default function TavoliPage() {
                   value={newRoomName}
                   onChange={(e) => setNewRoomName(e.target.value)}
                   placeholder="Es. Piazza, Interno, Veranda"
-                  className="flex-1 rounded-lg border border-black/10 px-3 py-2 text-sm"
+                  className="flex-1 rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                 />
                 <button
                   onClick={handleAddRoom}
                   disabled={!newRoomName.trim()}
-                  className="touch-target rounded-lg bg-primary px-3 text-white disabled:opacity-40"
+                  className="touch-target rounded-lg bg-gradient-to-b from-[#C17F45] to-[#A6683A] px-3 text-[#1A1310] disabled:opacity-40"
                 >
                   <Plus size={16} />
                 </button>
@@ -320,7 +320,7 @@ export default function TavoliPage() {
             )}
 
             {rooms.length === 0 ? (
-              <p className="text-xs text-ink-muted">
+              <p className="text-xs text-[#A69686]">
                 Nessuna sala ancora. I tavoli senza sala compaiono tutti insieme qui sotto.
               </p>
             ) : (
@@ -328,7 +328,7 @@ export default function TavoliPage() {
                 {rooms.map((room) => (
                   <div
                     key={room.id}
-                    className="flex items-center justify-between gap-2 rounded-lg bg-bg-subtle p-2.5"
+                    className="flex items-center justify-between gap-2 rounded-lg border border-[#3A2C22] bg-[#1A1310] p-2.5"
                   >
                     {editingRoomId === room.id ? (
                       <>
@@ -336,36 +336,36 @@ export default function TavoliPage() {
                           value={editingRoomName}
                           onChange={(e) => setEditingRoomName(e.target.value)}
                           autoFocus
-                          className="flex-1 rounded-lg border border-black/10 px-2 py-1 text-sm"
+                          className="flex-1 rounded-lg border border-[#3A2C22] bg-[#251C17] px-2 py-1 text-sm text-[#F0E9E0] focus:border-[#C17F45]/60 focus:outline-none"
                         />
                         <button
                           onClick={handleSaveRoomName}
-                          className="touch-target grid place-items-center rounded-lg text-primary"
+                          className="touch-target grid place-items-center rounded-lg text-[#C17F45]"
                         >
                           <Check size={16} />
                         </button>
                         <button
                           onClick={() => setEditingRoomId(null)}
-                          className="touch-target grid place-items-center rounded-lg text-ink-muted"
+                          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
                         >
                           <X size={16} />
                         </button>
                       </>
                     ) : (
                       <>
-                        <span className="text-sm text-ink">{room.name}</span>
+                        <span className="text-sm text-[#F0E9E0]">{room.name}</span>
                         {isAdmin && (
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => startEditRoom(room)}
-                              className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-white"
+                              className="touch-target grid place-items-center rounded-lg text-[#A69686]"
                               aria-label="Rinomina sala"
                             >
                               <Pencil size={14} />
                             </button>
                             <button
                               onClick={() => handleDeleteRoom(room.id, room.name)}
-                              className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                              className="touch-target grid place-items-center rounded-lg text-[#A69686] hover:bg-[#C0503D]/15 hover:text-[#D97A63]"
                               aria-label="Elimina sala"
                             >
                               <Trash2 size={14} />
@@ -383,26 +383,26 @@ export default function TavoliPage() {
       </div>
 
       {isAdmin && (
-        <div className="mb-3 rounded-xl border border-black/5 bg-white p-4">
-          <p className="mb-2 text-sm font-medium text-ink">Aggiungi un tavolo</p>
+        <div className="mb-3 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
+          <p className="mb-2 text-sm font-medium text-[#F0E9E0]">Aggiungi un tavolo</p>
           <div className="mb-2 flex gap-2">
             <input
               value={newNumber}
               onChange={(e) => setNewNumber(e.target.value)}
               placeholder="Numero"
-              className="w-20 rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="w-20 rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
             <input
               type="number"
               value={newCapacity}
               onChange={(e) => setNewCapacity(e.target.value)}
               placeholder="Coperti"
-              className="w-20 rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="w-20 rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
             <button
               onClick={handleAddTable}
               disabled={isAdding || !newNumber.trim()}
-              className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary text-sm font-medium text-white disabled:opacity-40"
+              className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-sm font-medium text-[#1A1310] disabled:opacity-40"
             >
               {isAdding ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
               Aggiungi
@@ -412,7 +412,7 @@ export default function TavoliPage() {
             <select
               value={newRoomId}
               onChange={(e) => setNewRoomId(e.target.value)}
-              className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm text-ink"
+              className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0]"
             >
               <option value="">Nessuna sala</option>
               {rooms.map((r) => (
@@ -425,15 +425,15 @@ export default function TavoliPage() {
 
           <button
             onClick={() => setShowBulk((v) => !v)}
-            className="mt-3 flex items-center gap-1.5 text-xs font-medium text-primary"
+            className="mt-3 flex items-center gap-1.5 text-xs font-medium text-[#C17F45]"
           >
             <Layers size={14} />
             {showBulk ? "Nascondi creazione in serie" : "Crea tanti tavoli insieme"}
           </button>
 
           {showBulk && (
-            <div className="mt-3 rounded-lg bg-bg-subtle p-3">
-              <p className="mb-2 text-xs text-ink-muted">
+            <div className="mt-3 rounded-lg border border-[#3A2C22] bg-[#1A1310] p-3">
+              <p className="mb-2 text-xs text-[#A69686]">
                 Es. dal tavolo 1 al 38, tutti da 4 coperti, tutti nella stessa sala.
               </p>
               <div className="mb-2 flex items-center gap-2">
@@ -442,29 +442,29 @@ export default function TavoliPage() {
                   onChange={(e) => setBulkFrom(e.target.value)}
                   placeholder="Da"
                   type="number"
-                  className="w-16 rounded-lg border border-black/10 px-2 py-2 text-sm"
+                  className="w-16 rounded-lg border border-[#3A2C22] bg-[#251C17] px-2 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                 />
-                <span className="text-ink-muted">–</span>
+                <span className="text-[#A69686]">–</span>
                 <input
                   value={bulkTo}
                   onChange={(e) => setBulkTo(e.target.value)}
                   placeholder="A"
                   type="number"
-                  className="w-16 rounded-lg border border-black/10 px-2 py-2 text-sm"
+                  className="w-16 rounded-lg border border-[#3A2C22] bg-[#251C17] px-2 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                 />
                 <input
                   value={bulkCapacity}
                   onChange={(e) => setBulkCapacity(e.target.value)}
                   placeholder="Coperti"
                   type="number"
-                  className="w-20 rounded-lg border border-black/10 px-2 py-2 text-sm"
+                  className="w-20 rounded-lg border border-[#3A2C22] bg-[#251C17] px-2 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                 />
               </div>
               {rooms.length > 0 && (
                 <select
                   value={bulkRoomId}
                   onChange={(e) => setBulkRoomId(e.target.value)}
-                  className="mb-2 w-full rounded-lg border border-black/10 px-3 py-2 text-sm text-ink"
+                  className="mb-2 w-full rounded-lg border border-[#3A2C22] bg-[#251C17] px-3 py-2 text-sm text-[#F0E9E0]"
                 >
                   <option value="">Nessuna sala</option>
                   {rooms.map((r) => (
@@ -477,7 +477,7 @@ export default function TavoliPage() {
               <button
                 onClick={handleBulkAdd}
                 disabled={isBulkAdding || !bulkFrom || !bulkTo}
-                className="touch-target flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary text-sm font-medium text-white disabled:opacity-40"
+                className="touch-target flex w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-sm font-medium text-[#1A1310] disabled:opacity-40"
               >
                 {isBulkAdding && <Loader2 size={16} className="animate-spin" />}
                 Crea tavoli
@@ -488,48 +488,50 @@ export default function TavoliPage() {
       )}
 
       {error && (
-        <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
+        <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">
+          {error}
+        </p>
       )}
 
       {isLoading ? (
-        <p className="py-8 text-center text-sm text-ink-muted">Carico i tavoli...</p>
+        <p className="py-8 text-center text-sm text-[#A69686]">Carico i tavoli...</p>
       ) : tables.length === 0 ? (
-        <p className="py-8 text-center text-sm text-ink-muted">
+        <p className="py-8 text-center text-sm text-[#A69686]">
           Nessun tavolo ancora. Aggiungine uno qui sopra.
         </p>
       ) : (
         <div className="space-y-5">
           {roomGroups.map((group) => (
             <div key={group.room?.id ?? "senza-sala"}>
-              <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#A69686]">
                 {group.room?.name ?? "Senza sala"}
               </p>
               <div className="grid grid-cols-2 gap-2">
                 {group.tables.map((table) => (
                   <div
                     key={table.id}
-                    className="flex items-center justify-between rounded-xl border border-black/5 bg-white p-3"
+                    className="flex items-center justify-between rounded-xl border border-[#3A2C22] bg-[#251C17] p-3"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-ink">Tavolo {table.number}</p>
+                      <p className="font-semibold text-[#F0E9E0]">Tavolo {table.number}</p>
                       <div className="mt-1 flex items-center gap-1">
                         {isAdmin ? (
                           <input
                             type="number"
                             value={table.capacity}
                             onChange={(e) => handleCapacityChange(table.id, Number(e.target.value))}
-                            className="num-tabular w-14 rounded border border-black/10 px-1.5 py-1 text-xs"
+                            className="num-tabular w-14 rounded border border-[#3A2C22] bg-[#1A1310] px-1.5 py-1 text-xs text-[#F0E9E0]"
                           />
                         ) : (
-                          <span className="num-tabular text-xs text-ink">{table.capacity}</span>
+                          <span className="num-tabular text-xs text-[#F0E9E0]">{table.capacity}</span>
                         )}
-                        <span className="text-xs text-ink-muted">coperti</span>
+                        <span className="text-xs text-[#A69686]">coperti</span>
                       </div>
                       {isAdmin && rooms.length > 0 && (
                         <select
                           value={table.roomId ?? ""}
                           onChange={(e) => handleRoomChange(table.id, e.target.value)}
-                          className="mt-1 w-full rounded border border-black/10 px-1 py-0.5 text-[11px] text-ink-muted"
+                          className="mt-1 w-full rounded border border-[#3A2C22] bg-[#1A1310] px-1 py-0.5 text-[11px] text-[#A69686]"
                         >
                           <option value="">Nessuna sala</option>
                           {rooms.map((r) => (
@@ -543,7 +545,7 @@ export default function TavoliPage() {
                     {isAdmin && (
                       <button
                         onClick={() => handleDelete(table.id, table.number)}
-                        className="touch-target grid shrink-0 place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                        className="touch-target grid shrink-0 place-items-center rounded-lg text-[#A69686] hover:bg-[#C0503D]/15 hover:text-[#D97A63]"
                         aria-label="Elimina tavolo"
                       >
                         <Trash2 size={16} />
