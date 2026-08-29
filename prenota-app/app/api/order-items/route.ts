@@ -4,10 +4,12 @@ import { getRestaurantId } from "@/lib/restaurant";
 
 export async function GET() {
   const supabase = createClient();
+  const restaurantId = await getRestaurantId(supabase);
 
   const { data, error } = await supabase
     .from("order_items")
     .select("*, suppliers(id, name)")
+    .eq("restaurant_id", restaurantId)
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -61,6 +63,8 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
     }
 
+    const restaurantId = await getRestaurantId(supabase);
+
     const updates: Record<string, unknown> = {};
     if (isOrdered !== undefined) updates.is_ordered = isOrdered;
     if (quantity !== undefined) updates.quantity = quantity || null;
@@ -69,6 +73,7 @@ export async function PATCH(req: NextRequest) {
       .from("order_items")
       .update(updates)
       .eq("id", id)
+      .eq("restaurant_id", restaurantId)
       .select()
       .single();
 
@@ -87,8 +92,9 @@ export async function DELETE(req: NextRequest) {
   const clearOrdered = req.nextUrl.searchParams.get("clearOrdered");
 
   try {
+    const restaurantId = await getRestaurantId(supabase);
+
     if (clearOrdered === "true") {
-      const restaurantId = await getRestaurantId(supabase);
       const { error } = await supabase
         .from("order_items")
         .delete()
@@ -103,7 +109,11 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Parametro 'id' obbligatorio." }, { status: 400 });
     }
 
-    const { error } = await supabase.from("order_items").delete().eq("id", id);
+    const { error } = await supabase
+      .from("order_items")
+      .delete()
+      .eq("id", id)
+      .eq("restaurant_id", restaurantId);
     if (error) throw error;
 
     return NextResponse.json({ success: true });
