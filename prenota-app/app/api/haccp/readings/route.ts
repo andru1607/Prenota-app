@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   const supabase = createClient();
+  const restaurantId = await getRestaurantId(supabase);
   const pointId = req.nextUrl.searchParams.get("pointId");
   const limit = Number(req.nextUrl.searchParams.get("limit") ?? "20");
   const latest = req.nextUrl.searchParams.get("latest");
@@ -12,6 +13,7 @@ export async function GET(req: NextRequest) {
   let query = supabase
     .from("haccp_readings")
     .select("*")
+    .eq("restaurant_id", restaurantId)
     .order("recorded_at", { ascending: false });
 
   if (pointId) {
@@ -86,7 +88,13 @@ export async function DELETE(req: NextRequest) {
     );
   }
 
-  const { error } = await supabase.from("haccp_readings").delete().eq("id", id);
+  const restaurantId = await getRestaurantId(supabase);
+
+  const { error } = await supabase
+    .from("haccp_readings")
+    .delete()
+    .eq("id", id)
+    .eq("restaurant_id", restaurantId);
 
   if (error) {
     console.error("Errore eliminazione lettura:", error);
