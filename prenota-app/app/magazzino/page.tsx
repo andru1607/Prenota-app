@@ -49,6 +49,12 @@ function stockRank(p: Prodotto) {
   return 2;
 }
 
+function SignatureLine({ className = "" }: { className?: string }) {
+  return (
+    <div className={`h-px w-14 bg-gradient-to-r from-[#C17F45] via-[#C17F45] to-transparent ${className}`} />
+  );
+}
+
 export default function MagazzinoPage() {
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [prodotti, setProdotti] = useState<Prodotto[]>([]);
@@ -188,7 +194,6 @@ export default function MagazzinoPage() {
     const nextValue = Math.max(0, target.bottiglie_chiuse + delta);
     if (nextValue === target.bottiglie_chiuse) return;
 
-    // Aggiorno subito l'interfaccia, poi salvo — così il tap sembra istantaneo
     setProdotti((prev) => prev.map((p) => (p.id === id ? { ...p, bottiglie_chiuse: nextValue } : p)));
 
     const supabase = createClient();
@@ -207,68 +212,68 @@ export default function MagazzinoPage() {
 
   function renderForm() {
     return (
-      <div className="mb-3 rounded-xl border border-primary bg-primary-light p-4">
+      <div className="mb-3 rounded-2xl border border-[#C17F45]/40 bg-gradient-to-b from-[#2A211C] to-[#1F1712] p-4">
         <div className="space-y-2">
           <input
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             placeholder="Nome prodotto (es. Gin Bombay Sapphire)"
             autoFocus
-            className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           />
           <input
             value={form.category}
             onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
             placeholder="Categoria (es. Gin)"
-            className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           />
           <div className="grid grid-cols-2 gap-2">
-            <label className="text-xs text-ink-muted">
+            <label className="text-xs text-[#A69686]">
               Capacità bottiglia (ml)
               <input
                 type="number"
                 value={form.capacita_standard_ml}
                 onChange={(e) => setForm((f) => ({ ...f, capacita_standard_ml: e.target.value }))}
-                className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                className="num-tabular mt-1 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] focus:border-[#C17F45]/60 focus:outline-none"
               />
             </label>
-            <label className="text-xs text-ink-muted">
+            <label className="text-xs text-[#A69686]">
               Soglia minima (bottiglie)
               <input
                 type="number"
                 value={form.soglia_minima}
                 onChange={(e) => setForm((f) => ({ ...f, soglia_minima: e.target.value }))}
-                className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                className="num-tabular mt-1 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] focus:border-[#C17F45]/60 focus:outline-none"
               />
             </label>
-            <label className="text-xs text-ink-muted">
+            <label className="text-xs text-[#A69686]">
               Bottiglie chiuse in stock
               <input
                 type="number"
                 value={form.bottiglie_chiuse}
                 onChange={(e) => setForm((f) => ({ ...f, bottiglie_chiuse: e.target.value }))}
-                className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                className="num-tabular mt-1 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] focus:border-[#C17F45]/60 focus:outline-none"
               />
             </label>
-            <label className="text-xs text-ink-muted">
+            <label className="text-xs text-[#A69686]">
               Bottiglia aperta (ml rimasti)
               <input
                 type="number"
                 value={form.ml_rimanenti_bottiglia_aperta}
                 onChange={(e) => setForm((f) => ({ ...f, ml_rimanenti_bottiglia_aperta: e.target.value }))}
                 placeholder="vuoto = nessuna aperta"
-                className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                className="num-tabular mt-1 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
               />
             </label>
           </div>
         </div>
 
-        {error && <p className="mt-2 text-sm text-status-danger">{error}</p>}
+        {error && <p className="mt-2 text-sm text-[#D97A63]">{error}</p>}
 
         <div className="mt-3 flex gap-2">
           <button
             onClick={cancelEdit}
-            className="touch-target flex flex-1 items-center justify-center gap-1 rounded-xl border border-black/10 bg-white py-2 text-sm font-medium text-ink-muted"
+            className="touch-target flex flex-1 items-center justify-center gap-1 rounded-xl border border-[#3A2C22] bg-[#1A1310] py-2 text-sm font-medium text-[#A69686]"
           >
             <X size={14} />
             Annulla
@@ -277,7 +282,7 @@ export default function MagazzinoPage() {
             <button
               onClick={() => handleDelete(editingId)}
               disabled={isSaving}
-              className="touch-target flex items-center justify-center gap-1 rounded-xl border border-status-danger px-3 py-2 text-sm font-medium text-status-danger"
+              className="touch-target flex items-center justify-center gap-1 rounded-xl border border-[#C0503D]/50 px-3 py-2 text-sm font-medium text-[#D97A63]"
             >
               <Trash2 size={14} />
             </button>
@@ -285,7 +290,7 @@ export default function MagazzinoPage() {
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="touch-target flex flex-1 items-center justify-center gap-1 rounded-xl bg-primary py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="touch-target flex flex-1 items-center justify-center gap-1 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2 text-sm font-medium text-[#1A1310] disabled:opacity-50"
           >
             {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
             Salva
@@ -296,21 +301,24 @@ export default function MagazzinoPage() {
   }
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen bg-[#1A1310] p-4">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-ink">Magazzino</h1>
+        <div>
+          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Magazzino</h1>
+          <SignatureLine className="mt-1.5" />
+        </div>
         {editingId === null && (
           <div className="flex items-center gap-2">
             <Link
               href="/magazzino/fattura"
-              className="touch-target flex items-center gap-1.5 rounded-lg border border-black/10 px-3 py-2 text-xs font-medium text-ink-muted"
+              className="touch-target flex items-center gap-1.5 rounded-lg border border-[#3A2C22] bg-[#251C17] px-3 py-2 text-xs font-medium text-[#A69686]"
             >
-              <FileText size={14} />
+              <FileText size={14} className="text-[#C17F45]" />
               Leggi fattura
             </Link>
             <button
               onClick={startNew}
-              className="touch-target grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary text-white"
+              className="touch-target grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310] shadow-[0_0_18px_rgba(227,168,87,0.35)]"
               aria-label="Aggiungi prodotto"
             >
               <Plus size={18} />
@@ -324,8 +332,8 @@ export default function MagazzinoPage() {
           onClick={() => setSoloScorteBasse((v) => !v)}
           className={`mb-3 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium ${
             soloScorteBasse
-              ? "bg-status-danger text-white"
-              : "bg-status-dangerBg text-status-danger"
+              ? "bg-[#C0503D] text-[#F5E9E4]"
+              : "border border-[#C0503D]/40 bg-[#2A1B14] text-[#E8977C]"
           }`}
         >
           <AlertTriangle size={16} className="shrink-0" />
@@ -341,11 +349,11 @@ export default function MagazzinoPage() {
       {editingId === "new" && renderForm()}
 
       {isLoading ? (
-        <div className="flex justify-center py-10 text-ink-muted">
+        <div className="flex justify-center py-10 text-[#C17F45]">
           <Loader2 size={20} className="animate-spin" />
         </div>
       ) : listaOrdinata.length === 0 && editingId !== "new" ? (
-        <p className="py-10 text-center text-sm text-ink-muted">
+        <p className="py-10 text-center text-sm text-[#A69686]">
           {soloScorteBasse
             ? "Nessun prodotto sotto scorta al momento."
             : "Non ci sono ancora prodotti in magazzino. Tocca \"+\" per aggiungerne uno."}
@@ -371,8 +379,8 @@ export default function MagazzinoPage() {
             return (
               <div
                 key={p.id}
-                className={`rounded-xl border bg-white p-3 ${
-                  esaurito ? "border-status-danger/40" : scortaBassa ? "border-amber-300" : "border-black/5"
+                className={`rounded-xl border bg-[#251C17] p-3 ${
+                  esaurito ? "border-[#C0503D]/50" : scortaBassa ? "border-[#E3A857]/50" : "border-[#3A2C22]"
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -380,32 +388,34 @@ export default function MagazzinoPage() {
                     onClick={() => startEdit(p)}
                     className="touch-target flex min-w-0 flex-1 items-center gap-3 text-left"
                   >
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary-light text-primary">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
                       <Boxes size={18} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <p className="truncate text-sm font-medium text-ink">{p.name}</p>
+                        <p className="truncate text-sm font-medium text-[#F0E9E0]">{p.name}</p>
                         {esaurito && (
-                          <span className="shrink-0 rounded-full bg-status-dangerBg px-1.5 py-0.5 text-[10px] font-medium text-status-danger">
+                          <span className="shrink-0 rounded-full border border-[#C0503D]/40 bg-[#C0503D]/15 px-1.5 py-0.5 text-[10px] font-medium text-[#D97A63]">
                             Esaurito
                           </span>
                         )}
                         {!esaurito && scortaBassa && (
-                          <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                          <span className="shrink-0 rounded-full border border-[#E3A857]/40 bg-[#E3A857]/15 px-1.5 py-0.5 text-[10px] font-medium text-[#E3A857]">
                             Scorta bassa
                           </span>
                         )}
                       </div>
-                      <p className="truncate text-xs text-ink-muted">
+                      <p className="num-tabular truncate text-xs text-[#A69686]">
                         {p.ml_rimanenti_bottiglia_aperta !== null
                           ? `aperta ${p.ml_rimanenti_bottiglia_aperta}/${p.capacita_standard_ml} ml`
                           : "nessuna bottiglia aperta"}
                       </p>
                       {pct !== null && (
-                        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-bg-subtle">
+                        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[#1A1310]">
                           <div
-                            className={`h-full rounded-full ${pct <= 20 ? "bg-amber-400" : "bg-primary"}`}
+                            className={`h-full rounded-full ${
+                              pct <= 20 ? "bg-[#C0503D]" : "bg-gradient-to-r from-[#C17F45] to-[#E3A857]"
+                            }`}
                             style={{ width: `${pct}%` }}
                           />
                         </div>
@@ -420,18 +430,20 @@ export default function MagazzinoPage() {
                         adjustBottiglieChiuse(p.id, -1);
                       }}
                       disabled={p.bottiglie_chiuse <= 0}
-                      className="touch-target grid h-8 w-8 place-items-center rounded-lg border border-black/10 text-ink-muted disabled:opacity-30"
+                      className="touch-target grid h-8 w-8 place-items-center rounded-lg border border-[#3A2C22] text-[#A69686] disabled:opacity-30"
                       aria-label="Togli una bottiglia chiusa"
                     >
                       <Minus size={14} />
                     </button>
-                    <span className="w-6 text-center text-sm font-medium text-ink">{p.bottiglie_chiuse}</span>
+                    <span className="num-tabular w-6 text-center text-sm font-medium text-[#F0E9E0]">
+                      {p.bottiglie_chiuse}
+                    </span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         adjustBottiglieChiuse(p.id, 1);
                       }}
-                      className="touch-target grid h-8 w-8 place-items-center rounded-lg border border-black/10 text-ink-muted"
+                      className="touch-target grid h-8 w-8 place-items-center rounded-lg border border-[#3A2C22] text-[#A69686]"
                       aria-label="Aggiungi una bottiglia chiusa"
                     >
                       <Plus size={14} />
