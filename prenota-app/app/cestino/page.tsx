@@ -89,23 +89,25 @@ export default function CestinoPage() {
   }
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen bg-[#1A1310] p-4">
       <div className="mb-4 flex items-center gap-2">
         <button
           onClick={() => router.push("/prenotazioni")}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Indietro"
         >
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 className="text-lg font-semibold text-ink">Cestino</h1>
-          <p className="text-xs text-ink-muted">Prenotazioni cancellate — recuperabili per 30 giorni</p>
+          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Cestino</h1>
+          <p className="text-xs text-[#A69686]">Prenotazioni cancellate — recuperabili per 30 giorni</p>
         </div>
       </div>
 
       {error && (
-        <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
+        <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">
+          {error}
+        </p>
       )}
 
       {isLoading ? (
@@ -115,19 +117,19 @@ export default function CestinoPage() {
       ) : (
         <div className="space-y-2">
           {items.map((item) => (
-            <div key={item.id} className="rounded-xl border border-black/5 bg-white p-3">
-              <p className="text-sm font-semibold text-ink">{item.customer_name}</p>
-              <p className="text-xs text-ink-muted">
+            <div key={item.id} className="rounded-xl border border-[#3A2C22] bg-[#251C17] p-3">
+              <p className="text-sm font-semibold text-[#F0E9E0]">{item.customer_name}</p>
+              <p className="text-xs text-[#A69686]">
                 {formatDateTime(item.reservation_time)} · {item.party_size} coperti
               </p>
-              <p className="mt-0.5 text-[11px] text-ink-muted">
+              <p className="mt-0.5 text-[11px] text-[#A69686]">
                 Cancellata il {formatDateTime(item.deleted_at)}
               </p>
               <div className="mt-2 flex gap-2">
                 <button
                   onClick={() => handleRestore(item)}
                   disabled={busyId === item.id}
-                  className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary py-2 text-xs font-medium text-white disabled:opacity-50"
+                  className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2 text-xs font-medium text-[#1A1310] disabled:opacity-50"
                 >
                   {busyId === item.id ? (
                     <Loader2 size={14} className="animate-spin" />
@@ -139,7 +141,7 @@ export default function CestinoPage() {
                 <button
                   onClick={() => handlePermanentDelete(item)}
                   disabled={busyId === item.id}
-                  className="touch-target flex items-center justify-center gap-1.5 rounded-lg border border-black/10 px-3 py-2 text-xs font-medium text-status-danger disabled:opacity-50"
+                  className="touch-target flex items-center justify-center gap-1.5 rounded-lg border border-[#3A2C22] px-3 py-2 text-xs font-medium text-[#D97A63] disabled:opacity-50"
                 >
                   <Trash2 size={14} />
                   Elimina per sempre
