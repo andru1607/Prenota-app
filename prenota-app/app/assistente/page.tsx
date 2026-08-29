@@ -68,23 +68,25 @@ export default function AssistentePage() {
   const visibleLogs = filter === "unanswered" ? logs.filter((l) => !l.answered) : logs;
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen bg-[#1A1310] p-4">
       <div className="mb-4 flex items-center gap-2">
         <button
           onClick={() => router.push("/impostazioni")}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Indietro"
         >
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 className="text-lg font-semibold text-ink">Assistente</h1>
-          <p className="text-xs text-ink-muted">Cosa chiede lo staff, per migliorare le risposte</p>
+          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Assistente</h1>
+          <p className="text-xs text-[#A69686]">Cosa chiede lo staff, per migliorare le risposte</p>
         </div>
       </div>
 
       {error && (
-        <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
+        <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">
+          {error}
+        </p>
       )}
 
       {isLoading ? (
@@ -98,27 +100,27 @@ export default function AssistentePage() {
       ) : (
         <>
           <div className="mb-4 grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-black/5 bg-white p-3 text-center">
-              <p className="num-tabular text-2xl font-bold text-ink">{logs.length}</p>
-              <p className="text-xs text-ink-muted">Domande totali</p>
+            <div className="rounded-xl border border-[#3A2C22] bg-[#251C17] p-3 text-center">
+              <p className="num-tabular text-2xl font-bold text-[#F0E9E0]">{logs.length}</p>
+              <p className="text-xs text-[#A69686]">Domande totali</p>
             </div>
-            <div className="rounded-xl border border-black/5 bg-white p-3 text-center">
-              <p className="num-tabular text-2xl font-bold text-status-danger">{unansweredCount}</p>
-              <p className="text-xs text-ink-muted">Senza risposta certa</p>
+            <div className="rounded-xl border border-[#3A2C22] bg-[#251C17] p-3 text-center">
+              <p className="num-tabular text-2xl font-bold text-[#D97A63]">{unansweredCount}</p>
+              <p className="text-xs text-[#A69686]">Senza risposta certa</p>
             </div>
           </div>
 
           {frequent.length > 0 && (
-            <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
-              <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-ink">
-                <TrendingUp size={15} />
+            <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
+              <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-[#F0E9E0]">
+                <TrendingUp size={15} className="text-[#C17F45]" />
                 Le più ripetute
               </p>
               <div className="space-y-1.5">
                 {frequent.map((f) => (
                   <div key={f.question} className="flex items-center justify-between gap-2 text-sm">
-                    <span className="truncate text-ink-muted">{f.question}</span>
-                    <span className="shrink-0 rounded-full bg-bg-subtle px-2 py-0.5 text-xs font-medium text-ink">
+                    <span className="truncate text-[#A69686]">{f.question}</span>
+                    <span className="shrink-0 rounded-full border border-[#3A2C22] bg-[#1A1310] px-2 py-0.5 text-xs font-medium text-[#F0E9E0]">
                       ×{f.count}
                     </span>
                   </div>
@@ -131,7 +133,9 @@ export default function AssistentePage() {
             <button
               onClick={() => setFilter("all")}
               className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                filter === "all" ? "bg-primary text-white" : "border border-black/10 text-ink-muted"
+                filter === "all"
+                  ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                  : "border border-[#3A2C22] text-[#A69686]"
               }`}
             >
               Tutte
@@ -140,8 +144,8 @@ export default function AssistentePage() {
               onClick={() => setFilter("unanswered")}
               className={`rounded-full px-3 py-1.5 text-xs font-medium ${
                 filter === "unanswered"
-                  ? "bg-status-danger text-white"
-                  : "border border-black/10 text-ink-muted"
+                  ? "bg-[#C0503D] text-white"
+                  : "border border-[#3A2C22] text-[#A69686]"
               }`}
             >
               Senza risposta certa
@@ -149,23 +153,23 @@ export default function AssistentePage() {
           </div>
 
           {visibleLogs.length === 0 ? (
-            <p className="py-6 text-center text-sm text-ink-muted">
+            <p className="py-6 text-center text-sm text-[#A69686]">
               Nessuna domanda in questa categoria.
             </p>
           ) : (
             <div className="space-y-2">
               {visibleLogs.map((log) => (
-                <div key={log.id} className="rounded-xl border border-black/5 bg-white p-3">
+                <div key={log.id} className="rounded-xl border border-[#3A2C22] bg-[#251C17] p-3">
                   <div className="mb-1 flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium text-ink">{log.question}</p>
+                    <p className="text-sm font-medium text-[#F0E9E0]">{log.question}</p>
                     {!log.answered && (
                       <span className="shrink-0" title="Il bot non ha risposto con certezza">
-                        <AlertCircle size={15} className="text-status-danger" />
+                        <AlertCircle size={15} className="text-[#D97A63]" />
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-ink-muted">{log.reply}</p>
-                  <p className="mt-1.5 text-[11px] text-ink-muted">{formatDate(log.created_at)}</p>
+                  <p className="text-xs text-[#A69686]">{log.reply}</p>
+                  <p className="mt-1.5 text-[11px] text-[#A69686]">{formatDate(log.created_at)}</p>
                 </div>
               ))}
             </div>
