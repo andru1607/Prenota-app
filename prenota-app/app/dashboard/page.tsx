@@ -331,7 +331,7 @@ export default function DashboardPage() {
 
   if (checkingLocale) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-ink-muted">
+      <div className="flex min-h-screen items-center justify-center bg-[#1A1310] text-[#C17F45]">
         <Loader2 size={20} className="animate-spin" />
       </div>
     );
@@ -349,18 +349,18 @@ export default function DashboardPage() {
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-[#1A1310]">
       <OnboardingGuide />
       <StatusBar totalCoperti={coperti} tavoliLiberi={tavoliLiberi} prossimoArrivo={prossimoArrivo} />
 
       <div className="p-4">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <h1 className="text-lg font-semibold text-ink">Sala</h1>
+          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Sala</h1>
 
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={toggleShowTables}
-              className="touch-target flex items-center gap-1.5 rounded-xl border border-black/10 px-3 py-2 text-sm font-medium text-ink-muted"
+              className="touch-target flex items-center gap-1.5 rounded-xl border border-[#3A2C22] px-3 py-2 text-sm font-medium text-[#A69686]"
               title={showTables ? "Nascondi tavoli" : "Mostra tavoli"}
             >
               {showTables ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -386,7 +386,7 @@ export default function DashboardPage() {
             <button
               onClick={() => galleryInputRef.current?.click()}
               disabled={isProcessing}
-              className="touch-target flex items-center gap-1.5 rounded-xl border border-black/10 px-3 py-2 text-sm font-medium text-ink-muted disabled:opacity-60"
+              className="touch-target flex items-center gap-1.5 rounded-xl border border-[#3A2C22] px-3 py-2 text-sm font-medium text-[#A69686] disabled:opacity-60"
             >
               <ImageIcon size={16} />
               Galleria
@@ -394,7 +394,7 @@ export default function DashboardPage() {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isProcessing}
-              className="touch-target flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+              className="touch-target flex items-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] px-4 py-2 text-sm font-medium text-[#1A1310] disabled:opacity-60"
             >
               {isProcessing ? (
                 <>
@@ -412,20 +412,20 @@ export default function DashboardPage() {
         </div>
 
         {skippedInfo && (
-          <p className="mb-3 rounded-lg bg-status-pendingBg p-3 text-sm text-status-pending">
+          <p className="mb-3 rounded-lg border border-[#E3A857]/40 bg-[#2A2115] p-3 text-sm text-[#E3A857]">
             {skippedInfo}
           </p>
         )}
 
         {error && (
-          <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">
+          <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">
             {error}
           </p>
         )}
 
         {showTables ? (
           <>
-            <p className="mb-3 text-xs text-ink-muted">
+            <p className="mb-3 text-xs text-[#A69686]">
               Tocca un tavolo per cambiarne lo stato (libero → occupato → riservato).
             </p>
 
@@ -435,8 +435,8 @@ export default function DashboardPage() {
                   onClick={() => handleRoomFilterChange("all")}
                   className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${
                     roomFilter === "all"
-                      ? "bg-primary text-white"
-                      : "border border-black/10 text-ink-muted"
+                      ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                      : "border border-[#3A2C22] text-[#A69686]"
                   }`}
                 >
                   Tutte
@@ -447,8 +447,8 @@ export default function DashboardPage() {
                     onClick={() => handleRoomFilterChange(room.id)}
                     className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${
                       roomFilter === room.id
-                        ? "bg-primary text-white"
-                        : "border border-black/10 text-ink-muted"
+                        ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                        : "border border-[#3A2C22] text-[#A69686]"
                     }`}
                   >
                     {room.name}
@@ -459,8 +459,8 @@ export default function DashboardPage() {
                     onClick={() => handleRoomFilterChange("none")}
                     className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${
                       roomFilter === "none"
-                        ? "bg-primary text-white"
-                        : "border border-black/10 text-ink-muted"
+                        ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                        : "border border-[#3A2C22] text-[#A69686]"
                     }`}
                   >
                     Senza sala
@@ -489,7 +489,7 @@ export default function DashboardPage() {
 
               if (filteredTables.length === 0) {
                 return (
-                  <p className="py-8 text-center text-sm text-ink-muted">
+                  <p className="py-8 text-center text-sm text-[#A69686]">
                     Nessun tavolo in questa sala.
                   </p>
                 );
@@ -506,7 +506,7 @@ export default function DashboardPage() {
           </>
         ) : (
           <div>
-            <p className="mb-3 text-xs text-ink-muted">Prossime prenotazioni.</p>
+            <p className="mb-3 text-xs text-[#A69686]">Prossime prenotazioni.</p>
 
             {isLoadingData ? (
               <div className="space-y-2">
@@ -531,7 +531,7 @@ export default function DashboardPage() {
                   return (
                     <div key={r.id}>
                       {showSeparator && (
-                        <p className="mb-2 mt-4 text-xs font-semibold uppercase text-ink-muted first:mt-0">
+                        <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-[#A69686] first:mt-0">
                           {dayLabel}
                         </p>
                       )}
@@ -552,7 +552,7 @@ export default function DashboardPage() {
 
             <button
               onClick={() => router.push("/prenotazioni")}
-              className="touch-target mt-3 flex w-full items-center justify-center gap-1 rounded-xl border border-black/10 py-2.5 text-sm font-medium text-primary"
+              className="touch-target mt-3 flex w-full items-center justify-center gap-1 rounded-xl border border-[#3A2C22] py-2.5 text-sm font-medium text-[#C17F45]"
             >
               Vedi tutte le prenotazioni
               <ChevronRight size={16} />
