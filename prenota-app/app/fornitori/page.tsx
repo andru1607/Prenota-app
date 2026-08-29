@@ -64,6 +64,12 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+function SignatureLine({ className = "" }: { className?: string }) {
+  return (
+    <div className={`h-px w-14 bg-gradient-to-r from-[#C17F45] via-[#C17F45] to-transparent ${className}`} />
+  );
+}
+
 export default function FornitoriPage() {
   const router = useRouter();
   const { show } = useToast();
@@ -95,7 +101,6 @@ export default function FornitoriPage() {
   const [supplierEmail, setSupplierEmail] = useState("");
   const [supplierCategory, setSupplierCategory] = useState("");
 
-  // Lettura fattura
   const invoiceInputRef = useRef<HTMLInputElement>(null);
   const [isReadingInvoice, setIsReadingInvoice] = useState(false);
   const [invoiceResult, setInvoiceResult] = useState<ParsedInvoiceResult | null>(null);
@@ -343,8 +348,6 @@ export default function FornitoriPage() {
     }
   }
 
-  // --- Lettura fattura ---
-
   async function handleInvoiceSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -370,7 +373,7 @@ export default function FornitoriPage() {
       setInvoiceResult(body);
     } catch (err) {
       console.error(err);
-      show("Non sono riuscito a leggere la fattura. Riprova con una foto più nitida.", "error");
+      show("Non sono riuscito a leggere la fattura. Riprova con una foto più nitide.", "error");
     } finally {
       setIsReadingInvoice(false);
       e.target.value = "";
@@ -442,16 +445,19 @@ export default function FornitoriPage() {
   const noResultsFound = query.trim().length > 0 && !isSearching && searchResults.length === 0;
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen bg-[#1A1310] p-4">
       <div className="mb-4 flex items-center gap-2">
         <button
           onClick={() => router.push("/strumenti")}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Indietro"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="flex-1 text-lg font-semibold text-ink">Fornitori e ordini</h1>
+        <div className="flex-1">
+          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Fornitori e ordini</h1>
+          <SignatureLine className="mt-1" />
+        </div>
         {isAdmin && (
           <>
             <input
@@ -464,13 +470,13 @@ export default function FornitoriPage() {
             <button
               onClick={() => invoiceInputRef.current?.click()}
               disabled={isReadingInvoice}
-              className="touch-target flex items-center gap-1.5 rounded-xl border border-black/10 px-3 py-2 text-xs font-medium text-ink-muted disabled:opacity-60"
+              className="touch-target flex items-center gap-1.5 rounded-xl border border-[#3A2C22] bg-[#251C17] px-3 py-2 text-xs font-medium text-[#A69686] disabled:opacity-60"
               title="Leggi fattura"
             >
               {isReadingInvoice ? (
                 <Loader2 size={15} className="animate-spin" />
               ) : (
-                <Receipt size={15} />
+                <Receipt size={15} className="text-[#C17F45]" />
               )}
               Leggi fattura
             </button>
@@ -479,14 +485,16 @@ export default function FornitoriPage() {
       </div>
 
       {error && (
-        <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
+        <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">
+          {error}
+        </p>
       )}
 
-      <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
+      <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
         <div className="relative mb-1">
           <Search
             size={16}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#A69686]"
           />
           <input
             value={query}
@@ -495,14 +503,14 @@ export default function FornitoriPage() {
               setShowNewItemForm(false);
             }}
             placeholder="Cerca un prodotto da ordinare..."
-            className="w-full rounded-xl border border-black/10 bg-white py-2.5 pl-9 pr-3 text-sm"
+            className="w-full rounded-xl border border-[#3A2C22] bg-[#1A1310] py-2.5 pl-9 pr-3 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           />
         </div>
 
         {!query.trim() && frequentProducts.length > 0 && (
           <div className="mt-3">
-            <p className="mb-1.5 flex items-center gap-1 text-xs font-medium text-ink-muted">
-              <Zap size={12} />
+            <p className="mb-1.5 flex items-center gap-1 text-xs font-medium text-[#A69686]">
+              <Zap size={12} className="text-[#C17F45]" />
               Ordinati spesso
             </p>
             <div className="flex flex-wrap gap-1.5">
@@ -510,9 +518,9 @@ export default function FornitoriPage() {
                 <button
                   key={product.id}
                   onClick={() => quickAdd(product)}
-                  className="touch-target flex items-center gap-1 rounded-full border border-black/10 bg-bg-subtle px-3 py-1.5 text-xs font-medium text-ink"
+                  className="touch-target flex items-center gap-1 rounded-full border border-[#3A2C22] bg-[#1A1310] px-3 py-1.5 text-xs font-medium text-[#F0E9E0]"
                 >
-                  <Plus size={12} className="text-primary" />
+                  <Plus size={12} className="text-[#C17F45]" />
                   {product.name}
                 </button>
               ))}
@@ -520,7 +528,7 @@ export default function FornitoriPage() {
           </div>
         )}
 
-        {isSearching && <p className="py-2 text-xs text-ink-muted">Cerco...</p>}
+        {isSearching && <p className="py-2 text-xs text-[#A69686]">Cerco...</p>}
 
         {searchResults.length > 0 && (
           <div className="mt-2 space-y-1.5">
@@ -528,16 +536,16 @@ export default function FornitoriPage() {
               <button
                 key={product.id}
                 onClick={() => quickAdd(product)}
-                className="touch-target flex w-full items-center justify-between gap-2 rounded-lg bg-bg-subtle p-2.5 text-left"
+                className="touch-target flex w-full items-center justify-between gap-2 rounded-lg border border-[#3A2C22] bg-[#1A1310] p-2.5 text-left"
               >
                 <div className="min-w-0">
-                  <p className="text-sm text-ink">{product.name}</p>
-                  <p className="text-xs text-ink-muted">
+                  <p className="text-sm text-[#F0E9E0]">{product.name}</p>
+                  <p className="text-xs text-[#A69686]">
                     {product.suppliers?.name ?? "Nessun fornitore"}
                     {product.default_quantity && ` · ${product.default_quantity}`}
                   </p>
                 </div>
-                <span className="grid shrink-0 h-7 w-7 place-items-center rounded-lg bg-primary text-white">
+                <span className="grid shrink-0 h-7 w-7 place-items-center rounded-lg bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]">
                   <Plus size={15} />
                 </span>
               </button>
@@ -546,13 +554,13 @@ export default function FornitoriPage() {
         )}
 
         {noResultsFound && !showNewItemForm && (
-          <div className="mt-2 rounded-lg bg-bg-subtle p-3">
-            <p className="mb-2 text-sm text-ink-muted">
+          <div className="mt-2 rounded-lg border border-[#3A2C22] bg-[#1A1310] p-3">
+            <p className="mb-2 text-sm text-[#A69686]">
               Nessun prodotto trovato per "{query}".
             </p>
             <button
               onClick={() => setShowNewItemForm(true)}
-              className="touch-target flex items-center gap-1.5 text-sm font-medium text-primary"
+              className="touch-target flex items-center gap-1.5 text-sm font-medium text-[#C17F45]"
             >
               <Plus size={15} />
               Aggiungi "{query}" alla lista
@@ -561,12 +569,12 @@ export default function FornitoriPage() {
         )}
 
         {showNewItemForm && (
-          <div className="mt-2 rounded-lg bg-bg-subtle p-3">
+          <div className="mt-2 rounded-lg border border-[#3A2C22] bg-[#1A1310] p-3">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm font-medium text-ink">Nuovo prodotto: {query}</p>
+              <p className="text-sm font-medium text-[#F0E9E0]">Nuovo prodotto: {query}</p>
               <button
                 onClick={() => setShowNewItemForm(false)}
-                className="touch-target grid place-items-center rounded-lg text-ink-muted"
+                className="touch-target grid place-items-center rounded-lg text-[#A69686]"
                 aria-label="Chiudi"
               >
                 <X size={16} />
@@ -578,13 +586,13 @@ export default function FornitoriPage() {
                 onChange={(e) => setNewItemQuantity(e.target.value)}
                 placeholder="Quantità (es. 5 kg)"
                 autoFocus
-                className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-[#3A2C22] bg-[#251C17] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
               />
               {suppliers.length > 0 && (
                 <select
                   value={newItemSupplier}
                   onChange={(e) => setNewItemSupplier(e.target.value)}
-                  className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm text-ink"
+                  className="w-full rounded-lg border border-[#3A2C22] bg-[#251C17] px-3 py-2 text-sm text-[#F0E9E0]"
                 >
                   <option value="">Nessun fornitore</option>
                   {suppliers.map((s) => (
@@ -594,7 +602,7 @@ export default function FornitoriPage() {
                   ))}
                 </select>
               )}
-              <label className="flex items-center gap-2 text-xs text-ink-muted">
+              <label className="flex items-center gap-2 text-xs text-[#A69686]">
                 <input
                   type="checkbox"
                   checked={saveToCatalog}
@@ -605,7 +613,7 @@ export default function FornitoriPage() {
             </div>
             <button
               onClick={handleAddNewItem}
-              className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2 text-sm font-medium text-white"
+              className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2 text-sm font-medium text-[#1A1310]"
             >
               <Plus size={16} />
               Aggiungi alla lista
@@ -614,13 +622,13 @@ export default function FornitoriPage() {
         )}
       </div>
 
-      <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
+      <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-sm font-medium text-ink">Lista da ordinare</p>
+          <p className="text-sm font-medium text-[#F0E9E0]">Lista da ordinare</p>
           {hasOrdered && (
             <button
               onClick={clearOrdered}
-              className="touch-target text-xs font-medium text-status-danger"
+              className="touch-target text-xs font-medium text-[#D97A63]"
             >
               Svuota ordinati
             </button>
@@ -639,7 +647,7 @@ export default function FornitoriPage() {
           <div className="space-y-4">
             {Array.from(groupedItems.entries()).map(([supplierName, items]) => (
               <div key={supplierName}>
-                <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase text-ink-muted">
+                <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[#A69686]">
                   <Truck size={12} />
                   {supplierName}
                 </p>
@@ -647,7 +655,7 @@ export default function FornitoriPage() {
                   {items.map((item) => (
                     <div
                       key={item.id}
-                      className="animate-fade-in flex items-center justify-between gap-2 rounded-lg bg-bg-subtle p-2.5"
+                      className="animate-fade-in flex items-center justify-between gap-2 rounded-lg border border-[#3A2C22] bg-[#1A1310] p-2.5"
                     >
                       <button
                         onClick={() => toggleOrdered(item)}
@@ -656,15 +664,15 @@ export default function FornitoriPage() {
                         <span
                           className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition-colors ${
                             item.is_ordered
-                              ? "border-status-free bg-status-free text-white"
-                              : "border-black/20"
+                              ? "border-[#7C9473] bg-[#7C9473] text-[#1A1310]"
+                              : "border-[#3A2C22]"
                           }`}
                         >
                           {item.is_ordered && <Check size={12} />}
                         </span>
                         <span
                           className={`min-w-0 text-sm ${
-                            item.is_ordered ? "text-ink-muted line-through" : "text-ink"
+                            item.is_ordered ? "text-[#A69686] line-through" : "text-[#F0E9E0]"
                           }`}
                         >
                           {item.name}
@@ -679,12 +687,12 @@ export default function FornitoriPage() {
                           onKeyDown={(e) => e.key === "Enter" && saveQuantity(item.id)}
                           autoFocus
                           placeholder="Quantità"
-                          className="w-24 shrink-0 rounded-lg border border-black/10 px-2 py-1 text-xs"
+                          className="w-24 shrink-0 rounded-lg border border-[#3A2C22] bg-[#251C17] px-2 py-1 text-xs text-[#F0E9E0]"
                         />
                       ) : (
                         <button
                           onClick={() => startEditQuantity(item)}
-                          className="shrink-0 rounded-lg px-1.5 py-0.5 text-xs text-ink-muted underline decoration-dotted"
+                          className="shrink-0 rounded-lg px-1.5 py-0.5 text-xs text-[#A69686] underline decoration-dotted"
                         >
                           {item.quantity || "+ quantità"}
                         </button>
@@ -692,7 +700,7 @@ export default function FornitoriPage() {
 
                       <button
                         onClick={() => deleteItem(item.id)}
-                        className="touch-target grid shrink-0 place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                        className="touch-target grid shrink-0 place-items-center rounded-lg text-[#A69686]"
                         aria-label="Rimuovi"
                       >
                         <Trash2 size={15} />
@@ -706,16 +714,16 @@ export default function FornitoriPage() {
         )}
       </div>
 
-      <div className="rounded-xl border border-black/5 bg-white p-4">
+      <div className="rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
         <button
           onClick={() => setShowSuppliers((v) => !v)}
           className="touch-target flex w-full items-center justify-between"
         >
-          <span className="text-sm font-medium text-ink">Fornitori</span>
+          <span className="text-sm font-medium text-[#F0E9E0]">Fornitori</span>
           {showSuppliers ? (
-            <ChevronDown size={18} className="text-ink-muted" />
+            <ChevronDown size={18} className="text-[#A69686]" />
           ) : (
-            <ChevronRightIcon size={18} className="text-ink-muted" />
+            <ChevronRightIcon size={18} className="text-[#A69686]" />
           )}
         </button>
 
@@ -724,7 +732,7 @@ export default function FornitoriPage() {
             {isAdmin && (
               <button
                 onClick={() => (showSupplierForm ? resetSupplierForm() : setShowSupplierForm(true))}
-                className="touch-target mb-2 flex items-center gap-1 text-xs font-medium text-primary"
+                className="touch-target mb-2 flex items-center gap-1 text-xs font-medium text-[#C17F45]"
               >
                 <Plus size={14} />
                 Aggiungi
@@ -732,40 +740,40 @@ export default function FornitoriPage() {
             )}
 
             {showSupplierForm && (
-              <div className="mb-3 rounded-lg bg-bg-subtle p-3">
+              <div className="mb-3 rounded-lg border border-[#3A2C22] bg-[#1A1310] p-3">
                 <div className="space-y-2">
                   <input
                     value={supplierName}
                     onChange={(e) => setSupplierName(e.target.value)}
                     placeholder="Nome fornitore"
                     autoFocus
-                    className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-[#3A2C22] bg-[#251C17] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                   />
                   <input
                     value={supplierPhone}
                     onChange={(e) => setSupplierPhone(e.target.value)}
                     placeholder="Telefono"
                     type="tel"
-                    className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-[#3A2C22] bg-[#251C17] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                   />
                   <input
                     value={supplierEmail}
                     onChange={(e) => setSupplierEmail(e.target.value)}
                     placeholder="Email"
                     type="email"
-                    className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-[#3A2C22] bg-[#251C17] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                   />
                   <input
                     value={supplierCategory}
                     onChange={(e) => setSupplierCategory(e.target.value)}
                     placeholder="Categoria (es. Ortofrutta)"
-                    className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-[#3A2C22] bg-[#251C17] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                   />
                 </div>
                 <button
                   onClick={handleSaveSupplier}
                   disabled={!supplierName.trim()}
-                  className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2 text-sm font-medium text-white disabled:opacity-40"
+                  className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2 text-sm font-medium text-[#1A1310] disabled:opacity-40"
                 >
                   <Check size={16} />
                   Salva fornitore
@@ -778,13 +786,13 @@ export default function FornitoriPage() {
             ) : (
               <div className="space-y-1.5">
                 {suppliers.map((s) => (
-                  <div key={s.id} className="rounded-lg bg-bg-subtle p-3">
+                  <div key={s.id} className="rounded-lg border border-[#3A2C22] bg-[#1A1310] p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-ink">{s.name}</p>
+                          <p className="text-sm font-medium text-[#F0E9E0]">{s.name}</p>
                           {s.category && (
-                            <span className="rounded-full bg-white px-1.5 py-0.5 text-[10px] text-ink-muted">
+                            <span className="rounded-full border border-[#3A2C22] bg-[#251C17] px-1.5 py-0.5 text-[10px] text-[#A69686]">
                               {s.category}
                             </span>
                           )}
@@ -792,7 +800,7 @@ export default function FornitoriPage() {
                         {s.phone && (
                           <a
                             href={`tel:${s.phone}`}
-                            className="mt-0.5 flex items-center gap-1 text-xs text-ink-muted underline"
+                            className="mt-0.5 flex items-center gap-1 text-xs text-[#A69686] underline"
                           >
                             <Phone size={11} /> {s.phone}
                           </a>
@@ -800,7 +808,7 @@ export default function FornitoriPage() {
                         {s.email && (
                           <a
                             href={`mailto:${s.email}`}
-                            className="mt-0.5 flex items-center gap-1 text-xs text-ink-muted underline"
+                            className="mt-0.5 flex items-center gap-1 text-xs text-[#A69686] underline"
                           >
                             <Mail size={11} /> {s.email}
                           </a>
@@ -810,14 +818,14 @@ export default function FornitoriPage() {
                         <div className="flex shrink-0 items-center gap-1">
                           <button
                             onClick={() => startEditSupplier(s)}
-                            className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-white"
+                            className="touch-target grid place-items-center rounded-lg text-[#A69686]"
                             aria-label="Modifica fornitore"
                           >
                             <Pencil size={15} />
                           </button>
                           <button
                             onClick={() => handleDeleteSupplier(s.id)}
-                            className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+                            className="touch-target grid place-items-center rounded-lg text-[#A69686]"
                             aria-label="Elimina fornitore"
                           >
                             <Trash2 size={15} />
