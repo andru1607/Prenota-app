@@ -13,7 +13,6 @@ import {
   CupSoda,
   Droplets,
   Coffee,
-  User,
   Star,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -38,8 +37,6 @@ const CATEGORY_ICONS: Record<string, typeof Martini> = {
   "Analcolici": Droplets,
   "Caffetteria": Coffee,
 };
-
-const CUSTOM_LABEL = "I tuoi cocktail";
 
 function SignatureLine({ className = "" }: { className?: string }) {
   return (
@@ -80,15 +77,6 @@ export default function CocktailListPage() {
     load();
   }, []);
 
-  const customCocktails = useMemo(
-    () => cocktails.filter((c) => c.restaurant_id !== null),
-    [cocktails]
-  );
-  const standardCocktails = useMemo(
-    () => cocktails.filter((c) => c.restaurant_id === null),
-    [cocktails]
-  );
-
   const featuredCocktails = useMemo(
     () =>
       cocktails
@@ -97,10 +85,10 @@ export default function CocktailListPage() {
     [cocktails]
   );
 
-  const standardCategories = useMemo(() => {
-    const names = Array.from(new Set(standardCocktails.map((c) => c.category || "Altro")));
+  const categories = useMemo(() => {
+    const names = Array.from(new Set(cocktails.map((c) => c.category || "Altro")));
     return names.sort();
-  }, [standardCocktails]);
+  }, [cocktails]);
 
   const searching = search.trim().length > 0;
 
@@ -112,9 +100,8 @@ export default function CocktailListPage() {
 
   const categoryResults = useMemo(() => {
     if (!selectedCategory) return [];
-    if (selectedCategory === CUSTOM_LABEL) return customCocktails;
-    return standardCocktails.filter((c) => (c.category || "Altro") === selectedCategory);
-  }, [selectedCategory, standardCocktails, customCocktails]);
+    return cocktails.filter((c) => (c.category || "Altro") === selectedCategory);
+  }, [selectedCategory, cocktails]);
 
   function renderCocktailRow(cocktail: Cocktail) {
     return (
@@ -174,7 +161,7 @@ export default function CocktailListPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Cerca un cocktail"
-          className="w-full bg-transparent text-sm text-[#F0E9E0] outline-none placeholder:text-[#7A6E63]"
+          className="w-full bg-transparent text-base text-[#F0E9E0] outline-none placeholder:text-[#7A6E63]"
         />
       </div>
 
@@ -203,20 +190,18 @@ export default function CocktailListPage() {
           <SignatureLine className="mb-3" />
           {categoryResults.length === 0 ? (
             <p className="py-6 text-center text-sm text-[#A69686]">
-              Non hai ancora cocktail qui.
+              Non ci sono ancora cocktail qui.
             </p>
           ) : (
             <div className="mb-3 space-y-2">{categoryResults.map(renderCocktailRow)}</div>
           )}
-          {selectedCategory !== CUSTOM_LABEL && (
-            <Link
-              href={`/cocktail/nuovo?categoria=${encodeURIComponent(selectedCategory)}`}
-              className="touch-target flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#3A2C22] py-2.5 text-xs font-medium text-[#A69686]"
-            >
-              <Plus size={14} />
-              Aggiungi un prodotto in {selectedCategory}
-            </Link>
-          )}
+          <Link
+            href={`/cocktail/nuovo?categoria=${encodeURIComponent(selectedCategory)}`}
+            className="touch-target flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#3A2C22] py-2.5 text-xs font-medium text-[#A69686]"
+          >
+            <Plus size={14} />
+            Aggiungi un prodotto in {selectedCategory}
+          </Link>
         </div>
       ) : cocktails.length === 0 ? (
         <p className="py-10 text-center text-sm text-[#A69686]">Non ci sono ancora cocktail.</p>
@@ -244,25 +229,9 @@ export default function CocktailListPage() {
           )}
 
           <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => setSelectedCategory(CUSTOM_LABEL)}
-              className="touch-target flex flex-col items-start gap-2.5 rounded-2xl border border-[#3A2C22] bg-gradient-to-b from-[#2A211C] to-[#1F1712] p-4 text-left"
-            >
-              <div className="relative grid h-11 w-11 place-items-center">
-                <div className="absolute inset-0 rounded-full bg-[#E3A857] opacity-20 blur-md" />
-                <div className="relative grid h-11 w-11 place-items-center rounded-full border border-[#E3A857]/50 bg-[#1A1310] text-[#E3A857]">
-                  <User size={18} />
-                </div>
-              </div>
-              <div>
-                <p className="text-sm font-bold uppercase tracking-wide text-[#F0E9E0]">{CUSTOM_LABEL}</p>
-                <p className="num-tabular text-xs text-[#A69686]">{customCocktails.length} cocktail</p>
-              </div>
-            </button>
-
-            {standardCategories.map((category) => {
+            {categories.map((category) => {
               const Icon = CATEGORY_ICONS[category] ?? Martini;
-              const count = standardCocktails.filter((c) => (c.category || "Altro") === category).length;
+              const count = cocktails.filter((c) => (c.category || "Altro") === category).length;
               return (
                 <button
                   key={category}
