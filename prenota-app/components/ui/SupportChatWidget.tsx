@@ -74,7 +74,7 @@ export function SupportChatWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-20 right-4 z-40 grid h-12 w-12 place-items-center rounded-full bg-primary text-white shadow-lg md:bottom-6 md:right-6"
+          className="fixed bottom-20 right-4 z-40 grid h-12 w-12 place-items-center rounded-full bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310] shadow-[0_0_18px_rgba(227,168,87,0.35)] md:bottom-6 md:right-6"
           aria-label="Apri assistente"
         >
           <MessageCircleQuestion size={22} />
@@ -82,16 +82,16 @@ export function SupportChatWidget() {
       )}
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 md:items-center">
-          <div className="flex h-[85vh] w-full max-w-md flex-col rounded-t-2xl bg-white md:h-[70vh] md:rounded-2xl">
-            <div className="flex items-center justify-between border-b border-black/5 p-4">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center">
+          <div className="flex h-[85vh] w-full max-w-md flex-col rounded-t-2xl border border-[#3A2C22] bg-[#251C17] md:h-[70vh] md:rounded-2xl">
+            <div className="flex items-center justify-between border-b border-[#3A2C22] p-4">
               <div>
-                <p className="text-sm font-semibold text-ink">Assistente Prenota</p>
-                <p className="text-xs text-ink-muted">Chiedimi come si fa qualcosa nell'app</p>
+                <p className="text-sm font-semibold text-[#F0E9E0]">Assistente Prenota</p>
+                <p className="text-xs text-[#A69686]">Chiedimi come si fa qualcosa nell'app</p>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="touch-target grid place-items-center rounded-lg text-ink-muted"
+                className="touch-target grid place-items-center rounded-lg text-[#A69686]"
                 aria-label="Chiudi"
               >
                 <X size={20} />
@@ -101,14 +101,14 @@ export function SupportChatWidget() {
             <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
               {messages.length === 0 && (
                 <div className="space-y-2">
-                  <p className="mb-2 text-xs font-medium uppercase text-ink-muted">
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#A69686]">
                     Domande frequenti
                   </p>
                   {SUGGESTED_QUESTIONS.map((q) => (
                     <button
                       key={q}
                       onClick={() => sendMessage(q)}
-                      className="touch-target block w-full rounded-xl border border-black/10 px-3 py-2.5 text-left text-sm text-ink"
+                      className="touch-target block w-full rounded-xl border border-[#3A2C22] bg-[#1A1310] px-3 py-2.5 text-left text-sm text-[#F0E9E0]"
                     >
                       {q}
                     </button>
@@ -121,15 +121,15 @@ export function SupportChatWidget() {
                   <div
                     className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm ${
                       m.role === "user"
-                        ? "bg-primary text-white"
-                        : "bg-bg-subtle text-ink"
+                        ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                        : "bg-[#1A1310] text-[#F0E9E0]"
                     }`}
                   >
                     <p>{m.content}</p>
                     {m.action && (
                       <button
                         onClick={() => handleActionTap(m.action!.url)}
-                        className="mt-2 flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-medium text-primary"
+                        className="mt-2 flex items-center gap-1 rounded-lg border border-[#3A2C22] bg-[#251C17] px-2.5 py-1.5 text-xs font-medium text-[#C17F45]"
                       >
                         {m.action.label}
                         <ArrowRight size={13} />
@@ -141,14 +141,14 @@ export function SupportChatWidget() {
 
               {isSending && (
                 <div className="flex justify-start">
-                  <div className="rounded-2xl bg-bg-subtle px-3.5 py-2.5">
-                    <Loader2 size={16} className="animate-spin text-ink-muted" />
+                  <div className="rounded-2xl bg-[#1A1310] px-3.5 py-2.5">
+                    <Loader2 size={16} className="animate-spin text-[#A69686]" />
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="border-t border-black/5 p-3">
+            <div className="border-t border-[#3A2C22] p-3">
               <div className="flex items-center gap-2">
                 <input
                   value={input}
@@ -157,12 +157,12 @@ export function SupportChatWidget() {
                     if (e.key === "Enter") sendMessage(input);
                   }}
                   placeholder="Scrivi una domanda..."
-                  className="flex-1 rounded-xl border border-black/10 px-3 py-2.5 text-sm"
+                  className="flex-1 rounded-xl border border-[#3A2C22] bg-[#1A1310] px-3 py-2.5 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                 />
                 <button
                   onClick={() => sendMessage(input)}
                   disabled={!input.trim() || isSending}
-                  className="touch-target grid place-items-center rounded-xl bg-primary text-white disabled:opacity-40"
+                  className="touch-target grid place-items-center rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310] disabled:opacity-40"
                   aria-label="Invia"
                 >
                   <Send size={18} />
@@ -170,7 +170,7 @@ export function SupportChatWidget() {
               </div>
               <a
                 href="mailto:alexandrut04@gmail.com?subject=Aiuto%20con%20Prenota"
-                className="mt-2 flex items-center justify-center gap-1.5 text-xs font-medium text-ink-muted"
+                className="mt-2 flex items-center justify-center gap-1.5 text-xs font-medium text-[#A69686]"
               >
                 <Mail size={13} />
                 Scrivi al supporto
