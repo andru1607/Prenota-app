@@ -70,16 +70,16 @@ const COURSE_LABELS: Record<number, string> = {
 const ROOM_FILTER_KEY = "prenota-app:comandeRoomFilter";
 
 const GROUP_COLORS = [
-  "#DC2626",
-  "#111827",
-  "#CA8A04",
-  "#78350F",
-  "#7C3AED",
-  "#0F766E",
-  "#1D4ED8",
-  "#EA580C",
-  "#BE185D",
-  "#4D7C0F",
+  "#A6473A",
+  "#5C7247",
+  "#C79A3D",
+  "#2F6459",
+  "#6B3654",
+  "#C1662E",
+  "#4A5568",
+  "#8B4A2B",
+  "#9C7A2E",
+  "#A85D5D",
 ];
 
 function colorForGroup(label: string): string {
@@ -126,6 +126,12 @@ function useLongPress(onLongPress: () => void, ms = 450) {
     onMouseLeave: clear,
     onContextMenu: (e: React.SyntheticEvent) => e.preventDefault(),
   };
+}
+
+function SignatureLine({ className = "" }: { className?: string }) {
+  return (
+    <div className={`h-px w-14 bg-gradient-to-r from-[#C17F45] via-[#C17F45] to-transparent ${className}`} />
+  );
 }
 
 export default function ComandePage() {
@@ -473,8 +479,8 @@ export default function ComandePage() {
       : "questa comanda";
 
     return (
-      <div className="flex min-h-screen flex-col bg-bg pb-24">
-        <div className="sticky top-0 z-10 border-b border-black/5 bg-white">
+      <div className="flex min-h-screen flex-col bg-[#1A1310] pb-24 print:bg-white">
+        <div className="sticky top-0 z-10 border-b border-[#3A2C22] bg-[#251C17] print:hidden">
           <div className="flex items-center gap-2 p-3">
             <button
               onClick={() => {
@@ -488,7 +494,7 @@ export default function ComandePage() {
                   setSelectedOrderId(null);
                 }
               }}
-              className="touch-target grid place-items-center rounded-lg text-ink-muted"
+              className="touch-target grid place-items-center rounded-lg text-[#A69686]"
               aria-label="Indietro"
             >
               <ArrowLeft size={20} />
@@ -498,17 +504,17 @@ export default function ComandePage() {
               <div className="relative flex-1">
                 <Search
                   size={15}
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#A69686]"
                 />
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Cerca un piatto..."
-                  className="w-full rounded-lg border border-black/10 bg-bg-subtle py-2 pl-8 pr-3 text-sm"
+                  className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] py-2 pl-8 pr-3 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                 />
               </div>
             ) : (
-              <h1 className="flex-1 truncate text-base font-semibold text-ink">
+              <h1 className="flex-1 truncate text-base font-semibold text-[#F0E9E0]">
                 {subView === "items"
                   ? activeGroupLabel
                   : subView === "bill"
@@ -524,7 +530,7 @@ export default function ComandePage() {
                 <button
                   onClick={() => handleDeleteOrder(selectedOrder.id, orderLabel)}
                   disabled={isDeleting}
-                  className="touch-target grid place-items-center rounded-lg text-status-danger disabled:opacity-50"
+                  className="touch-target grid place-items-center rounded-lg text-[#D97A63] disabled:opacity-50"
                   aria-label="Elimina comanda"
                 >
                   <Trash2 size={18} />
@@ -532,7 +538,7 @@ export default function ComandePage() {
                 {selectedOrder.items.length > 0 && (
                   <button
                     onClick={() => setSubView("bill")}
-                    className="touch-target grid place-items-center rounded-lg text-ink-muted"
+                    className="touch-target grid place-items-center rounded-lg text-[#A69686]"
                     aria-label="Vedi conto"
                   >
                     <Euro size={18} />
@@ -540,7 +546,7 @@ export default function ComandePage() {
                 )}
                 <button
                   onClick={openCategories}
-                  className="touch-target flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-sm font-medium text-white"
+                  className="touch-target flex items-center gap-1 rounded-lg bg-gradient-to-b from-[#C17F45] to-[#A6683A] px-2.5 py-1.5 text-sm font-medium text-[#1A1310]"
                   aria-label="Aggiungi piatti"
                 >
                   <Plus size={16} />
@@ -549,7 +555,7 @@ export default function ComandePage() {
             )}
             <button
               onClick={() => window.print()}
-              className="touch-target grid place-items-center rounded-lg text-ink-muted"
+              className="touch-target grid place-items-center rounded-lg text-[#A69686]"
               aria-label="Stampa"
             >
               <Printer size={18} />
@@ -557,15 +563,15 @@ export default function ComandePage() {
           </div>
 
           {(subView === "categories" || subView === "items") && (
-            <div className="flex border-t border-black/5">
+            <div className="flex border-t border-[#3A2C22]">
               {[1, 2, 3, 4].map((course) => (
                 <button
                   key={course}
                   onClick={() => setActiveCourse(course)}
                   className={`flex-1 py-2.5 text-sm font-medium ${
                     activeCourse === course
-                      ? "border-b-2 border-primary text-primary"
-                      : "text-ink-muted"
+                      ? "border-b-2 border-[#C17F45] text-[#C17F45]"
+                      : "text-[#A69686]"
                   }`}
                 >
                   {COURSE_LABELS[course]}
@@ -576,13 +582,13 @@ export default function ComandePage() {
         </div>
 
         {subView === "general" && (
-          <div className="flex-1 space-y-3 p-4 print:p-0">
+          <div className="flex-1 space-y-3 p-4 print:hidden">
             {selectedOrder.items.length === 0 ? (
               <div className="py-6 text-center">
-                <p className="mb-3 text-sm text-ink-muted">Nessun piatto ancora.</p>
+                <p className="mb-3 text-sm text-[#A69686]">Nessun piatto ancora.</p>
                 <button
                   onClick={openCategories}
-                  className="touch-target inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white"
+                  className="touch-target inline-flex items-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] px-4 py-2.5 text-sm font-medium text-[#1A1310]"
                 >
                   <Plus size={16} />
                   Aggiungi piatti
@@ -597,24 +603,24 @@ export default function ComandePage() {
                 const earliestSent = sent.map((i) => i.sent_at!).sort()[0];
 
                 return (
-                  <div key={course} className="animate-fade-in overflow-hidden rounded-2xl bg-white shadow-sm">
-                    <div className="flex items-center justify-between bg-ink px-3 py-2 text-white">
+                  <div key={course} className="animate-fade-in overflow-hidden rounded-2xl border border-[#3A2C22] bg-[#251C17]">
+                    <div className="flex items-center justify-between bg-[#2A211C] px-3 py-2 text-[#F0E9E0]">
                       <span className="flex items-center gap-2 text-sm font-semibold">
                         <span
                           className={`h-2 w-2 rounded-full ${
-                            pending.length > 0 ? "bg-status-pending" : "bg-status-free"
+                            pending.length > 0 ? "bg-[#E3A857]" : "bg-[#7C9473]"
                           }`}
                         />
                         {COURSE_LABELS[course]}
                       </span>
                       {earliestSent && (
-                        <span className="flex items-center gap-1 text-xs text-white/70">
+                        <span className="flex items-center gap-1 text-xs text-[#A69686]">
                           <Clock size={12} />
                           {formatElapsed(earliestSent)}
                         </span>
                       )}
                     </div>
-                    <div className="divide-y divide-black/5">
+                    <div className="divide-y divide-[#3A2C22]">
                       {courseItems.map((item) => (
                         <OrderItemRow
                           key={item.id}
@@ -633,7 +639,7 @@ export default function ComandePage() {
                       <button
                         onClick={() => handleSendCourse(course)}
                         disabled={sendingCourse === course}
-                        className="flex w-full items-center justify-center gap-2 bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-50 print:hidden"
+                        className="flex w-full items-center justify-center gap-2 bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2.5 text-sm font-medium text-[#1A1310] disabled:opacity-50"
                       >
                         {sendingCourse === course ? (
                           <Loader2 size={16} className="animate-spin" />
@@ -652,7 +658,7 @@ export default function ComandePage() {
               <button
                 onClick={handleClose}
                 disabled={isClosing}
-                className="touch-target flex w-full items-center justify-center gap-2 rounded-xl border border-black/10 bg-white py-3 text-sm font-medium text-ink-muted disabled:opacity-50 print:hidden"
+                className="touch-target flex w-full items-center justify-center gap-2 rounded-xl border border-[#3A2C22] bg-[#251C17] py-3 text-sm font-medium text-[#A69686] disabled:opacity-50"
               >
                 {isClosing ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
                 Chiudi comanda
@@ -665,7 +671,7 @@ export default function ComandePage() {
           <div className="flex-1 p-3">
             {searchResults ? (
               searchResults.length === 0 ? (
-                <p className="py-8 text-center text-sm text-ink-muted">Nessun piatto trovato.</p>
+                <p className="py-8 text-center text-sm text-[#A69686]">Nessun piatto trovato.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   {searchResults.map((item) => (
@@ -689,7 +695,7 @@ export default function ComandePage() {
                         setSubView("items");
                       }}
                       disabled={count === 0}
-                      className="touch-target flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl p-2 text-center text-xs font-semibold text-white shadow-sm transition-transform active:scale-95 disabled:opacity-30 disabled:shadow-none"
+                      className="touch-target flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl p-2 text-center text-xs font-semibold text-white transition-transform active:scale-95 disabled:opacity-30"
                       style={{ backgroundColor: color }}
                     >
                       {group.label}
@@ -716,12 +722,12 @@ export default function ComandePage() {
 
         {subView === "bill" && (
           <div className="flex-1 space-y-3 p-4 print:p-0">
-            <div className="overflow-hidden rounded-2xl bg-white shadow-sm print:shadow-none">
-              <div className="border-b border-dashed border-black/10 p-4 text-center">
-                <p className="text-sm font-semibold text-ink">
+            <div className="overflow-hidden rounded-2xl border border-[#3A2C22] bg-[#251C17] print:rounded-none print:border-0 print:bg-white">
+              <div className="border-b border-dashed border-[#3A2C22] p-4 text-center print:border-black/10">
+                <p className="text-sm font-semibold text-[#F0E9E0] print:text-black">
                   {selectedOrder.tableNumber ? `Tavolo ${selectedOrder.tableNumber}` : "Comanda"}
                 </p>
-                <p className="text-xs text-ink-muted">
+                <p className="text-xs text-[#A69686] print:text-black">
                   {new Date(selectedOrder.created_at).toLocaleDateString("it-IT", {
                     day: "numeric",
                     month: "long",
@@ -733,51 +739,51 @@ export default function ComandePage() {
               <div className="space-y-1.5 p-4">
                 {selectedOrder.items.map((item) => (
                   <div key={item.id} className="flex items-baseline justify-between gap-3 text-sm">
-                    <span className="text-ink">
+                    <span className="text-[#F0E9E0] print:text-black">
                       {item.quantity}× {item.name}
                     </span>
-                    <span className="num-tabular shrink-0 text-ink">
+                    <span className="num-tabular shrink-0 text-[#F0E9E0] print:text-black">
                       €{(priceFor(item) * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 ))}
               </div>
-              <div className="flex items-center justify-between border-t border-dashed border-black/10 p-4">
-                <span className="text-base font-semibold text-ink">Totale</span>
-                <span className="num-tabular text-xl font-bold text-ink">€{orderTotal.toFixed(2)}</span>
+              <div className="flex items-center justify-between border-t border-dashed border-[#3A2C22] p-4 print:border-black/10">
+                <span className="text-base font-semibold text-[#F0E9E0] print:text-black">Totale</span>
+                <span className="num-tabular text-xl font-bold text-[#F0E9E0] print:text-black">€{orderTotal.toFixed(2)}</span>
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white p-4 shadow-sm print:hidden">
-              <p className="mb-3 text-sm font-medium text-ink">Dividi il conto</p>
+            <div className="rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4 print:hidden">
+              <p className="mb-3 text-sm font-medium text-[#F0E9E0]">Dividi il conto</p>
               <div className="flex items-center justify-center gap-4">
                 <button
                   onClick={() => setSplitPeople((n) => Math.max(1, n - 1))}
-                  className="touch-target grid h-10 w-10 place-items-center rounded-xl bg-bg-subtle text-ink"
+                  className="touch-target grid h-10 w-10 place-items-center rounded-xl border border-[#3A2C22] bg-[#1A1310] text-[#F0E9E0]"
                   aria-label="Meno persone"
                 >
                   <Minus size={16} />
                 </button>
                 <div className="text-center">
-                  <p className="num-tabular text-2xl font-bold text-ink">{splitPeople}</p>
-                  <p className="text-xs text-ink-muted">{splitPeople === 1 ? "persona" : "persone"}</p>
+                  <p className="num-tabular text-2xl font-bold text-[#F0E9E0]">{splitPeople}</p>
+                  <p className="text-xs text-[#A69686]">{splitPeople === 1 ? "persona" : "persone"}</p>
                 </div>
                 <button
                   onClick={() => setSplitPeople((n) => Math.min(30, n + 1))}
-                  className="touch-target grid h-10 w-10 place-items-center rounded-xl bg-bg-subtle text-ink"
+                  className="touch-target grid h-10 w-10 place-items-center rounded-xl border border-[#3A2C22] bg-[#1A1310] text-[#F0E9E0]"
                   aria-label="Più persone"
                 >
                   <Plus size={16} />
                 </button>
               </div>
-              <div className="mt-4 rounded-xl bg-primary-light p-3 text-center">
-                <p className="text-xs font-medium uppercase text-primary">A testa</p>
-                <p className="num-tabular text-2xl font-bold text-primary">
+              <div className="mt-4 rounded-xl border border-[#C17F45]/30 bg-[#C17F45]/15 p-3 text-center">
+                <p className="text-xs font-medium uppercase tracking-wide text-[#C17F45]">A testa</p>
+                <p className="num-tabular text-2xl font-bold text-[#C17F45]">
                   €{(orderTotal / splitPeople).toFixed(2)}
                 </p>
               </div>
               {splitPeople > 1 && (
-                <p className="mt-2 text-center text-[11px] text-ink-muted">
+                <p className="mt-2 text-center text-[11px] text-[#A69686]">
                   Divisione in parti uguali, arrotondata al centesimo.
                 </p>
               )}
@@ -785,7 +791,7 @@ export default function ComandePage() {
 
             <button
               onClick={() => window.print()}
-              className="touch-target flex w-full items-center justify-center gap-2 rounded-xl border border-black/10 bg-white py-2.5 text-sm font-medium text-ink-muted print:hidden"
+              className="touch-target flex w-full items-center justify-center gap-2 rounded-xl border border-[#3A2C22] bg-[#251C17] py-2.5 text-sm font-medium text-[#A69686] print:hidden"
             >
               <Printer size={16} />
               Stampa conto
@@ -795,7 +801,7 @@ export default function ComandePage() {
 
         {subView !== "bill" && (
           <div
-            className="fixed bottom-0 left-0 right-0 bg-primary text-white print:hidden"
+            className="fixed bottom-0 left-0 right-0 bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310] print:hidden"
             style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
           >
             <div className="flex items-center justify-between px-4 py-3">
@@ -807,7 +813,7 @@ export default function ComandePage() {
                 <Receipt size={20} />
               </button>
               <span className="flex items-baseline gap-1.5">
-                <span className="text-xs font-medium uppercase text-white/70">Totale</span>
+                <span className="text-xs font-medium uppercase text-[#1A1310]/70">Totale</span>
                 <span className="num-tabular text-xl font-bold">€{orderTotal.toFixed(2)}</span>
               </span>
               {subView !== "general" ? (
@@ -829,15 +835,16 @@ export default function ComandePage() {
   }
 
   return (
-    <div className="p-4">
-      <h1 className="mb-4 text-lg font-semibold text-ink">Comande</h1>
+    <div className="min-h-screen bg-[#1A1310] p-4">
+      <h1 className="mb-1 text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Comande</h1>
+      <SignatureLine className="mb-4" />
 
       {error && (
-        <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
+        <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">{error}</p>
       )}
 
       {isLoading ? (
-        <p className="py-8 text-center text-sm text-ink-muted">Carico i tavoli...</p>
+        <p className="py-8 text-center text-sm text-[#A69686]">Carico i tavoli...</p>
       ) : tables.length === 0 ? (
         <EmptyState
           icon={UtensilsCrossed}
@@ -854,8 +861,8 @@ export default function ComandePage() {
                   onClick={() => handleRoomFilterChange(r.id)}
                   className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium ${
                     roomFilter === r.id
-                      ? "bg-primary text-white"
-                      : "border border-black/10 text-ink-muted"
+                      ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                      : "border border-[#3A2C22] text-[#A69686]"
                   }`}
                 >
                   {r.name}
@@ -866,8 +873,8 @@ export default function ComandePage() {
                   onClick={() => handleRoomFilterChange("none")}
                   className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium ${
                     roomFilter === "none"
-                      ? "bg-primary text-white"
-                      : "border border-black/10 text-ink-muted"
+                      ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                      : "border border-[#3A2C22] text-[#A69686]"
                   }`}
                 >
                   Senza sala
@@ -878,7 +885,7 @@ export default function ComandePage() {
 
           {visibleRoomGroups.map((group) => (
             <div key={group.room?.id ?? "senza-sala"}>
-              <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#A69686]">
                 {group.room?.name ?? "Senza sala"}
               </p>
               <div className="grid grid-cols-3 gap-2">
@@ -890,10 +897,10 @@ export default function ComandePage() {
                       <button
                         onClick={() => handleOpenTable(table.id, `Tavolo ${table.number}`)}
                         disabled={isOpening}
-                        className={`touch-target flex aspect-square w-full flex-col items-center justify-center gap-0.5 rounded-2xl text-center shadow-sm transition-transform active:scale-95 disabled:opacity-60 ${
+                        className={`touch-target flex aspect-square w-full flex-col items-center justify-center gap-0.5 rounded-2xl text-center transition-transform active:scale-95 disabled:opacity-60 ${
                           activeOrder
-                            ? "bg-primary text-white"
-                            : "border-2 border-black/10 bg-white text-ink"
+                            ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                            : "border-2 border-[#3A2C22] bg-[#251C17] text-[#F0E9E0]"
                         }`}
                       >
                         {isOpening ? (
@@ -920,7 +927,7 @@ export default function ComandePage() {
                           onClick={() =>
                             handleDeleteOrder(activeOrder.id, `Tavolo ${table.number}`)
                           }
-                          className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full bg-white text-status-danger shadow-sm"
+                          className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full border border-[#3A2C22] bg-[#251C17] text-[#D97A63]"
                           aria-label={`Elimina comanda tavolo ${table.number}`}
                         >
                           <Trash2 size={12} />
@@ -934,12 +941,12 @@ export default function ComandePage() {
           ))}
 
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase text-ink-muted">Senza tavolo</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#A69686]">Senza tavolo</p>
             <div className="space-y-2">
               {takeoutOrders.map((order) => (
                 <div
                   key={order.id}
-                  className="flex items-center justify-between rounded-xl border border-black/5 bg-white p-3"
+                  className="flex items-center justify-between rounded-xl border border-[#3A2C22] bg-[#251C17] p-3"
                 >
                   <button
                     onClick={() => {
@@ -947,13 +954,13 @@ export default function ComandePage() {
                       setSubView("general");
                       setActiveCourse(1);
                     }}
-                    className="touch-target flex-1 text-left text-sm font-medium text-ink"
+                    className="touch-target flex-1 text-left text-sm font-medium text-[#F0E9E0]"
                   >
                     Comanda asporto · {order.items.length} piatt{order.items.length === 1 ? "o" : "i"}
                   </button>
                   <button
                     onClick={() => handleDeleteOrder(order.id, "questa comanda")}
-                    className="touch-target grid place-items-center rounded-lg text-status-danger"
+                    className="touch-target grid place-items-center rounded-lg text-[#D97A63]"
                     aria-label="Elimina comanda"
                   >
                     <Trash2 size={16} />
@@ -963,7 +970,7 @@ export default function ComandePage() {
               <button
                 onClick={() => handleOpenTable(null, "asporto")}
                 disabled={isOpeningTable === "takeout"}
-                className="touch-target flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-black/20 py-2.5 text-sm font-medium text-ink-muted disabled:opacity-50"
+                className="touch-target flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#3A2C22] py-2.5 text-sm font-medium text-[#A69686] disabled:opacity-50"
               >
                 {isOpeningTable === "takeout" ? (
                   <Loader2 size={16} className="animate-spin" />
@@ -1005,36 +1012,36 @@ function OrderItemRow({
     >
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-ink">
+          <p className="text-[#F0E9E0]">
             {item.quantity}× {item.name}
-            <span className="ml-1.5 text-[10px] uppercase text-ink-muted">
+            <span className="ml-1.5 text-[10px] uppercase text-[#A69686]">
               {item.destination === "bar" ? "Bar" : "Cucina"}
             </span>
           </p>
-          {item.notes && <p className="text-xs text-ink-muted">{item.notes}</p>}
-          <p className="text-xs text-ink-muted">
+          {item.notes && <p className="text-xs text-[#A69686]">{item.notes}</p>}
+          <p className="text-xs text-[#A69686]">
             {!item.sent_at ? "Da inviare" : `€${(price * item.quantity).toFixed(2)}`}
           </p>
         </div>
         {!isExpanded && (
-          <span className="shrink-0 text-[10px] text-ink-muted print:hidden">Tieni premuto</span>
+          <span className="shrink-0 text-[10px] text-[#A69686] print:hidden">Tieni premuto</span>
         )}
       </div>
 
       {isExpanded && (
-        <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-bg-subtle p-2 print:hidden">
+        <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-[#1A1310] p-2 print:hidden">
           <div className="flex items-center gap-2">
             <button
               onClick={() => (item.quantity <= 1 ? onDelete() : onSetQuantity(item.quantity - 1))}
-              className="touch-target grid h-8 w-8 place-items-center rounded-lg bg-white text-ink shadow-sm"
+              className="touch-target grid h-8 w-8 place-items-center rounded-lg border border-[#3A2C22] bg-[#251C17] text-[#F0E9E0]"
               aria-label="Diminuisci quantità"
             >
               <Minus size={14} />
             </button>
-            <span className="num-tabular w-6 text-center text-sm font-semibold">{item.quantity}</span>
+            <span className="num-tabular w-6 text-center text-sm font-semibold text-[#F0E9E0]">{item.quantity}</span>
             <button
               onClick={() => onSetQuantity(item.quantity + 1)}
-              className="touch-target grid h-8 w-8 place-items-center rounded-lg bg-white text-ink shadow-sm"
+              className="touch-target grid h-8 w-8 place-items-center rounded-lg border border-[#3A2C22] bg-[#251C17] text-[#F0E9E0]"
               aria-label="Aumenta quantità"
             >
               <Plus size={14} />
@@ -1042,7 +1049,7 @@ function OrderItemRow({
           </div>
           <button
             onClick={onDelete}
-            className="touch-target flex items-center gap-1 rounded-lg bg-status-dangerBg px-2.5 py-1.5 text-xs font-medium text-status-danger"
+            className="touch-target flex items-center gap-1 rounded-lg border border-[#C0503D]/30 bg-[#C0503D]/15 px-2.5 py-1.5 text-xs font-medium text-[#D97A63]"
           >
             <Trash2 size={13} />
             Elimina
@@ -1054,11 +1061,11 @@ function OrderItemRow({
 }
 
 function ItemTile({ item, onTap }: { item: MenuItem; onTap: () => void }) {
-  const color = item.category ? colorForGroup(groupForCategory(item.category).label) : "#111827";
+  const color = item.category ? colorForGroup(groupForCategory(item.category).label) : "#3A2C22";
   return (
     <button
       onClick={onTap}
-      className="touch-target flex min-h-[76px] flex-col items-center justify-center gap-1 rounded-2xl p-2.5 text-center text-white shadow-sm transition-transform active:scale-95"
+      className="touch-target flex min-h-[76px] flex-col items-center justify-center gap-1 rounded-2xl p-2.5 text-center text-white transition-transform active:scale-95"
       style={{ backgroundColor: color }}
     >
       <span className="text-sm font-semibold leading-tight">{item.name}</span>
