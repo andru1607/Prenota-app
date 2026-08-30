@@ -12,7 +12,8 @@ import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 const display = Oswald({ subsets: ["latin"], weight: ["500", "600", "700"] });
 const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
-const PAGE_BG = "#EEEEE9";
+const PAGE_BG = "#1A1310";
+const CARD_BG = "#251C17";
 
 interface RestaurantBranding {
   name: string;
@@ -54,7 +55,7 @@ function groupMenuByCategory(items: MenuItem[]): { category: string; items: Menu
 function TicketPerforation() {
   return (
     <div className="relative py-1">
-      <div className="border-t-2 border-dashed border-black/15" />
+      <div className="border-t-2 border-dashed border-[#F0E9E0]/15" />
       <span
         className="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full"
         style={{ backgroundColor: PAGE_BG }}
@@ -178,7 +179,10 @@ export default function RichiestaPage() {
           <LanguageSwitcher lang={lang} onChange={setLang} accentColor={color} />
         </div>
 
-        <div className="rounded-2xl bg-white shadow-lg" style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.08)" }}>
+        <div
+          className="rounded-2xl border border-[#3A2C22]"
+          style={{ backgroundColor: CARD_BG, boxShadow: "0 8px 30px rgba(0,0,0,0.4)" }}
+        >
           <div
             className="flex flex-col items-center gap-2 rounded-t-2xl px-6 py-7 text-center"
             style={{ backgroundColor: color }}
@@ -210,7 +214,7 @@ export default function RichiestaPage() {
           {hasInfo && (
             <div className="space-y-3 px-6 py-5">
               {branding?.description && (
-                <p className="text-sm leading-relaxed text-ink">{branding.description}</p>
+                <p className="text-sm leading-relaxed text-[#F0E9E0]">{branding.description}</p>
               )}
 
               <div className="space-y-2.5">
@@ -223,10 +227,10 @@ export default function RichiestaPage() {
                   >
                     <MapPin size={15} className="mt-0.5 shrink-0" style={{ color }} />
                     <div className="min-w-0">
-                      <p className={`${mono.className} text-[10px] uppercase tracking-widest text-ink-muted`}>
+                      <p className={`${mono.className} text-[10px] uppercase tracking-widest text-[#A69686]`}>
                         Indirizzo
                       </p>
-                      <p className="text-sm text-ink underline decoration-black/20 underline-offset-2">
+                      <p className="text-sm text-[#F0E9E0] underline decoration-[#F0E9E0]/25 underline-offset-2">
                         {branding.address}
                       </p>
                     </div>
@@ -236,10 +240,10 @@ export default function RichiestaPage() {
                   <a href={`tel:${branding.contact_phone}`} className="flex items-start gap-2.5">
                     <Phone size={15} className="mt-0.5 shrink-0" style={{ color }} />
                     <div className="min-w-0">
-                      <p className={`${mono.className} text-[10px] uppercase tracking-widest text-ink-muted`}>
+                      <p className={`${mono.className} text-[10px] uppercase tracking-widest text-[#A69686]`}>
                         Telefono
                       </p>
-                      <p className="text-sm text-ink underline decoration-black/20 underline-offset-2">
+                      <p className="text-sm text-[#F0E9E0] underline decoration-[#F0E9E0]/25 underline-offset-2">
                         {branding.contact_phone}
                       </p>
                     </div>
@@ -249,10 +253,10 @@ export default function RichiestaPage() {
                   <div className="flex items-start gap-2.5">
                     <Clock size={15} className="mt-0.5 shrink-0" style={{ color }} />
                     <div className="min-w-0">
-                      <p className={`${mono.className} text-[10px] uppercase tracking-widest text-ink-muted`}>
+                      <p className={`${mono.className} text-[10px] uppercase tracking-widest text-[#A69686]`}>
                         Orari
                       </p>
-                      <p className="whitespace-pre-line text-sm text-ink">{branding.opening_hours_text}</p>
+                      <p className="whitespace-pre-line text-sm text-[#F0E9E0]">{branding.opening_hours_text}</p>
                     </div>
                   </div>
                 )}
@@ -272,7 +276,7 @@ export default function RichiestaPage() {
                 onClick={() => setShowMenu((v) => !v)}
                 className="touch-target flex w-full items-center justify-between"
               >
-                <span className={`${display.className} flex items-center gap-2 text-sm uppercase tracking-wide text-ink`}>
+                <span className={`${display.className} flex items-center gap-2 text-sm uppercase tracking-wide text-[#F0E9E0]`}>
                   <UtensilsCrossed size={16} style={{ color }} />
                   {t("menu")}
                 </span>
@@ -298,13 +302,13 @@ export default function RichiestaPage() {
                         {group.items.map((item) => (
                           <div key={item.id} className="flex items-baseline justify-between gap-3">
                             <div className="min-w-0">
-                              <p className="text-sm text-ink">{item.name}</p>
+                              <p className="text-sm text-[#F0E9E0]">{item.name}</p>
                               {item.description && (
-                                <p className="text-xs text-ink-muted">{item.description}</p>
+                                <p className="text-xs text-[#A69686]">{item.description}</p>
                               )}
                             </div>
                             {item.price !== null && (
-                              <p className={`${mono.className} shrink-0 text-sm text-ink`}>
+                              <p className={`${mono.className} shrink-0 text-sm text-[#F0E9E0]`}>
                                 €{Number(item.price).toFixed(2)}
                               </p>
                             )}
@@ -336,7 +340,7 @@ export default function RichiestaPage() {
 
             {showForm && (
               <form onSubmit={handleSubmit}>
-                <h2 className={`${display.className} mb-3 text-sm uppercase tracking-wide text-ink`}>
+                <h2 className={`${display.className} mb-3 text-sm uppercase tracking-wide text-[#F0E9E0]`}>
                   {t("requestReservation")}
                 </h2>
 
@@ -356,20 +360,20 @@ export default function RichiestaPage() {
                     onChange={(e) => setCustomerName(e.target.value)}
                     placeholder={t("fullName")}
                     autoFocus
-                    className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm"
+                    className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2.5 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                   />
                   <input
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder={t("phone")}
-                    className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm"
+                    className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2.5 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                   />
                   <input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm text-ink"
+                    className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2.5 text-sm text-[#F0E9E0]"
                   />
                   <div className="grid grid-cols-2 gap-2">
                     <input
@@ -378,14 +382,14 @@ export default function RichiestaPage() {
                       placeholder={t("timePlaceholder")}
                       inputMode="numeric"
                       maxLength={5}
-                      className={`${mono.className} rounded-lg border border-black/10 px-3 py-2.5 text-sm`}
+                      className={`${mono.className} rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2.5 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none`}
                     />
                     <input
                       type="number"
                       value={partySize}
                       onChange={(e) => setPartySize(e.target.value)}
                       placeholder={t("people")}
-                      className={`${mono.className} rounded-lg border border-black/10 px-3 py-2.5 text-sm`}
+                      className={`${mono.className} rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2.5 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none`}
                     />
                   </div>
                   <textarea
@@ -394,18 +398,18 @@ export default function RichiestaPage() {
                     placeholder={t("specialRequests")}
                     rows={2}
                     maxLength={300}
-                    className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm"
+                    className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2.5 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
                   />
                 </div>
 
                 {!isRestaurantOpen && (
-                  <p className="mt-2 flex items-center gap-1.5 text-sm text-status-danger">
+                  <p className="mt-2 flex items-center gap-1.5 text-sm text-[#D97A63]">
                     <CalendarX size={15} />
                     {t("closedOnThisDate")}
                   </p>
                 )}
 
-                {error && <p className="mt-2 text-sm text-status-danger">{error}</p>}
+                {error && <p className="mt-2 text-sm text-[#D97A63]">{error}</p>}
 
                 <button
                   type="submit"
@@ -417,7 +421,7 @@ export default function RichiestaPage() {
                   {isLoading ? t("sending") : t("sendRequest")}
                 </button>
 
-                <p className="mt-3 text-center text-xs text-ink-muted">{t("upToSixNote")}</p>
+                <p className="mt-3 text-center text-xs text-[#A69686]">{t("upToSixNote")}</p>
               </form>
             )}
           </div>
