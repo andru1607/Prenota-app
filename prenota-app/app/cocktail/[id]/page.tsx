@@ -289,22 +289,24 @@ export default function CocktailDetailPage() {
         )}
       </div>
 
-      <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#A69686]">Ingredienti</p>
-        <div className="space-y-1.5">
-          {ingredients.map((ing) => (
-            <div key={ing.id} className="flex items-center justify-between gap-3 text-sm">
-              <span className="text-[#F0E9E0]">{ing.name}</span>
-              <span className="num-tabular text-right text-[#A69686]">{formatDose(ing.amount_ml)}</span>
-            </div>
-          ))}
+      {ingredients.length > 0 && (
+        <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#A69686]">Ingredienti</p>
+          <div className="space-y-1.5">
+            {ingredients.map((ing) => (
+              <div key={ing.id} className="flex items-center justify-between gap-3 text-sm">
+                <span className="text-[#F0E9E0]">{ing.name}</span>
+                <span className="num-tabular text-right text-[#A69686]">{formatDose(ing.amount_ml)}</span>
+              </div>
+            ))}
+          </div>
+          {!dosatorePiccolo && !dosatoreGrande && (
+            <p className="mt-2 text-xs text-[#A69686]">
+              Imposta il tuo dosatore in Impostazioni per vedere le dosi anche in numero di dosatori.
+            </p>
+          )}
         </div>
-        {!dosatorePiccolo && !dosatoreGrande && (
-          <p className="mt-2 text-xs text-[#A69686]">
-            Imposta il tuo dosatore in Impostazioni per vedere le dosi anche in numero di dosatori.
-          </p>
-        )}
-      </div>
+      )}
 
       <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#A69686]">Preparazione</p>
