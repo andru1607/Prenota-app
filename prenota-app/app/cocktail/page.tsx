@@ -2,7 +2,20 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Martini, Plus, Search, Loader2, ArrowLeft, Award, Sparkles, Zap, Droplets, User } from "lucide-react";
+import {
+  Martini,
+  Plus,
+  Search,
+  Loader2,
+  ArrowLeft,
+  Wine,
+  FlaskConical,
+  CupSoda,
+  Droplets,
+  Coffee,
+  User,
+  Star,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getMyStaffRow } from "@/lib/roles";
 import { OnboardingGuide } from "@/components/ui/OnboardingGuide";
@@ -14,13 +27,16 @@ type Cocktail = {
   glass: string | null;
   image_url: string | null;
   restaurant_id: string | null;
+  featured_rank: number | null;
 };
 
 const CATEGORY_ICONS: Record<string, typeof Martini> = {
-  "Intramontabili": Award,
-  "Contemporary Classics": Sparkles,
-  "New Era Drinks": Zap,
+  "Aperitivi": Wine,
+  "Amari": FlaskConical,
+  "Long Drink": CupSoda,
+  "Cocktail Classici": Martini,
   "Analcolici": Droplets,
+  "Caffetteria": Coffee,
 };
 
 const CUSTOM_LABEL = "I tuoi cocktail";
@@ -50,7 +66,7 @@ export default function CocktailListPage() {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("cocktails")
-        .select("id, name, category, glass, image_url, restaurant_id")
+        .select("id, name, category, glass, image_url, restaurant_id, featured_rank")
         .or(`restaurant_id.is.null,restaurant_id.eq.${staffRow.restaurantId}`)
         .order("name", { ascending: true });
 
@@ -70,6 +86,14 @@ export default function CocktailListPage() {
   );
   const standardCocktails = useMemo(
     () => cocktails.filter((c) => c.restaurant_id === null),
+    [cocktails]
+  );
+
+  const featuredCocktails = useMemo(
+    () =>
+      cocktails
+        .filter((c) => c.featured_rank !== null)
+        .sort((a, b) => (a.featured_rank ?? 0) - (b.featured_rank ?? 0)),
     [cocktails]
   );
 
@@ -178,56 +202,88 @@ export default function CocktailListPage() {
           </p>
           <SignatureLine className="mb-3" />
           {categoryResults.length === 0 ? (
-            <p className="py-10 text-center text-sm text-[#A69686]">
-              Non hai ancora cocktail qui. Tocca &quot;+&quot; per aggiungerne uno.
+            <p className="py-6 text-center text-sm text-[#A69686]">
+              Non hai ancora cocktail qui.
             </p>
           ) : (
-            <div className="space-y-2">{categoryResults.map(renderCocktailRow)}</div>
+            <div className="mb-3 space-y-2">{categoryResults.map(renderCocktailRow)}</div>
+          )}
+          {selectedCategory !== CUSTOM_LABEL && (
+            <Link
+              href={`/cocktail/nuovo?categoria=${encodeURIComponent(selectedCategory)}`}
+              className="touch-target flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#3A2C22] py-2.5 text-xs font-medium text-[#A69686]"
+            >
+              <Plus size={14} />
+              Aggiungi un prodotto in {selectedCategory}
+            </Link>
           )}
         </div>
       ) : cocktails.length === 0 ? (
         <p className="py-10 text-center text-sm text-[#A69686]">Non ci sono ancora cocktail.</p>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => setSelectedCategory(CUSTOM_LABEL)}
-            className="touch-target flex flex-col items-start gap-2.5 rounded-2xl border border-[#3A2C22] bg-gradient-to-b from-[#2A211C] to-[#1F1712] p-4 text-left"
-          >
-            <div className="relative grid h-11 w-11 place-items-center">
-              <div className="absolute inset-0 rounded-full bg-[#E3A857] opacity-20 blur-md" />
-              <div className="relative grid h-11 w-11 place-items-center rounded-full border border-[#E3A857]/50 bg-[#1A1310] text-[#E3A857]">
-                <User size={18} />
+        <>
+          {featuredCocktails.length > 0 && (
+            <div className="mb-5">
+              <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[#E3A857]">
+                <Star size={13} className="fill-[#E3A857]" />
+                I più richiesti
+              </p>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {featuredCocktails.map((c) => (
+                  <Link
+                    key={c.id}
+                    href={`/cocktail/${c.id}`}
+                    className="flex h-20 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl border border-[#E3A857]/30 bg-[#E3A857]/10 p-2 text-center"
+                  >
+                    <Martini size={16} className="text-[#E3A857]" />
+                    <span className="text-xs font-medium leading-tight text-[#F0E9E0]">{c.name}</span>
+                  </Link>
+                ))}
               </div>
             </div>
-            <div>
-              <p className="text-sm font-bold uppercase tracking-wide text-[#F0E9E0]">{CUSTOM_LABEL}</p>
-              <p className="num-tabular text-xs text-[#A69686]">{customCocktails.length} cocktail</p>
-            </div>
-          </button>
+          )}
 
-          {standardCategories.map((category) => {
-            const Icon = CATEGORY_ICONS[category] ?? Martini;
-            const count = standardCocktails.filter((c) => (c.category || "Altro") === category).length;
-            return (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className="touch-target flex flex-col items-start gap-2.5 rounded-2xl border border-[#3A2C22] bg-gradient-to-b from-[#2A211C] to-[#1F1712] p-4 text-left"
-              >
-                <div className="relative grid h-11 w-11 place-items-center">
-                  <div className="absolute inset-0 rounded-full bg-[#C17F45] opacity-20 blur-md" />
-                  <div className="relative grid h-11 w-11 place-items-center rounded-full border border-[#C17F45]/50 bg-[#1A1310] text-[#C17F45]">
-                    <Icon size={18} />
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setSelectedCategory(CUSTOM_LABEL)}
+              className="touch-target flex flex-col items-start gap-2.5 rounded-2xl border border-[#3A2C22] bg-gradient-to-b from-[#2A211C] to-[#1F1712] p-4 text-left"
+            >
+              <div className="relative grid h-11 w-11 place-items-center">
+                <div className="absolute inset-0 rounded-full bg-[#E3A857] opacity-20 blur-md" />
+                <div className="relative grid h-11 w-11 place-items-center rounded-full border border-[#E3A857]/50 bg-[#1A1310] text-[#E3A857]">
+                  <User size={18} />
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-bold uppercase tracking-wide text-[#F0E9E0]">{CUSTOM_LABEL}</p>
+                <p className="num-tabular text-xs text-[#A69686]">{customCocktails.length} cocktail</p>
+              </div>
+            </button>
+
+            {standardCategories.map((category) => {
+              const Icon = CATEGORY_ICONS[category] ?? Martini;
+              const count = standardCocktails.filter((c) => (c.category || "Altro") === category).length;
+              return (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className="touch-target flex flex-col items-start gap-2.5 rounded-2xl border border-[#3A2C22] bg-gradient-to-b from-[#2A211C] to-[#1F1712] p-4 text-left"
+                >
+                  <div className="relative grid h-11 w-11 place-items-center">
+                    <div className="absolute inset-0 rounded-full bg-[#C17F45] opacity-20 blur-md" />
+                    <div className="relative grid h-11 w-11 place-items-center rounded-full border border-[#C17F45]/50 bg-[#1A1310] text-[#C17F45]">
+                      <Icon size={18} />
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <p className="text-sm font-bold uppercase tracking-wide text-[#F0E9E0]">{category}</p>
-                  <p className="num-tabular text-xs text-[#A69686]">{count} cocktail</p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                  <div>
+                    <p className="text-sm font-bold uppercase tracking-wide text-[#F0E9E0]">{category}</p>
+                    <p className="num-tabular text-xs text-[#A69686]">{count} cocktail</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </>
       )}
       </div>
     </div>
