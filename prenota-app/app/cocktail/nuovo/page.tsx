@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Martini, Loader2, Check, Plus, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getMyStaffRow } from "@/lib/roles";
@@ -13,15 +13,21 @@ type IngredientRow = {
   amount_ml: string;
 };
 
+const CATEGORIES = ["Aperitivi", "Amari", "Long Drink", "Cocktail Classici", "Analcolici", "Caffetteria"];
+
 function newIngredientRow(): IngredientRow {
   return { id: crypto.randomUUID(), name: "", amount_ml: "" };
 }
 
 export default function NuovoCocktailPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const presetCategory = searchParams.get("categoria");
 
   const [name, setName] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(
+    presetCategory && CATEGORIES.includes(presetCategory) ? presetCategory : CATEGORIES[0]
+  );
   const [glass, setGlass] = useState("");
   const [technique, setTechnique] = useState("");
   const [garnish, setGarnish] = useState("");
@@ -55,11 +61,6 @@ export default function NuovoCocktailPage() {
       .map((ing) => ({ name: ing.name.trim(), amount_ml: Number(ing.amount_ml) }))
       .filter((ing) => ing.name && ing.amount_ml > 0);
 
-    if (validIngredients.length === 0) {
-      setError("Aggiungi almeno un ingrediente con nome e dose in ml.");
-      return;
-    }
-
     setIsSaving(true);
 
     try {
@@ -76,7 +77,7 @@ export default function NuovoCocktailPage() {
         .insert({
           restaurant_id: staffRow.restaurantId,
           name: name.trim(),
-          category: category.trim() || null,
+          category,
           glass: glass.trim() || null,
           technique: technique.trim() || null,
           garnish: garnish.trim() || null,
@@ -87,20 +88,22 @@ export default function NuovoCocktailPage() {
 
       if (cocktailError || !cocktail) throw cocktailError;
 
-      const ingredientRows = validIngredients.map((ing, index) => ({
-        cocktail_id: cocktail.id,
-        name: ing.name,
-        amount_ml: ing.amount_ml,
-        position: index,
-      }));
+      if (validIngredients.length > 0) {
+        const ingredientRows = validIngredients.map((ing, index) => ({
+          cocktail_id: cocktail.id,
+          name: ing.name,
+          amount_ml: ing.amount_ml,
+          position: index,
+        }));
 
-      const { error: ingredientsError } = await supabase
-        .from("cocktail_ingredients")
-        .insert(ingredientRows);
+        const { error: ingredientsError } = await supabase
+          .from("cocktail_ingredients")
+          .insert(ingredientRows);
 
-      if (ingredientsError) {
-        await supabase.from("cocktails").delete().eq("id", cocktail.id);
-        throw ingredientsError;
+        if (ingredientsError) {
+          await supabase.from("cocktails").delete().eq("id", cocktail.id);
+          throw ingredientsError;
+        }
       }
 
       router.push(`/cocktail/${cocktail.id}`);
@@ -127,7 +130,7 @@ export default function NuovoCocktailPage() {
           </div>
         </div>
         <div>
-          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Nuovo cocktail</h1>
+          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Nuovo prodotto</h1>
           <p className="text-xs text-[#A69686]">Visibile e modificabile solo dal tuo bar</p>
         </div>
       </div>
@@ -137,34 +140,40 @@ export default function NuovoCocktailPage() {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Nome del cocktail"
+            placeholder="Nome (es. Negroni, Espresso, Fernet...)"
             autoFocus
             className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           />
-          <div className="grid grid-cols-2 gap-2">
-            <input
+          <label className="block text-xs text-[#A69686]">
+            Categoria
+            <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              placeholder="Categoria (es. Long drink)"
-              className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
-            />
-            <input
-              value={glass}
-              onChange={(e) => setGlass(e.target.value)}
-              placeholder="Bicchiere (es. Tumbler basso)"
-              className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
-            />
-          </div>
+              className="mt-1 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0]"
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </label>
+          <input
+            value={glass}
+            onChange={(e) => setGlass(e.target.value)}
+            placeholder="Bicchiere/tazza (es. Tumbler basso, Tazzina)"
+            className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
+          />
           <input
             value={technique}
             onChange={(e) => setTechnique(e.target.value)}
-            placeholder="Tecnica (es. Shakerato, Mescolato, Build)"
+            placeholder="Tecnica (es. Shakerato, Mescolato, Build, Estrazione)"
             className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           />
           <input
             value={garnish}
             onChange={(e) => setGarnish(e.target.value)}
-            placeholder="Guarnizione (es. scorza di limone)"
+            placeholder="Guarnizione (facoltativa)"
             className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           />
           <textarea
@@ -178,7 +187,10 @@ export default function NuovoCocktailPage() {
       </div>
 
       <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#A69686]">Ingredienti</p>
+        <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#A69686]">Ingredienti</p>
+        <p className="mb-3 text-[11px] text-[#A69686]">
+          Facoltativi — lascia vuoto per prodotti senza dosi da dosatore (es. un caffè).
+        </p>
         <div className="space-y-2">
           {ingredients.map((ing) => (
             <div key={ing.id} className="flex items-center gap-2">
@@ -221,10 +233,10 @@ export default function NuovoCocktailPage() {
       <button
         onClick={handleSave}
         disabled={isSaving}
-        className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2.5 text-sm font-medium text-[#1A1310] shadow-[0_0_18px_rgba(227,168,87,0.25)] disabled:opacity-50"
+        className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2.5 text-sm font-medium text-[#1A1310] disabled:opacity-50"
       >
         {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-        {isSaving ? "Salvo..." : "Salva cocktail"}
+        {isSaving ? "Salvo..." : "Salva"}
       </button>
     </div>
   );
