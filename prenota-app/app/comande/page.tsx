@@ -695,7 +695,7 @@ export default function ComandePage() {
                         setSubView("items");
                       }}
                       disabled={count === 0}
-                      className="touch-target flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl p-2 text-center text-xs font-semibold text-white transition-transform active:scale-95 disabled:opacity-30"
+                      className="touch-target touch-manipulation flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl p-2 text-center text-xs font-semibold text-white transition-transform active:scale-95 disabled:opacity-30"
                       style={{ backgroundColor: color }}
                     >
                       {group.label}
@@ -897,7 +897,7 @@ export default function ComandePage() {
                       <button
                         onClick={() => handleOpenTable(table.id, `Tavolo ${table.number}`)}
                         disabled={isOpening}
-                        className={`touch-target flex aspect-square w-full flex-col items-center justify-center gap-0.5 rounded-2xl text-center transition-transform active:scale-95 disabled:opacity-60 ${
+                        className={`touch-target touch-manipulation flex aspect-square w-full flex-col items-center justify-center gap-0.5 rounded-2xl text-center transition-transform active:scale-95 disabled:opacity-60 ${
                           activeOrder
                             ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
                             : "border-2 border-[#3A2C22] bg-[#251C17] text-[#F0E9E0]"
@@ -1065,7 +1065,7 @@ function ItemTile({ item, onTap }: { item: MenuItem; onTap: () => void }) {
   return (
     <button
       onClick={onTap}
-      className="touch-target flex min-h-[76px] flex-col items-center justify-center gap-1 rounded-2xl p-2.5 text-center text-white transition-transform active:scale-95"
+      className="touch-target touch-manipulation flex min-h-[76px] flex-col items-center justify-center gap-1 rounded-2xl p-2.5 text-center text-white transition-transform active:scale-95"
       style={{ backgroundColor: color }}
     >
       <span className="text-sm font-semibold leading-tight">{item.name}</span>
