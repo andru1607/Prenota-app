@@ -42,11 +42,17 @@ const STATUS_LABEL: Record<OrderItem["status"], string> = {
 };
 
 const STATUS_COLOR: Record<OrderItem["status"], string> = {
-  pending: "bg-white border-black/10 text-ink",
-  in_progress: "bg-status-pendingBg border-status-pending text-status-pending",
-  ready: "bg-status-freeBg border-status-free text-status-free",
-  served: "bg-bg-subtle border-black/5 text-ink-muted",
+  pending: "bg-[#251C17] border-[#3A2C22] text-[#F0E9E0]",
+  in_progress: "bg-[#E3A857]/15 border-[#E3A857] text-[#E3A857]",
+  ready: "bg-[#7C9473]/15 border-[#7C9473] text-[#7C9473]",
+  served: "bg-[#1A1310] border-[#3A2C22] text-[#A69686]",
 };
+
+function SignatureLine({ className = "" }: { className?: string }) {
+  return (
+    <div className={`h-px w-14 bg-gradient-to-r from-[#C17F45] via-[#C17F45] to-transparent ${className}`} />
+  );
+}
 
 export function OrderMonitor({ defaultView }: { defaultView: "kitchen" | "bar" }) {
   const [view, setView] = useState<"kitchen" | "bar">(defaultView);
@@ -157,13 +163,13 @@ export function OrderMonitor({ defaultView }: { defaultView: "kitchen" | "bar" }
   }
 
   return (
-    <div className="min-h-screen bg-bg p-4">
+    <div className="min-h-screen bg-[#1A1310] p-4">
       <div className="mb-4 flex items-center justify-between gap-2">
-        <div className="flex rounded-xl border border-black/10 bg-white p-1">
+        <div className="flex rounded-xl border border-[#3A2C22] bg-[#251C17] p-1">
           <button
             onClick={() => setView("kitchen")}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium ${
-              view === "kitchen" ? "bg-primary text-white" : "text-ink-muted"
+              view === "kitchen" ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]" : "text-[#A69686]"
             }`}
           >
             <ChefHat size={16} />
@@ -172,7 +178,7 @@ export function OrderMonitor({ defaultView }: { defaultView: "kitchen" | "bar" }
           <button
             onClick={() => setView("bar")}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium ${
-              view === "bar" ? "bg-primary text-white" : "text-ink-muted"
+              view === "bar" ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]" : "text-[#A69686]"
             }`}
           >
             <Wine size={16} />
@@ -184,7 +190,7 @@ export function OrderMonitor({ defaultView }: { defaultView: "kitchen" | "bar" }
             unlockAlertSound();
             load();
           }}
-          className="touch-target grid place-items-center rounded-xl border border-black/10 text-ink-muted"
+          className="touch-target grid place-items-center rounded-xl border border-[#3A2C22] bg-[#251C17] text-[#A69686]"
           aria-label="Aggiorna ora"
         >
           <RefreshCw size={20} />
@@ -192,12 +198,12 @@ export function OrderMonitor({ defaultView }: { defaultView: "kitchen" | "bar" }
       </div>
 
       {error && (
-        <p className="mb-3 rounded-lg bg-status-dangerBg p-3 text-sm text-status-danger">{error}</p>
+        <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">{error}</p>
       )}
 
       {isLoading ? (
         <div className="grid place-items-center py-16">
-          <Loader2 size={28} className="animate-spin text-primary" />
+          <Loader2 size={28} className="animate-spin text-[#C17F45]" />
         </div>
       ) : orders.length === 0 ? (
         <EmptyState icon={UtensilsCrossed} title="Nessuna comanda in corso" />
@@ -208,11 +214,11 @@ export function OrderMonitor({ defaultView }: { defaultView: "kitchen" | "bar" }
             return (
               <div
                 key={order.id}
-                className={`rounded-2xl border-2 bg-white p-4 shadow-sm ${
-                  allReady ? "border-status-free" : "border-black/5"
+                className={`rounded-2xl border-2 bg-[#251C17] p-4 ${
+                  allReady ? "border-[#7C9473]" : "border-[#3A2C22]"
                 }`}
               >
-                <p className="mb-3 text-lg font-bold text-ink">
+                <p className="mb-3 text-lg font-bold text-[#F0E9E0]">
                   {order.tableNumber ? `Tavolo ${order.tableNumber}` : "Senza tavolo"}
                 </p>
                 <div className="space-y-2">
