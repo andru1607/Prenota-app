@@ -27,6 +27,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
   themeColor: "#1A1310",
   viewportFit: "cover",
   maximumScale: 1,
@@ -40,7 +42,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="it" className={manrope.variable}>
-      <body className="bg-[#1A1310]">
+      <body className="overflow-x-hidden bg-[#1A1310]">
         <ThemeLoader />
         <ToastProvider>
           <AppChrome>{children}</AppChrome>
