@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Martini, Loader2, Check, Plus, Trash2 } from "lucide-react";
@@ -20,6 +20,14 @@ function newIngredientRow(): IngredientRow {
 }
 
 export default function NuovoCocktailPage() {
+  return (
+    <Suspense fallback={null}>
+      <NuovoCocktailForm />
+    </Suspense>
+  );
+}
+
+function NuovoCocktailForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const presetCategory = searchParams.get("categoria");
