@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getMyRole, getMyStaffRow } from "@/lib/roles";
-import { THEMES, applyTheme, type ThemeName, DEFAULT_THEME } from "@/lib/themes";
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -51,8 +50,6 @@ export default function ImpostazioniPage() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [appTheme, setAppTheme] = useState<ThemeName>(DEFAULT_THEME);
-  const [isSavingTheme, setIsSavingTheme] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -141,7 +138,7 @@ export default function ImpostazioniPage() {
       const supabase = createClient();
       const { data: restaurant } = await supabase
         .from("restaurants")
-        .select("name, logo_url, primary_color, app_theme, business_type")
+        .select("name, logo_url, primary_color, business_type")
         .eq("id", staffRow.restaurantId)
         .single();
 
@@ -150,28 +147,10 @@ export default function ImpostazioniPage() {
         setLogoUrl(restaurant.logo_url ?? null);
         setPrimaryColor(restaurant.primary_color ?? "#4F46E5");
         setBusinessType(restaurant.business_type === "bar" ? "bar" : "ristorante");
-        if (restaurant.app_theme && restaurant.app_theme in THEMES) {
-          setAppTheme(restaurant.app_theme as ThemeName);
-        }
       }
     }
     loadRestaurant();
   }, []);
-
-  async function handleSelectTheme(theme: ThemeName) {
-    if (!restaurantId) return;
-    setAppTheme(theme);
-    applyTheme(theme);
-    setIsSavingTheme(true);
-    try {
-      const supabase = createClient();
-      await supabase.from("restaurants").update({ app_theme: theme }).eq("id", restaurantId);
-    } catch (err) {
-      console.error("Errore salvataggio tema:", err);
-    } finally {
-      setIsSavingTheme(false);
-    }
-  }
 
   function handleLogoSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -281,45 +260,6 @@ export default function ImpostazioniPage() {
           <SectionLabel>Il tuo locale</SectionLabel>
 
           <div className="mb-2 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
-            <p className="mb-1 text-sm font-medium text-[#F0E9E0]">Aspetto dell'app</p>
-            <p className="mb-3 text-xs text-[#A69686]">
-              Cambia i colori dell'app che usi tu, indipendentemente da quelli della
-              pagina pubblica dei clienti.
-            </p>
-            <div className="space-y-2">
-              {(Object.keys(THEMES) as ThemeName[]).map((key) => {
-                const theme = THEMES[key];
-                const isSelected = appTheme === key;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => handleSelectTheme(key)}
-                    disabled={isSavingTheme}
-                    className={`touch-target flex w-full items-center gap-3 rounded-xl border p-3 text-left disabled:opacity-60 ${
-                      isSelected ? "border-[#C17F45] bg-[#C17F45]/15" : "border-[#3A2C22]"
-                    }`}
-                  >
-                    <span
-                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#3A2C22]"
-                      style={{ backgroundColor: theme.bg }}
-                    >
-                      <span
-                        className="h-4 w-4 rounded-full"
-                        style={{ backgroundColor: theme.primary }}
-                      />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-[#F0E9E0]">{theme.label}</p>
-                      <p className="text-xs text-[#A69686]">{theme.description}</p>
-                    </div>
-                    {isSelected && <Check size={18} className="shrink-0 text-[#C17F45]" />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mb-2 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
             <p className="mb-3 text-sm font-medium text-[#F0E9E0]">
               {isBar ? "Personalizza il tuo locale" : "Personalizza la pagina prenotazioni"}
             </p>
@@ -357,7 +297,7 @@ export default function ImpostazioniPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={isBar ? "Nome del bar" : "Nome del ristorante"}
-              className="mb-2 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
+              className="mb-2 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-base text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
 
             <div className="mb-3 flex items-center gap-3">
@@ -414,10 +354,10 @@ export default function ImpostazioniPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 rounded-lg border border-[#3A2C22] bg-[#1A1310] p-2">
-                <p className="flex-1 truncate text-xs text-[#A69686]">{link}</p>
+                <p className="min-w-0 flex-1 truncate text-xs text-[#A69686]">{link}</p>
                 <button
                   onClick={handleCopy}
-                  className="touch-target grid place-items-center rounded-lg text-[#C17F45]"
+                  className="touch-target grid shrink-0 place-items-center rounded-lg text-[#C17F45]"
                   aria-label="Copia link"
                 >
                   {copied ? <Check size={16} /> : <Copy size={16} />}
