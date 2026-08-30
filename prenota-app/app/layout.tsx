@@ -27,8 +27,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#4F46E5",
+  themeColor: "#1A1310",
   viewportFit: "cover",
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -38,7 +40,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="it" className={manrope.variable}>
-      <body>
+      <body className="bg-[#1A1310]">
         <ThemeLoader />
         <ToastProvider>
           <AppChrome>{children}</AppChrome>
