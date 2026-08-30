@@ -2,11 +2,21 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { X, Palette, QrCode, UtensilsCrossed, CalendarX, Sparkles } from "lucide-react";
+import {
+  X,
+  Palette,
+  QrCode,
+  UtensilsCrossed,
+  CalendarX,
+  Sparkles,
+  Martini,
+  Boxes,
+  BookOpen,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getMyStaffRow } from "@/lib/roles";
 
-const STEPS = [
+const RISTORANTE_STEPS = [
   {
     href: "/impostazioni",
     icon: Palette,
@@ -33,9 +43,37 @@ const STEPS = [
   },
 ];
 
+const BAR_STEPS = [
+  {
+    href: "/impostazioni",
+    icon: Palette,
+    title: "Personalizza il tuo locale",
+    description: "Aggiungi logo, nome e colore del tuo bar",
+  },
+  {
+    href: "/impostazioni/dosatore",
+    icon: Martini,
+    title: "Imposta il tuo dosatore",
+    description: "Le dosi delle ricette si convertiranno in automatico",
+  },
+  {
+    href: "/magazzino",
+    icon: Boxes,
+    title: "Aggiungi i prodotti al magazzino",
+    description: "Bottiglie, scorte e avvisi sempre sotto controllo",
+  },
+  {
+    href: "/cocktail",
+    icon: BookOpen,
+    title: "Esplora l'enciclopedia cocktail",
+    description: "116 ricette pronte, o aggiungi le tue",
+  },
+];
+
 export function OnboardingGuide() {
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
+  const [businessType, setBusinessType] = useState<"ristorante" | "bar">("ristorante");
 
   useEffect(() => {
     async function check() {
@@ -47,9 +85,13 @@ export function OnboardingGuide() {
       const supabase = createClient();
       const { data: restaurant } = await supabase
         .from("restaurants")
-        .select("onboarding_completed")
+        .select("onboarding_completed, business_type")
         .eq("id", staffRow.restaurantId)
         .single();
+
+      if (restaurant?.business_type === "bar") {
+        setBusinessType("bar");
+      }
 
       if (restaurant && restaurant.onboarding_completed === false) {
         setVisible(true);
@@ -70,6 +112,8 @@ export function OnboardingGuide() {
 
   if (!visible) return null;
 
+  const steps = businessType === "bar" ? BAR_STEPS : RISTORANTE_STEPS;
+
   return (
     <div className="mx-4 mt-4 rounded-2xl border border-[#E3A857]/30 bg-[#E3A857]/10 p-4">
       <div className="mb-3 flex items-start justify-between gap-2">
@@ -87,7 +131,7 @@ export function OnboardingGuide() {
       </div>
 
       <div className="space-y-2">
-        {STEPS.map((step) => {
+        {steps.map((step) => {
           const Icon = step.icon;
           return (
             <Link
