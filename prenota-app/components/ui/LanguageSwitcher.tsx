@@ -24,7 +24,7 @@ export function LanguageSwitcher({ lang, onChange, accentColor }: LanguageSwitch
             key={opt.code}
             onClick={() => onChange(opt.code)}
             className={`touch-target rounded-full px-3 text-xs font-semibold ${
-              active ? "text-white" : "border border-black/10 text-ink-muted"
+              active ? "text-white" : "border border-[#3A2C22] text-[#A69686]"
             }`}
             style={active && accentColor ? { backgroundColor: accentColor } : undefined}
           >
