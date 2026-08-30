@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Martini, Plus, Search, Loader2, ArrowLeft, Award, Sparkles, Zap, Droplets, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getMyStaffRow } from "@/lib/roles";
+import { OnboardingGuide } from "@/components/ui/OnboardingGuide";
 
 type Cocktail = {
   id: string;
@@ -126,7 +127,9 @@ export default function CocktailListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1A1310] p-4">
+    <div className="min-h-screen bg-[#1A1310]">
+      <OnboardingGuide />
+      <div className="p-4">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Cocktail</h1>
@@ -226,6 +229,7 @@ export default function CocktailListPage() {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }
