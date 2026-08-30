@@ -19,11 +19,11 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen">
       <Sidebar />
 
-      <main className="flex-1 pb-20 md:pb-0">{children}</main>
-
-      <BottomNav />
-
-      <SupportChatWidget />
+      <main className="min-w-0 flex-1 overflow-x-hidden pb-20 md:pb-0">
+        {children}
+        <BottomNav />
+        <SupportChatWidget />
+      </main>
     </div>
   );
 }
