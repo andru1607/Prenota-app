@@ -8,6 +8,7 @@ import { TableCard } from "@/components/ui/TableCard";
 import { ReservationCard } from "@/components/ui/ReservationCard";
 import { PhotoImportReview } from "@/components/ui/PhotoImportReview";
 import { OnboardingGuide } from "@/components/ui/OnboardingGuide";
+import { TrialBanner } from "@/components/ui/TrialBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableCardSkeleton, ReservationCardSkeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/ToastProvider";
@@ -351,6 +352,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#1A1310]">
       <OnboardingGuide />
+      <TrialBanner />
       <StatusBar totalCoperti={coperti} tavoliLiberi={tavoliLiberi} prossimoArrivo={prossimoArrivo} />
 
       <div className="p-4">
