@@ -6,7 +6,10 @@ import { ArrowLeft, Star, Trash2, Check, Loader2, CalendarClock } from "lucide-r
 import { ReservationCard } from "@/components/ui/ReservationCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { LockedFeature } from "@/components/ui/LockedFeature";
 import { useToast } from "@/components/ui/ToastProvider";
+import { useSubscription } from "@/lib/hooks/useSubscription";
+import { hasAccessToFeature } from "@/lib/subscription";
 import { getMyRole } from "@/lib/roles";
 import type { Customer, Reservation } from "@/types";
 
@@ -40,6 +43,7 @@ export default function ClienteDettaglioPage() {
   const params = useParams();
   const router = useRouter();
   const { show } = useToast();
+  const { info: subInfo, isLoading: subLoading } = useSubscription();
   const customerId = params.id as string;
 
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -122,9 +126,13 @@ export default function ClienteDettaglioPage() {
     }
   }
 
+  if (!subLoading && subInfo && !hasAccessToFeature(subInfo.effectiveTier, "clienti")) {
+    return <LockedFeature feature="clienti" />;
+  }
+
   if (isLoading) {
     return (
-      <div className="p-4">
+      <div className="min-h-screen bg-[#1A1310] p-4">
         <div className="mb-4 flex items-center gap-3">
           <Skeleton className="h-9 w-9 rounded-lg" />
           <Skeleton className="h-6 w-32" />
@@ -136,32 +144,36 @@ export default function ClienteDettaglioPage() {
   }
 
   if (error || !customer) {
-    return <p className="p-4 text-center text-sm text-status-danger">{error || "Cliente non trovato."}</p>;
+    return (
+      <div className="min-h-screen bg-[#1A1310] p-4">
+        <p className="text-center text-sm text-[#D97A63]">{error || "Cliente non trovato."}</p>
+      </div>
+    );
   }
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen bg-[#1A1310] p-4">
       <div className="mb-4 flex items-center gap-2">
         <button
           onClick={() => router.push("/clienti")}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-bg-subtle"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686]"
           aria-label="Indietro"
         >
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-1.5">
-            <h1 className="text-lg font-semibold text-ink">{customer.name}</h1>
+            <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">{customer.name}</h1>
             {customer.isRegular && (
-              <Star size={15} className="fill-status-pending text-status-pending" />
+              <Star size={15} className="fill-[#E3A857] text-[#E3A857]" />
             )}
           </div>
-          <p className="text-sm text-ink-muted">{customer.phone || "Nessun telefono"}</p>
+          <p className="text-sm text-[#A69686]">{customer.phone || "Nessun telefono"}</p>
         </div>
         {isAdmin && (
         <button
           onClick={handleDelete}
-          className="touch-target grid place-items-center rounded-lg text-ink-muted hover:bg-status-dangerBg hover:text-status-danger"
+          className="touch-target grid place-items-center rounded-lg text-[#A69686] hover:bg-[#C0503D]/15 hover:text-[#D97A63]"
           aria-label="Elimina cliente"
         >
           <Trash2 size={18} />
@@ -169,37 +181,37 @@ export default function ClienteDettaglioPage() {
         )}
       </div>
 
-      <div className="mb-4 grid grid-cols-2 gap-3 rounded-xl border border-black/5 bg-white p-4">
+      <div className="mb-4 grid grid-cols-2 gap-3 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
         <div className="text-center">
-          <p className="num-tabular text-2xl font-bold text-ink">{customer.reservationCount}</p>
-          <p className="text-xs text-ink-muted">Prenotazioni</p>
+          <p className="num-tabular text-2xl font-bold text-[#F0E9E0]">{customer.reservationCount}</p>
+          <p className="text-xs text-[#A69686]">Prenotazioni</p>
         </div>
         <div className="text-center">
-          <p className="text-2xl font-bold text-ink">{customer.isRegular ? "Sì" : "No"}</p>
-          <p className="text-xs text-ink-muted">Cliente abituale</p>
+          <p className="text-2xl font-bold text-[#F0E9E0]">{customer.isRegular ? "Sì" : "No"}</p>
+          <p className="text-xs text-[#A69686]">Cliente abituale</p>
         </div>
       </div>
 
-      <div className="mb-4 rounded-xl border border-black/5 bg-white p-4">
-        <p className="mb-2 text-sm font-medium text-ink">Note (allergie, preferenze...)</p>
+      <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
+        <p className="mb-2 text-sm font-medium text-[#F0E9E0]">Note (allergie, preferenze...)</p>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={3}
-          className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           placeholder="Es. allergia ai crostacei, preferisce tavoli vicino alla finestra..."
         />
         <button
           onClick={handleSaveNotes}
           disabled={isSavingNotes}
-          className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="touch-target mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2 text-sm font-medium text-[#1A1310] disabled:opacity-50"
         >
           {isSavingNotes && <Loader2 size={16} className="animate-spin" />}
           Salva note
         </button>
       </div>
 
-      <p className="mb-2 text-xs font-medium uppercase text-ink-muted">Storico prenotazioni</p>
+      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#A69686]">Storico prenotazioni</p>
       {!customer.phone ? (
         <EmptyState
           icon={CalendarClock}
