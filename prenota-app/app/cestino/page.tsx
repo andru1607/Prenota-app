@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, RotateCcw, Trash2, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListSkeleton } from "@/components/ui/Skeleton";
+import { LockedFeature } from "@/components/ui/LockedFeature";
 import { useToast } from "@/components/ui/ToastProvider";
+import { useSubscription } from "@/lib/hooks/useSubscription";
+import { hasAccessToFeature } from "@/lib/subscription";
 
 interface TrashedReservation {
   id: string;
@@ -27,6 +30,7 @@ function formatDateTime(iso: string): string {
 export default function CestinoPage() {
   const router = useRouter();
   const { show } = useToast();
+  const { info: subInfo, isLoading: subLoading } = useSubscription();
   const [items, setItems] = useState<TrashedReservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,6 +90,10 @@ export default function CestinoPage() {
     } finally {
       setBusyId(null);
     }
+  }
+
+  if (!subLoading && subInfo && !hasAccessToFeature(subInfo.effectiveTier, "cestino")) {
+    return <LockedFeature feature="cestino" />;
   }
 
   return (
