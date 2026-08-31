@@ -14,6 +14,8 @@ import {
   Loader2,
   Bell,
   BellOff,
+  Share,
+  PlusSquare,
   UtensilsCrossed,
   CalendarX,
   User,
@@ -59,11 +61,25 @@ export default function ImpostazioniPage() {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
   const [pushError, setPushError] = useState<string | null>(null);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   const isBar = businessType === "bar";
 
   useEffect(() => {
+    const ua = navigator.userAgent;
+    const iOS = /iPad|iPhone|iPod/.test(ua) || (ua.includes("Macintosh") && "ontouchend" in document);
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (navigator as any).standalone === true;
+    setIsIOS(iOS);
+    setIsStandalone(standalone);
+
     async function checkPushStatus() {
+      // Su iPhone/iPad, il Push API non esiste proprio finché l'app non è
+      // aperta dall'icona sulla schermata Home: mostriamo le istruzioni
+      // invece di provare ad attivarlo.
+      if (iOS && !standalone) return;
       if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
       setPushSupported(true);
 
@@ -408,9 +424,48 @@ export default function ImpostazioniPage() {
         </>
       )}
 
-      {pushSupported && !isBar && (
+      {!isBar && isIOS && !isStandalone && (
         <>
           <SectionLabel>Notifiche</SectionLabel>
+          <div className="mb-4 rounded-2xl border border-[#E3A857]/30 bg-[#E3A857]/10 p-4">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="grid h-9 w-9 place-items-center rounded-full border border-[#E3A857]/40 bg-[#1A1310] text-[#E3A857]">
+                <BellOff size={18} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-[#F0E9E0]">Notifiche push</p>
+                <p className="text-xs text-[#A69686]">
+                  Su iPhone vanno prima attivate aggiungendo l'app alla schermata Home
+                </p>
+              </div>
+            </div>
+            <div className="space-y-2 text-sm text-[#F0E9E0]">
+              <p className="flex items-center gap-2">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-[#3A2C22] bg-[#1A1310] text-xs text-[#A69686]">
+                  1
+                </span>
+                Tocca <Share size={14} className="inline text-[#C17F45]" /> Condividi in Safari
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-[#3A2C22] bg-[#1A1310] text-xs text-[#A69686]">
+                  2
+                </span>
+                Scegli <PlusSquare size={14} className="inline text-[#C17F45]" /> "Aggiungi alla schermata Home"
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-[#3A2C22] bg-[#1A1310] text-xs text-[#A69686]">
+                  3
+                </span>
+                Apri Prenota dall'icona appena creata, poi torna qui
+              </p>
+            </div>
+          </div>
+        </>
+      )}
+
+      {pushSupported && !isBar && (
+        <>
+          {!(isIOS && !isStandalone) && <SectionLabel>Notifiche</SectionLabel>}
           <div className="mb-4 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
             <div className="mb-2 flex items-center gap-3">
               <div className="grid h-9 w-9 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
