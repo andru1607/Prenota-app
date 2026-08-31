@@ -13,6 +13,9 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { getMyRole } from "@/lib/roles";
+import { LockedFeature } from "@/components/ui/LockedFeature";
+import { useSubscription } from "@/lib/hooks/useSubscription";
+import { hasAccessToFeature } from "@/lib/subscription";
 
 interface HaccpPoint {
   id: string;
@@ -53,6 +56,7 @@ function SignatureLine({ className = "" }: { className?: string }) {
 
 export default function HaccpPage() {
   const router = useRouter();
+  const { info: subInfo, isLoading: subLoading } = useSubscription();
   const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -218,6 +222,10 @@ export default function HaccpPage() {
     if (!lastDone) return true;
     const diffHours = (Date.now() - new Date(lastDone).getTime()) / 36e5;
     return task.frequency === "daily" ? diffHours > 24 : diffHours > 24 * 7;
+  }
+
+  if (!subLoading && subInfo && !hasAccessToFeature(subInfo.effectiveTier, "haccp")) {
+    return <LockedFeature feature="haccp" />;
   }
 
   return (
