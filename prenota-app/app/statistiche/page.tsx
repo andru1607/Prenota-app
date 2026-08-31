@@ -3,6 +3,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, RefreshCw } from "lucide-react";
+import { LockedFeature } from "@/components/ui/LockedFeature";
+import { useSubscription } from "@/lib/hooks/useSubscription";
+import { hasAccessToFeature } from "@/lib/subscription";
 import type { Reservation } from "@/types";
 
 type RangeOption = "7" | "30";
@@ -44,6 +47,7 @@ interface DayStat {
 
 export default function StatistichePage() {
   const router = useRouter();
+  const { info: subInfo, isLoading: subLoading } = useSubscription();
   const [range, setRange] = useState<RangeOption>("7");
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -117,6 +121,10 @@ export default function StatistichePage() {
     const isToday = dateStr === toDateString(today);
     if (isToday) return "Oggi";
     return d.toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" });
+  }
+
+  if (!subLoading && subInfo && !hasAccessToFeature(subInfo.effectiveTier, "statistiche")) {
+    return <LockedFeature feature="statistiche" />;
   }
 
   return (
