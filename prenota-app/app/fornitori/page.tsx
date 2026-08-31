@@ -22,7 +22,10 @@ import {
 import { getMyRole } from "@/lib/roles";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListSkeleton } from "@/components/ui/Skeleton";
+import { LockedFeature } from "@/components/ui/LockedFeature";
 import { useToast } from "@/components/ui/ToastProvider";
+import { useSubscription } from "@/lib/hooks/useSubscription";
+import { hasAccessToFeature } from "@/lib/subscription";
 import { InvoiceImportReview, type InvoiceConfirmData } from "@/components/ui/InvoiceImportReview";
 import type { ParsedInvoiceResult } from "@/lib/parseInvoicePhoto";
 
@@ -73,6 +76,7 @@ function SignatureLine({ className = "" }: { className?: string }) {
 export default function FornitoriPage() {
   const router = useRouter();
   const { show } = useToast();
+  const { info: subInfo, isLoading: subLoading } = useSubscription();
   const [isAdmin, setIsAdmin] = useState(false);
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -421,6 +425,10 @@ export default function FornitoriPage() {
     } finally {
       setIsSavingInvoice(false);
     }
+  }
+
+  if (!subLoading && subInfo && !hasAccessToFeature(subInfo.effectiveTier, "fornitori")) {
+    return <LockedFeature feature="fornitori" />;
   }
 
   if (invoiceResult) {
