@@ -12,6 +12,7 @@ import {
   BookOpen,
   Users,
   Trash2,
+  QrCode,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getMyStaffRow } from "@/lib/roles";
@@ -37,6 +38,12 @@ const RISTORANTE_SECTIONS = [
         icon: UtensilsCrossed,
         title: "Tavoli",
         description: "Stato e capienza dei tavoli",
+      },
+      {
+        href: "/qr",
+        icon: QrCode,
+        title: "Mostra QR prenotazioni",
+        description: "Da far scansionare a un cliente al volo",
       },
       {
         href: "/cestino",
