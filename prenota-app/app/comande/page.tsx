@@ -480,7 +480,7 @@ export default function ComandePage() {
 
     return (
       <div className="flex min-h-screen flex-col bg-[#1A1310] pb-24 print:bg-white">
-        <div className="sticky top-0 z-10 border-b border-[#3A2C22] bg-[#251C17] print:hidden">
+        <div className="sticky top-0 z-20 border-b border-[#3A2C22] bg-[#251C17] print:hidden">
           <div className="flex items-center gap-2 p-3">
             <button
               onClick={() => {
@@ -668,7 +668,7 @@ export default function ComandePage() {
         )}
 
         {subView === "categories" && (
-          <div className="flex-1 p-3">
+          <div className="flex-1 p-3 pb-24">
             {searchResults ? (
               searchResults.length === 0 ? (
                 <p className="py-8 text-center text-sm text-[#A69686]">Nessun piatto trovato.</p>
@@ -711,7 +711,7 @@ export default function ComandePage() {
         )}
 
         {subView === "items" && (
-          <div className="flex-1 p-3">
+          <div className="flex-1 p-3 pb-24">
             <div className="grid grid-cols-2 gap-2">
               {itemsInGroup.map((item) => (
                 <ItemTile key={item.id} item={item} onTap={() => handleAddItem(item)} />
@@ -801,7 +801,7 @@ export default function ComandePage() {
 
         {subView !== "bill" && (
           <div
-            className="fixed bottom-0 left-0 right-0 bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310] print:hidden"
+            className="fixed bottom-0 left-0 right-0 z-30 bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310] shadow-[0_-4px_20px_rgba(0,0,0,0.35)] print:hidden"
             style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
           >
             <div className="flex items-center justify-between px-4 py-3">
