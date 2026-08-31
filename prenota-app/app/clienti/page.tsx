@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { Search, Plus, Loader2, ChevronRight, X, Check, Users, Phone } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListSkeleton } from "@/components/ui/Skeleton";
+import { LockedFeature } from "@/components/ui/LockedFeature";
 import { useToast } from "@/components/ui/ToastProvider";
+import { useSubscription } from "@/lib/hooks/useSubscription";
+import { hasAccessToFeature } from "@/lib/subscription";
 import { LOYALTY_TIERS, getLoyaltyTier } from "@/lib/loyalty";
 import type { Customer } from "@/types";
 
@@ -23,6 +26,7 @@ function mapCustomerRow(row: any): Customer {
 export default function ClientiPage() {
   const router = useRouter();
   const { show } = useToast();
+  const { info: subInfo, isLoading: subLoading } = useSubscription();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +101,10 @@ export default function ClientiPage() {
     tierFilter === "all"
       ? customers
       : customers.filter((c) => getLoyaltyTier(c.reservationCount).key === tierFilter);
+
+  if (!subLoading && subInfo && !hasAccessToFeature(subInfo.effectiveTier, "clienti")) {
+    return <LockedFeature feature="clienti" />;
+  }
 
   return (
     <div className="min-h-screen bg-[#1A1310] p-4">
