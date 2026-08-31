@@ -255,7 +255,7 @@ export default function ClientiPage() {
 
               <div className="flex shrink-0 items-center gap-1">
                 {customer.phone && (
-                  <a
+                  
                     href={`tel:${customer.phone}`}
                     onClick={(e) => e.stopPropagation()}
                     className="touch-target grid place-items-center rounded-lg text-[#C17F45] hover:bg-[#C17F45]/15"
