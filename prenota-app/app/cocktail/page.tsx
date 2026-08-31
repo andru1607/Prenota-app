@@ -1,260 +1,579 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import {
-  Martini,
-  Plus,
-  Search,
-  Loader2,
-  ArrowLeft,
-  Wine,
-  FlaskConical,
-  CupSoda,
-  Droplets,
-  Coffee,
-  Star,
-} from "lucide-react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { Camera, Loader2, Eye, EyeOff, ChevronRight, CalendarClock, Image as ImageIcon } from "lucide-react";
+import { StatusBar } from "@/components/ui/StatusBar";
+import { TableCard } from "@/components/ui/TableCard";
+import { ReservationCard } from "@/components/ui/ReservationCard";
+import { PhotoImportReview } from "@/components/ui/PhotoImportReview";
+import { OnboardingGuide } from "@/components/ui/OnboardingGuide";
+import { TrialBanner } from "@/components/ui/TrialBanner";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { TableCardSkeleton, ReservationCardSkeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/ToastProvider";
 import { createClient } from "@/lib/supabase/client";
 import { getMyStaffRow } from "@/lib/roles";
-import { OnboardingGuide } from "@/components/ui/OnboardingGuide";
+import type { ParsedReservationDraft, Reservation, RestaurantTable, TableStatus } from "@/types";
 
-type Cocktail = {
-  id: string;
-  name: string;
-  category: string | null;
-  glass: string | null;
-  image_url: string | null;
-  restaurant_id: string | null;
-  featured_rank: number | null;
-};
+const DEFAULT_TABLES = [
+  { number: "1", capacity: 2 },
+  { number: "2", capacity: 2 },
+  { number: "3", capacity: 4 },
+  { number: "4", capacity: 4 },
+  { number: "5", capacity: 6 },
+  { number: "6", capacity: 8 },
+];
 
-const CATEGORY_ICONS: Record<string, typeof Martini> = {
-  "Aperitivi": Wine,
-  "Amari": FlaskConical,
-  "Long Drink": CupSoda,
-  "Cocktail Classici": Martini,
-  "Analcolici": Droplets,
-  "Caffetteria": Coffee,
-};
+const STATUS_CYCLE: TableStatus[] = ["free", "occupied", "reserved"];
+const REFRESH_INTERVAL_MS = 60_000;
+const SHOW_TABLES_KEY = "prenota-app:showTables";
+const ROOM_FILTER_KEY = "prenota-app:roomFilter";
+const MAX_PREVIEW_ITEMS = 8;
 
-function SignatureLine({ className = "" }: { className?: string }) {
-  return (
-    <div
-      className={`h-px w-14 bg-gradient-to-r from-[#C17F45] via-[#C17F45] to-transparent ${className}`}
-    />
-  );
+function formatPreviewDayLabel(dateStr: string): string {
+  const today = new Date();
+  const todayStr = today.toDateString();
+  const d = new Date(dateStr);
+
+  if (d.toDateString() === todayStr) return "Oggi";
+
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  if (d.toDateString() === tomorrow.toDateString()) return "Domani";
+
+  const label = d.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-export default function CocktailListPage() {
-  const [cocktails, setCocktails] = useState<Cocktail[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+function mapReservationRow(row: any): Reservation {
+  return {
+    id: row.id,
+    customerName: row.customer_name,
+    phone: row.phone ?? undefined,
+    partySize: row.party_size,
+    reservationTime: row.reservation_time,
+    status: row.status,
+    tableId: row.table_id ?? undefined,
+    notes: row.notes ?? undefined,
+    source: row.source,
+    createdAt: row.created_at,
+    customerConfirmedAt: row.customer_confirmed_at ?? undefined,
+  };
+}
+
+function mapTableRow(row: any): RestaurantTable & { roomId: string | null } {
+  return {
+    id: row.id,
+    number: row.number,
+    capacity: row.capacity,
+    status: row.status,
+    notes: row.notes ?? undefined,
+    roomId: row.room_id ?? null,
+  };
+}
+
+function sortTablesByNumber<T extends { number: string }>(tables: T[]): T[] {
+  return [...tables].sort((a, b) => {
+    const numA = Number(a.number);
+    const numB = Number(b.number);
+    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+    return a.number.localeCompare(b.number);
+  });
+}
+
+export default function DashboardPage() {
+  const router = useRouter();
+  const { show } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [drafts, setDrafts] = useState<ParsedReservationDraft[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [skippedInfo, setSkippedInfo] = useState<string | null>(null);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [tables, setTables] = useState<(RestaurantTable & { roomId: string | null })[]>([]);
+  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
+  const [roomFilter, setRoomFilter] = useState<string>("all");
+  const [showTables, setShowTables] = useState(false);
+  const [checkingLocale, setCheckingLocale] = useState(true);
 
   useEffect(() => {
-    async function load() {
+    async function checkBusinessType() {
       const staffRow = await getMyStaffRow();
       if (!staffRow) {
-        setIsLoading(false);
+        setCheckingLocale(false);
         return;
       }
 
       const supabase = createClient();
-      const { data, error } = await supabase
-        .from("cocktails")
-        .select("id, name, category, glass, image_url, restaurant_id, featured_rank")
-        .or(`restaurant_id.is.null,restaurant_id.eq.${staffRow.restaurantId}`)
-        .order("name", { ascending: true });
+      const { data } = await supabase
+        .from("restaurants")
+        .select("business_type")
+        .eq("id", staffRow.restaurantId)
+        .single();
 
-      if (error) {
-        console.error("Errore caricamento cocktail:", error);
-      } else if (data) {
-        setCocktails(data);
+      if (data?.business_type === "bar") {
+        router.replace("/cocktail");
+        return;
       }
-      setIsLoading(false);
+
+      setCheckingLocale(false);
     }
-    load();
+    checkBusinessType();
+  }, [router]);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem(SHOW_TABLES_KEY);
+    if (saved === "true") setShowTables(true);
+
+    const savedRoom = window.localStorage.getItem(ROOM_FILTER_KEY);
+    if (savedRoom) setRoomFilter(savedRoom);
   }, []);
 
-  const featuredCocktails = useMemo(
-    () =>
-      cocktails
-        .filter((c) => c.featured_rank !== null)
-        .sort((a, b) => (a.featured_rank ?? 0) - (b.featured_rank ?? 0)),
-    [cocktails]
+  function handleRoomFilterChange(value: string) {
+    setRoomFilter(value);
+    window.localStorage.setItem(ROOM_FILTER_KEY, value);
+  }
+
+  function toggleShowTables() {
+    setShowTables((prev) => {
+      const next = !prev;
+      window.localStorage.setItem(SHOW_TABLES_KEY, String(next));
+      return next;
+    });
+  }
+
+  const loadReservations = useCallback(async () => {
+    try {
+      const res = await fetch("/api/reservations");
+      if (!res.ok) return;
+      const { reservations: data } = await res.json();
+      setReservations((data ?? []).map(mapReservationRow));
+    } catch (err) {
+      console.error("Errore caricamento numeri servizio:", err);
+    }
+  }, []);
+
+  const loadTables = useCallback(async () => {
+    try {
+      const res = await fetch("/api/tables");
+      if (!res.ok) return;
+      const { tables: data } = await res.json();
+
+      if (!data || data.length === 0) {
+        const seedRes = await fetch("/api/tables", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tables: DEFAULT_TABLES }),
+        });
+        if (seedRes.ok) {
+          const { tables: seeded } = await seedRes.json();
+          setTables(sortTablesByNumber((seeded ?? []).map(mapTableRow)));
+        }
+        return;
+      }
+
+      setTables(sortTablesByNumber(data.map(mapTableRow)));
+    } catch (err) {
+      console.error("Errore caricamento tavoli:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    Promise.all([loadReservations(), loadTables()]).finally(() => setIsLoadingData(false));
+    fetch("/api/rooms")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => setRooms(body?.rooms ?? []))
+      .catch(() => {});
+    const interval = setInterval(loadReservations, REFRESH_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [loadReservations, loadTables]);
+
+  async function handleTableTap(table: RestaurantTable) {
+    const currentIndex = STATUS_CYCLE.indexOf(table.status);
+    const nextStatus = STATUS_CYCLE[(currentIndex + 1) % STATUS_CYCLE.length];
+
+    setTables((prev) => prev.map((t) => (t.id === table.id ? { ...t, status: nextStatus } : t)));
+
+    try {
+      const res = await fetch("/api/tables", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: table.id, status: nextStatus }),
+      });
+      if (!res.ok) throw new Error("Errore aggiornamento tavolo");
+    } catch (err) {
+      console.error(err);
+      loadTables();
+    }
+  }
+
+  async function updateReservationStatus(id: string, status: Reservation["status"], toastMessage: string) {
+    setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+    try {
+      const res = await fetch("/api/reservations", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      if (!res.ok) throw new Error("Errore aggiornamento");
+      show(toastMessage);
+    } catch (err) {
+      console.error(err);
+      show("Non sono riuscito ad aggiornare la prenotazione.", "error");
+      loadReservations();
+    }
+  }
+
+  const today = new Date();
+  const todayReservations = reservations.filter(
+    (r) => new Date(r.reservationTime).toDateString() === today.toDateString()
   );
 
-  const categories = useMemo(() => {
-    const names = Array.from(new Set(cocktails.map((c) => c.category || "Altro")));
-    return names.sort();
-  }, [cocktails]);
+  const coperti = todayReservations
+    .filter((r) => r.status !== "cancelled")
+    .reduce((sum, r) => sum + r.partySize, 0);
 
-  const searching = search.trim().length > 0;
+  const now = new Date();
+  const activeToday = todayReservations
+    .filter((r) => r.status !== "cancelled" && r.status !== "completed" && r.status !== "no_show")
+    .sort((a, b) => new Date(a.reservationTime).getTime() - new Date(b.reservationTime).getTime());
 
-  const searchResults = useMemo(() => {
-    if (!searching) return [];
-    const term = search.trim().toLowerCase();
-    return cocktails.filter((c) => c.name.toLowerCase().includes(term));
-  }, [cocktails, search, searching]);
+  const nextArrival = activeToday.find((r) => new Date(r.reservationTime).getTime() >= now.getTime());
 
-  const categoryResults = useMemo(() => {
-    if (!selectedCategory) return [];
-    return cocktails.filter((c) => (c.category || "Altro") === selectedCategory);
-  }, [selectedCategory, cocktails]);
+  const prossimoArrivo = nextArrival
+    ? new Date(nextArrival.reservationTime).toLocaleTimeString("it-IT", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : undefined;
 
-  function renderCocktailRow(cocktail: Cocktail) {
+  const tavoliLiberi = tables.filter((t) => t.status === "free").length;
+
+  const allActive = reservations
+    .filter((r) => r.status !== "cancelled" && r.status !== "completed" && r.status !== "no_show")
+    .sort((a, b) => new Date(a.reservationTime).getTime() - new Date(b.reservationTime).getTime());
+
+  const previewList = allActive.slice(0, MAX_PREVIEW_ITEMS);
+
+  async function handlePhotoSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setError(null);
+    setSkippedInfo(null);
+    setIsProcessing(true);
+
+    try {
+      const allDrafts: ParsedReservationDraft[] = [];
+      const allSkipped: string[] = [];
+
+      for (const file of Array.from(files)) {
+        const base64 = await fileToBase64(file);
+        const res = await fetch("/api/parse-agenda", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64, mediaType: file.type }),
+        });
+
+        if (!res.ok) throw new Error("Errore nella lettura di una delle foto");
+
+        const { drafts, skipped } = await res.json();
+        if (drafts) allDrafts.push(...drafts);
+        if (skipped) allSkipped.push(...skipped);
+      }
+
+      if (allSkipped.length > 0) {
+        setSkippedInfo(
+          `${allSkipped.length} già presenti, escluse automaticamente: ${allSkipped.join(", ")}`
+        );
+      }
+
+      if (allDrafts.length > 0) {
+        setDrafts(allDrafts);
+      } else if (allSkipped.length > 0) {
+        setError(null);
+      } else {
+        setError("Non ho trovato nessuna prenotazione leggibile in queste foto.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Non sono riuscito a leggere una o più foto. Riprova con foto più nitide.");
+    } finally {
+      setIsProcessing(false);
+      e.target.value = "";
+    }
+  }
+
+  async function handleConfirmImport(confirmed: ParsedReservationDraft[]) {
+    setIsSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ drafts: confirmed, source: "photo" }),
+      });
+      if (!res.ok) throw new Error("Errore nel salvataggio");
+
+      setDrafts(null);
+      show(`${confirmed.length} prenotazion${confirmed.length === 1 ? "e" : "i"} salvat${confirmed.length === 1 ? "a" : "e"}`);
+      router.push("/prenotazioni");
+    } catch (err) {
+      console.error(err);
+      setError("Non sono riuscito a salvare le prenotazioni. Riprova.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  if (checkingLocale) {
     return (
-      <Link
-        key={cocktail.id}
-        href={`/cocktail/${cocktail.id}`}
-        className="touch-target flex items-center gap-3 rounded-xl border border-[#3A2C22] bg-[#251C17] p-3"
-      >
-        <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-[#C17F45]/40 bg-[#1A1310] text-[#E3A857]">
-          {cocktail.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={cocktail.image_url}
-              alt={cocktail.name}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <Martini size={18} />
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-[#F0E9E0]">{cocktail.name}</p>
-          <p className="truncate text-xs text-[#A69686]">
-            {[cocktail.category, cocktail.glass].filter(Boolean).join(" · ") || "—"}
-          </p>
-        </div>
-        {cocktail.restaurant_id && (
-          <span className="shrink-0 rounded-full border border-[#E3A857]/30 bg-[#E3A857]/15 px-2 py-0.5 text-[10px] font-medium text-[#E3A857]">
-            Tuo
-          </span>
-        )}
-      </Link>
+      <div className="flex min-h-screen items-center justify-center bg-[#1A1310] text-[#C17F45]">
+        <Loader2 size={20} className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (drafts) {
+    return (
+      <PhotoImportReview
+        drafts={drafts}
+        onConfirm={handleConfirmImport}
+        onCancel={() => setDrafts(null)}
+        isSaving={isSaving}
+      />
     );
   }
 
   return (
     <div className="min-h-screen bg-[#1A1310]">
       <OnboardingGuide />
+      <TrialBanner />
+      <StatusBar totalCoperti={coperti} tavoliLiberi={tavoliLiberi} prossimoArrivo={prossimoArrivo} />
+
       <div className="p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Cocktail</h1>
-          <SignatureLine className="mt-1.5" />
-        </div>
-        <Link
-          href="/cocktail/nuovo"
-          className="touch-target grid h-10 w-10 place-items-center rounded-full bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310] shadow-[0_0_18px_rgba(227,168,87,0.35)]"
-          aria-label="Aggiungi cocktail"
-        >
-          <Plus size={19} />
-        </Link>
-      </div>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Sala</h1>
 
-      <div className="mb-4 flex items-center gap-2 rounded-xl border border-[#3A2C22] bg-[#251C17] px-3 py-2.5 focus-within:border-[#C17F45]/60">
-        <Search size={16} className="text-[#A69686]" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Cerca un cocktail"
-          className="w-full bg-transparent text-base text-[#F0E9E0] outline-none placeholder:text-[#7A6E63]"
-        />
-      </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={toggleShowTables}
+              className="touch-target flex items-center gap-1.5 rounded-xl border border-[#3A2C22] px-3 py-2 text-sm font-medium text-[#A69686]"
+              title={showTables ? "Nascondi tavoli" : "Mostra tavoli"}
+            >
+              {showTables ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showTables ? "Nascondi tavoli" : "Mostra tavoli"}
+            </button>
 
-      {isLoading ? (
-        <div className="flex justify-center py-10 text-[#C17F45]">
-          <Loader2 size={20} className="animate-spin" />
-        </div>
-      ) : searching ? (
-        searchResults.length === 0 ? (
-          <p className="py-10 text-center text-sm text-[#A69686]">Nessun cocktail trovato.</p>
-        ) : (
-          <div className="space-y-2">{searchResults.map(renderCocktailRow)}</div>
-        )
-      ) : selectedCategory ? (
-        <div>
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className="mb-3 flex items-center gap-1 text-xs font-medium text-[#A69686]"
-          >
-            <ArrowLeft size={14} />
-            Tutte le categorie
-          </button>
-          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#F0E9E0]">
-            {selectedCategory}
-          </p>
-          <SignatureLine className="mb-3" />
-          {categoryResults.length === 0 ? (
-            <p className="py-6 text-center text-sm text-[#A69686]">
-              Non ci sono ancora cocktail qui.
-            </p>
-          ) : (
-            <div className="mb-3 space-y-2">{categoryResults.map(renderCocktailRow)}</div>
-          )}
-          <Link
-            href={`/cocktail/nuovo?categoria=${encodeURIComponent(selectedCategory)}`}
-            className="touch-target flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#3A2C22] py-2.5 text-xs font-medium text-[#A69686]"
-          >
-            <Plus size={14} />
-            Aggiungi un prodotto in {selectedCategory}
-          </Link>
-        </div>
-      ) : cocktails.length === 0 ? (
-        <p className="py-10 text-center text-sm text-[#A69686]">Non ci sono ancora cocktail.</p>
-      ) : (
-        <>
-          {featuredCocktails.length > 0 && (
-            <div className="mb-5">
-              <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[#E3A857]">
-                <Star size={13} className="fill-[#E3A857]" />
-                I più richiesti
-              </p>
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {featuredCocktails.map((c) => (
-                  <Link
-                    key={c.id}
-                    href={`/cocktail/${c.id}`}
-                    className="flex h-20 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl border border-[#E3A857]/30 bg-[#E3A857]/10 p-2 text-center"
-                  >
-                    <Martini size={16} className="text-[#E3A857]" />
-                    <span className="text-xs font-medium leading-tight text-[#F0E9E0]">{c.name}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-3">
-            {categories.map((category) => {
-              const Icon = CATEGORY_ICONS[category] ?? Martini;
-              const count = cocktails.filter((c) => (c.category || "Altro") === category).length;
-              return (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className="touch-target flex flex-col items-start gap-2.5 rounded-2xl border border-[#3A2C22] bg-gradient-to-b from-[#2A211C] to-[#1F1712] p-4 text-left"
-                >
-                  <div className="relative grid h-11 w-11 place-items-center">
-                    <div className="absolute inset-0 rounded-full bg-[#C17F45] opacity-20 blur-md" />
-                    <div className="relative grid h-11 w-11 place-items-center rounded-full border border-[#C17F45]/50 bg-[#1A1310] text-[#C17F45]">
-                      <Icon size={18} />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold uppercase tracking-wide text-[#F0E9E0]">{category}</p>
-                    <p className="num-tabular text-xs text-[#A69686]">{count} cocktail</p>
-                  </div>
-                </button>
-              );
-            })}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handlePhotoSelected}
+            />
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handlePhotoSelected}
+            />
+            <button
+              onClick={() => galleryInputRef.current?.click()}
+              disabled={isProcessing}
+              className="touch-target flex items-center gap-1.5 rounded-xl border border-[#3A2C22] px-3 py-2 text-sm font-medium text-[#A69686] disabled:opacity-60"
+            >
+              <ImageIcon size={16} />
+              Galleria
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isProcessing}
+              className="touch-target flex items-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] px-4 py-2 text-sm font-medium text-[#1A1310] disabled:opacity-60"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Leggo...
+                </>
+              ) : (
+                <>
+                  <Camera size={18} />
+                  Foto agenda
+                </>
+              )}
+            </button>
           </div>
-        </>
-      )}
+        </div>
+
+        {skippedInfo && (
+          <p className="mb-3 rounded-lg border border-[#E3A857]/40 bg-[#2A2115] p-3 text-sm text-[#E3A857]">
+            {skippedInfo}
+          </p>
+        )}
+
+        {error && (
+          <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">
+            {error}
+          </p>
+        )}
+
+        {showTables ? (
+          <>
+            <p className="mb-3 text-xs text-[#A69686]">
+              Tocca un tavolo per cambiarne lo stato (libero → occupato → riservato).
+            </p>
+
+            {rooms.length > 0 && (
+              <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+                <button
+                  onClick={() => handleRoomFilterChange("all")}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${
+                    roomFilter === "all"
+                      ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                      : "border border-[#3A2C22] text-[#A69686]"
+                  }`}
+                >
+                  Tutte
+                </button>
+                {rooms.map((room) => (
+                  <button
+                    key={room.id}
+                    onClick={() => handleRoomFilterChange(room.id)}
+                    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${
+                      roomFilter === room.id
+                        ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                        : "border border-[#3A2C22] text-[#A69686]"
+                    }`}
+                  >
+                    {room.name}
+                  </button>
+                ))}
+                {tables.some((t) => !t.roomId || !rooms.some((r) => r.id === t.roomId)) && (
+                  <button
+                    onClick={() => handleRoomFilterChange("none")}
+                    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${
+                      roomFilter === "none"
+                        ? "bg-gradient-to-b from-[#C17F45] to-[#A6683A] text-[#1A1310]"
+                        : "border border-[#3A2C22] text-[#A69686]"
+                    }`}
+                  >
+                    Senza sala
+                  </button>
+                )}
+              </div>
+            )}
+
+            {(() => {
+              if (isLoadingData) {
+                return (
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <TableCardSkeleton key={i} />
+                    ))}
+                  </div>
+                );
+              }
+
+              const filteredTables =
+                roomFilter === "all"
+                  ? tables
+                  : roomFilter === "none"
+                  ? tables.filter((t) => !t.roomId || !rooms.some((r) => r.id === t.roomId))
+                  : tables.filter((t) => t.roomId === roomFilter);
+
+              if (filteredTables.length === 0) {
+                return (
+                  <p className="py-8 text-center text-sm text-[#A69686]">
+                    Nessun tavolo in questa sala.
+                  </p>
+                );
+              }
+
+              return (
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                  {filteredTables.map((table) => (
+                    <TableCard key={table.id} table={table} onClick={() => handleTableTap(table)} />
+                  ))}
+                </div>
+              );
+            })()}
+          </>
+        ) : (
+          <div>
+            <p className="mb-3 text-xs text-[#A69686]">Prossime prenotazioni.</p>
+
+            {isLoadingData ? (
+              <div className="space-y-2">
+                <ReservationCardSkeleton />
+                <ReservationCardSkeleton />
+                <ReservationCardSkeleton />
+              </div>
+            ) : previewList.length === 0 ? (
+              <EmptyState
+                icon={CalendarClock}
+                title="Nessuna prenotazione attiva al momento"
+                description="Le prossime prenotazioni appariranno qui."
+              />
+            ) : (
+              <div className="space-y-2">
+                {previewList.map((r, index) => {
+                  const dayLabel = formatPreviewDayLabel(r.reservationTime);
+                  const previousDayLabel =
+                    index > 0 ? formatPreviewDayLabel(previewList[index - 1].reservationTime) : null;
+                  const showSeparator = dayLabel !== previousDayLabel;
+
+                  return (
+                    <div key={r.id}>
+                      {showSeparator && (
+                        <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-[#A69686] first:mt-0">
+                          {dayLabel}
+                        </p>
+                      )}
+                      <ReservationCard
+                        reservation={r}
+                        onCheckIn={() =>
+                          updateReservationStatus(r.id, "completed", "Cliente segnato come presente")
+                        }
+                        onNoShow={() =>
+                          updateReservationStatus(r.id, "no_show", "Segnato come assente")
+                        }
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <button
+              onClick={() => router.push("/prenotazioni")}
+              className="touch-target mt-3 flex w-full items-center justify-center gap-1 rounded-xl border border-[#3A2C22] py-2.5 text-sm font-medium text-[#C17F45]"
+            >
+              Vedi tutte le prenotazioni
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      resolve(result.split(",")[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
