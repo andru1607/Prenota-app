@@ -18,7 +18,10 @@ import {
   Euro,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { LockedFeature } from "@/components/ui/LockedFeature";
 import { useToast } from "@/components/ui/ToastProvider";
+import { useSubscription } from "@/lib/hooks/useSubscription";
+import { hasAccessToFeature } from "@/lib/subscription";
 import { MENU_GROUPS, groupForCategory } from "@/lib/menuGroups";
 
 interface MenuItem {
@@ -136,6 +139,7 @@ function SignatureLine({ className = "" }: { className?: string }) {
 
 export default function ComandePage() {
   const { show } = useToast();
+  const { info: subInfo, isLoading: subLoading } = useSubscription();
   const [orders, setOrders] = useState<Order[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [tables, setTables] = useState<TableOption[]>([]);
@@ -469,6 +473,10 @@ export default function ComandePage() {
     setSubView("categories");
     setActiveGroupLabel(null);
     setSearch("");
+  }
+
+  if (!subLoading && subInfo && !hasAccessToFeature(subInfo.effectiveTier, "comande")) {
+    return <LockedFeature feature="comande" />;
   }
 
   if (selectedOrder) {
