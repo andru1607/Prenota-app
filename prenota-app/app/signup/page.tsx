@@ -33,12 +33,14 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [website, setWebsite] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!acceptedTerms) return;
     setError(null);
     setIsLoading(true);
 
@@ -78,7 +80,7 @@ export default function SignupPage() {
           <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
             <MailCheck size={24} />
           </div>
-          <h1 className="text-lg font-semibold text-[#F0E9E0]">Controlla la tua email</h1>
+          <h1 className="text-lg font-bold text-[#F0E9E0]">Controlla la tua email</h1>
           <p className="mt-2 text-sm text-[#A69686]">
             Ti abbiamo inviato un link di conferma a <strong className="text-[#F0E9E0]">{registeredEmail}</strong>.
             Toccalo per attivare l'account e iniziare a usare Prenota.
@@ -96,7 +98,7 @@ export default function SignupPage() {
       <div className="flex min-h-screen items-center justify-center bg-[#1A1310] p-4">
         <div className="w-full max-w-sm rounded-2xl border border-[#3A2C22] bg-[#251C17] p-6">
           <div className="mb-5 text-center">
-            <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">Che attività gestisci?</h1>
+            <h1 className="text-lg font-bold text-[#F0E9E0]">Che attività gestisci?</h1>
             <p className="mt-1 text-sm text-[#A69686]">
               Scegli il tipo di locale: l'app si adatta di conseguenza
             </p>
@@ -159,13 +161,10 @@ export default function SignupPage() {
         </button>
 
         <div className="mb-4 flex flex-col items-center gap-2 text-center">
-          <div className="relative grid h-12 w-12 place-items-center">
-            <div className="absolute inset-0 rounded-full bg-[#E3A857] opacity-20 blur-md" />
-            <div className="relative grid h-12 w-12 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
-              {isBar ? <Martini size={22} /> : <Store size={22} />}
-            </div>
+          <div className="grid h-12 w-12 place-items-center rounded-full border border-[#C17F45]/40 bg-[#1A1310] text-[#C17F45]">
+            {isBar ? <Martini size={22} /> : <Store size={22} />}
           </div>
-          <h1 className="text-lg font-bold uppercase tracking-wide text-[#F0E9E0]">
+          <h1 className="text-lg font-bold text-[#F0E9E0]">
             {isBar ? "Crea il tuo bar" : "Crea il tuo ristorante"}
           </h1>
           <p className="text-sm text-[#A69686]">
@@ -206,11 +205,26 @@ export default function SignupPage() {
           />
         </div>
 
+        <label className="mt-3 flex items-start gap-2 text-xs text-[#A69686]">
+          <input
+            type="checkbox"
+            checked={acceptedTerms}
+            onChange={(e) => setAcceptedTerms(e.target.checked)}
+            className="mt-0.5 shrink-0"
+          />
+          <span>
+            Ho letto e accetto i{" "}
+            <Link href="/termini" target="_blank" className="font-medium text-[#C17F45] underline">
+              Termini di Servizio e l'Informativa Privacy
+            </Link>
+          </span>
+        </label>
+
         {error && <p className="mt-2 text-sm text-[#D97A63]">{error}</p>}
 
         <button
           type="submit"
-          disabled={isLoading || !restaurantName || !email || password.length < 6}
+          disabled={isLoading || !restaurantName || !email || password.length < 6 || !acceptedTerms}
           className="touch-target mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#C17F45] to-[#A6683A] py-2.5 text-sm font-medium text-[#1A1310] disabled:opacity-40"
         >
           {isLoading && <Loader2 size={18} className="animate-spin" />}
