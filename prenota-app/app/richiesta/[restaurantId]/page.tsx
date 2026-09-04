@@ -422,6 +422,14 @@ export default function RichiestaPage() {
                 </button>
 
                 <p className="mt-3 text-center text-xs text-[#A69686]">{t("upToSixNote")}</p>
+                <a
+                  href={`/richiesta/${restaurantId}/privacy`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 block text-center text-xs text-[#A69686] underline decoration-[#A69686]/40 underline-offset-2"
+                >
+                  Come trattiamo i tuoi dati
+                </a>
               </form>
             )}
           </div>
