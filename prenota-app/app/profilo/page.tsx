@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Check, User, Store, Mail, Lock } from "lucide-react";
+import { ArrowLeft, Loader2, Check, User, Store, Mail, Lock, ShieldAlert, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getMyStaffRow } from "@/lib/roles";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/ToastProvider";
 import { RestaurantSwitcher } from "@/components/ui/RestaurantSwitcher";
+import Link from "next/link";
 
 export default function ProfiloPage() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function ProfiloPage() {
   const [staffId, setStaffId] = useState<string | null>(null);
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [role, setRole] = useState<string>("");
+  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
 
   const [fullName, setFullName] = useState("");
   const [restaurantName, setRestaurantName] = useState("");
@@ -37,6 +39,10 @@ export default function ProfiloPage() {
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
 
+  const [showDeleteForm, setShowDeleteForm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
   useEffect(() => {
     async function load() {
       const supabase = createClient();
@@ -46,6 +52,13 @@ export default function ProfiloPage() {
       if (!user) return;
 
       setCurrentEmail(user.email ?? "");
+
+      const { data: adminRow } = await supabase
+        .from("platform_admins")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      setIsPlatformAdmin(!!adminRow);
 
       const activeStaffRow = await getMyStaffRow();
       if (!activeStaffRow) {
@@ -163,6 +176,24 @@ export default function ProfiloPage() {
     }
   }
 
+  async function handleDeleteRestaurant() {
+    if (!restaurantId || deleteConfirmText.trim() !== restaurantName.trim()) return;
+    setIsDeleting(true);
+    try {
+      const supabase = createClient();
+      const { error: deleteError } = await supabase.from("restaurants").delete().eq("id", restaurantId);
+      if (deleteError) throw deleteError;
+
+      await supabase.auth.signOut();
+      router.push("/login");
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      show("Non sono riuscito a eliminare il locale. Riprova.", "error");
+      setIsDeleting(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#1A1310] p-4">
@@ -191,9 +222,22 @@ export default function ProfiloPage() {
       </div>
 
       {error && (
-        <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">
-          {error}
-        </p>
+        <p className="mb-3 rounded-lg border border-[#C0503D]/40 bg-[#2A1B14] p-3 text-sm text-[#D97A63]">{error}</p>
+      )}
+
+      {isPlatformAdmin && (
+        <Link
+          href="/admin"
+          className="touch-target mb-3 flex items-center gap-3 rounded-xl border border-[#E3A857]/30 bg-[#E3A857]/10 p-4"
+        >
+          <div className="grid h-9 w-9 place-items-center rounded-full border border-[#E3A857]/40 bg-[#1A1310] text-[#E3A857]">
+            <ShieldAlert size={18} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-[#F0E9E0]">Pannello admin</p>
+            <p className="text-xs text-[#A69686]">Visibile solo a te — tutti i locali iscritti</p>
+          </div>
+        </Link>
       )}
 
       <RestaurantSwitcher />
@@ -212,7 +256,7 @@ export default function ProfiloPage() {
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           placeholder="Nome e cognome"
-          className="mb-4 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
+          className="mb-4 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-base text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
         />
 
         <div className="mb-3 flex items-center gap-2">
@@ -224,7 +268,7 @@ export default function ProfiloPage() {
             value={restaurantName}
             onChange={(e) => setRestaurantName(e.target.value)}
             placeholder="Nome del ristorante"
-            className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
+            className="w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-base text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
           />
         ) : (
           <p className="rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#A69686]">
@@ -264,11 +308,9 @@ export default function ProfiloPage() {
               placeholder="Nuova email"
               type="email"
               autoCapitalize="none"
-              className="mb-2 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
+              className="mb-2 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-base text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
-            {emailMessage && (
-              <p className="mb-2 text-xs text-[#A69686]">{emailMessage}</p>
-            )}
+            {emailMessage && <p className="mb-2 text-xs text-[#A69686]">{emailMessage}</p>}
             <div className="flex gap-2">
               <button
                 onClick={() => {
@@ -293,7 +335,7 @@ export default function ProfiloPage() {
         )}
       </div>
 
-      <div className="animate-fade-in rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
+      <div className="animate-fade-in mb-3 rounded-2xl border border-[#3A2C22] bg-[#251C17] p-4">
         <div className="mb-2 flex items-center gap-2">
           <Lock size={16} className="text-[#A69686]" />
           <p className="text-sm font-medium text-[#F0E9E0]">Password</p>
@@ -313,18 +355,16 @@ export default function ProfiloPage() {
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Nuova password"
               type="password"
-              className="mb-2 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
+              className="mb-2 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-base text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
             <input
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Conferma password"
               type="password"
-              className="mb-2 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-sm text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
+              className="mb-2 w-full rounded-lg border border-[#3A2C22] bg-[#1A1310] px-3 py-2 text-base text-[#F0E9E0] placeholder:text-[#7A6E63] focus:border-[#C17F45]/60 focus:outline-none"
             />
-            {passwordMessage && (
-              <p className="mb-2 text-xs text-[#D97A63]">{passwordMessage}</p>
-            )}
+            {passwordMessage && <p className="mb-2 text-xs text-[#D97A63]">{passwordMessage}</p>}
             <div className="flex gap-2">
               <button
                 onClick={() => {
@@ -350,6 +390,63 @@ export default function ProfiloPage() {
           </div>
         )}
       </div>
+
+      {role === "admin" && restaurantId && (
+        <div className="animate-fade-in rounded-2xl border border-[#C0503D]/40 bg-[#2A1B14] p-4">
+          <div className="mb-2 flex items-center gap-2">
+            <Trash2 size={16} className="text-[#D97A63]" />
+            <p className="text-sm font-medium text-[#D97A63]">Zona pericolosa</p>
+          </div>
+          <p className="mb-3 text-xs text-[#A69686]">
+            Elimina per sempre "{restaurantName}" e tutti i suoi dati — prenotazioni, clienti, staff, tavoli,
+            tutto quanto. Non si può annullare.
+          </p>
+
+          {!showDeleteForm ? (
+            <button
+              onClick={() => setShowDeleteForm(true)}
+              className="touch-target rounded-lg border border-[#C0503D]/40 px-3 py-2 text-xs font-medium text-[#D97A63]"
+            >
+              Elimina locale e tutti i dati
+            </button>
+          ) : (
+            <div>
+              <p className="mb-2 text-xs text-[#A69686]">
+                Per confermare, scrivi esattamente il nome del locale:{" "}
+                <span className="font-medium text-[#F0E9E0]">{restaurantName}</span>
+              </p>
+              <input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={restaurantName}
+                autoFocus
+                className="mb-2 w-full rounded-lg border border-[#C0503D]/40 bg-[#1A1310] px-3 py-2 text-base text-[#F0E9E0] placeholder:text-[#7A6E63] focus:outline-none"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowDeleteForm(false);
+                    setDeleteConfirmText("");
+                  }}
+                  disabled={isDeleting}
+                  className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#3A2C22] py-2 text-sm font-medium text-[#A69686] disabled:opacity-40"
+                >
+                  <X size={15} />
+                  Annulla
+                </button>
+                <button
+                  onClick={handleDeleteRestaurant}
+                  disabled={isDeleting || deleteConfirmText.trim() !== restaurantName.trim()}
+                  className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#C0503D] py-2 text-sm font-medium text-white disabled:opacity-40"
+                >
+                  {isDeleting ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
+                  Elimina per sempre
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
