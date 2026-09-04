@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { SupportChatWidget } from "@/components/ui/SupportChatWidget";
 
-const PUBLIC_PREFIXES = ["/richiesta", "/prenotazione", "/login", "/signup", "/auth/confirm"];
+const PUBLIC_PREFIXES = ["/richiesta", "/prenotazione", "/login", "/signup", "/auth/confirm", "/termini"];
 
 export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
